@@ -10,10 +10,7 @@
 //! In a `.mrpack`, a resource pack the browser installed from Modrinth, still the same file, is
 //! listed by its download (`files`, with its SHA-1 and SHA-512) instead of being copied; the
 //! rest goes under `overrides/`, which a launcher copies into the game folder.
-use crate::browser::installed::{Entry, Installed};
-use crate::browser::{FileRef, Kind, SourceId, GAME};
 use horizon_world::nbt::{self, Limits, Tag};
-use sha2::Digest;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -32,6 +29,8 @@ pub const FOLDERS: [&str; 4] = ["resourcepacks", "shaderpacks", "skyline-mods", 
 /// What a world keeps per player: left out.
 const PER_PLAYER: [&str; 4] = ["playerdata", "stats", "advancements", "session.lock"];
 const INDEX: &str = "modrinth.index.json";
+/// The Minecraft version Skyline plays, for a `.mrpack`'s dependencies.
+const GAME: &str = "26.3";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Format {
@@ -53,7 +52,10 @@ impl Format {
 pub struct Linked {
     /// Relative to the game folder: `resourcepacks/<name>`.
     pub path: String,
-    pub file: FileRef,
+    pub url: String,
+    pub sha1: String,
+    pub sha512: String,
+    pub size: u64,
 }
 
 /// What an export wrote.
@@ -160,10 +162,10 @@ fn index(name: &str, linked: &[&Linked]) -> serde_json::Value {
         .map(|l| {
             serde_json::json!({
                 "path": l.path,
-                "hashes": { "sha1": l.file.sha1, "sha512": l.file.sha512 },
+                "hashes": { "sha1": l.sha1, "sha512": l.sha512 },
                 "env": { "client": "required", "server": "unsupported" },
-                "downloads": [l.file.url],
-                "fileSize": l.file.size,
+                "downloads": [l.url],
+                "fileSize": l.size,
             })
         })
         .collect();
@@ -223,43 +225,6 @@ fn shareable_level(file: &Path) -> Result<Vec<u8>, String> {
     let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
     gz.write_all(&raw).map_err(|e| e.to_string())?;
     gz.finish().map_err(|e| e.to_string())
-}
-
-/// The resource packs the browser installed from Modrinth that are still the file it checked:
-/// with `lookup` (the source's file for an entry), what a `.mrpack` can list by download.
-pub fn linkable(home: &Path, lookup: &dyn Fn(&Entry) -> Option<FileRef>) -> Vec<Linked> {
-    Installed::load(home)
-        .entries
-        .iter()
-        .filter(|e| e.source == SourceId::Modrinth && e.kind == Kind::ResourcePack)
-        .filter(|e| {
-            let Ok(bytes) = fs::read(home.join(&e.file)) else {
-                return false;
-            };
-            let sum: String = sha2::Sha512::digest(&bytes)
-                .iter()
-                .map(|b| format!("{b:02x}"))
-                .collect();
-            e.checksum.strip_prefix("SHA-512:") == Some(sum.as_str())
-        })
-        .filter_map(|e| {
-            let file = lookup(e)?;
-            let same = file.sha512.as_deref() == e.checksum.strip_prefix("SHA-512:");
-            (same && file.sha1.is_some()).then(|| Linked {
-                path: e.file.clone(),
-                file,
-            })
-        })
-        .collect()
-}
-
-/// An entry's file as Modrinth serves it (asks Modrinth: for [`linkable`]).
-pub fn from_modrinth(e: &Entry) -> Option<FileRef> {
-    let sum = e.checksum.strip_prefix("SHA-512:")?;
-    crate::browser::modrinth::version_files(&e.version)
-        .ok()?
-        .into_iter()
-        .find(|f| f.sha512.as_deref() == Some(sum))
 }
 
 /// A free path for `name.<extension>` in `dir`: "Name (2).mrpack" when taken.

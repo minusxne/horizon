@@ -8,12 +8,6 @@ impl Launcher {
     /// The chip's two lines: the name that plays, and how.
     pub(super) fn who_plays(&self) -> (String, &'static str) {
         match self.accounts.player() {
-            Player::Microsoft(_) => (
-                self.accounts
-                    .selected()
-                    .map_or_else(String::new, |a| a.name.clone()),
-                tr("Microsoft account"),
-            ),
             Player::Offline(name) => (name, tr("Offline")),
             Player::GameName => (
                 self.offline_name.clone().unwrap_or_else(|| "Player".into()),
@@ -24,30 +18,20 @@ impl Launcher {
 
     pub(super) fn play_as(&mut self, who: Player) {
         let mut accounts = Accounts::load();
-        let done = accounts
-            .play_as(account::store(), who)
-            .and_then(|()| accounts.save());
+        let done = accounts.play_as(who).and_then(|()| accounts.save());
         match done {
-            Ok(()) => self.accounts = accounts,
-            Err(e) => self.sign_in_state = Some(SignInState::Done(Err(e))),
+            Ok(()) => {
+                self.accounts = accounts;
+                self.name_error = None;
+            }
+            Err(e) => self.name_error = Some(e),
         }
         self.account_menu = false;
     }
 
     /// Everyone the player can play as, with how each signs in.
     fn players(&self) -> Vec<(Player, String, &'static str)> {
-        let mut out: Vec<_> = self
-            .accounts
-            .accounts
-            .iter()
-            .map(|a| {
-                (
-                    Player::Microsoft(a.uuid.clone()),
-                    a.name.clone(),
-                    tr("Microsoft"),
-                )
-            })
-            .collect();
+        let mut out: Vec<(Player, String, &'static str)> = Vec::new();
         out.extend(
             self.accounts
                 .offline
@@ -141,7 +125,7 @@ impl Launcher {
             return;
         }
         self.play_as(Player::Offline(name));
-        if !matches!(self.sign_in_state, Some(SignInState::Done(Err(_)))) {
+        if self.name_error.is_none() {
             self.servers.text(Field::OfflineName).clear();
         }
     }
@@ -171,15 +155,6 @@ impl Launcher {
                     ),
                 );
             }
-            let dressed = name.clone();
-            actions = actions.child(
-                button(format!("offline-skin-{i}"), "Skin…", Kind::Ghost, &t).on_click(
-                    cx.listener(move |this, _: &ClickEvent, _, cx| {
-                        this.open_skin(dressed.clone());
-                        cx.notify();
-                    }),
-                ),
-            );
             let forget = name.clone();
             actions = actions.child(
                 button(format!("offline-forget-{i}"), "Forget", Kind::Ghost, &t).on_click(
@@ -209,7 +184,6 @@ impl Launcher {
                 &t,
             ));
         }
-        rows = rows.children(self.skin_panel(cx));
         n += 1;
         let add = div()
             .flex()
@@ -229,10 +203,10 @@ impl Launcher {
             tr("Offline name"),
             Some(
                 div()
-                    .child(tr(
-                        "Play offline under another name, and switch from the top bar. Online \
-                         servers don't take offline names.",
-                    ))
+                    .child(match &self.name_error {
+                        Some(e) => e.clone(),
+                        None => tr("Play under another name, and switch from the top bar.").into(),
+                    })
                     .into_any_element(),
             ),
             Some(add.into_any_element()),

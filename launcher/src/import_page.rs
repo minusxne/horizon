@@ -25,10 +25,8 @@ impl Launcher {
                 Err(e) => self.importing.note = Some(Err(e)),
                 Ok(Dropped::Instance) => self.import_instance(file, cx),
                 Ok(Dropped::Modpack) => {
-                    self.show_modpack(None);
-                    self.pack_job(move |log| horizon_launcher::modpacks::import(&file, log));
-                    self.importing.note = Some(Ok(format!(
-                        "{name} is a Java modpack: importing it on the Modpacks page."
+                    self.importing.note = Some(Err(format!(
+                        "{name} is a Java modpack, which Skyline doesn't play."
                     )));
                 }
                 Ok(Dropped::Pack(_)) => {

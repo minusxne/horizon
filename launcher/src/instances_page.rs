@@ -67,6 +67,12 @@ impl Launcher {
     }
 
     /// The instance Play starts.
+    /// Vanilla's mark, drawn from the player's prepared game files when there are some.
+    /// (Drawn by the removed mod browser's images; none until the Content page brings it back.)
+    pub(super) fn vanilla_icon(&self) -> Option<std::path::PathBuf> {
+        None
+    }
+
     pub(super) fn selected_instance(&self) -> Option<&Instance> {
         let id = self
             .settings
@@ -174,7 +180,6 @@ impl Launcher {
     ) -> Vec<AnyElement> {
         let t = self.theme;
         let selected = self.selected_instance().map(|i| i.id.clone());
-        let on_packs = self.page == Page::Mods && self.mods.on_modpacks();
         let mut out = Vec::new();
         let mut group = None;
         for i in self.instances.list.clone() {
@@ -197,15 +202,7 @@ impl Launcher {
                         (Some(_), None) => tr("Ready").into(),
                     },
                 ),
-                InstanceKind::Port => {
-                    let slug = &i.id["port:".len()..];
-                    let summary = self.packs.iter().find(|p| p.slug == slug);
-                    (
-                        on_packs && self.pack_open.as_deref() == Some(slug),
-                        summary.map_or_else(|| tr("Modpack").into(), |p| p.summary()),
-                    )
-                }
-                InstanceKind::Pack => (false, tr("From Skyline's registry").into()),
+                InstanceKind::Port | InstanceKind::Pack => (false, tr("Modpack").into()),
             };
             let dot = matches!(i.kind, InstanceKind::Default | InstanceKind::Own).then(|| {
                 div()
@@ -247,10 +244,7 @@ impl Launcher {
                                 this.select_instance(&clicked);
                                 this.go(Page::Play);
                             }
-                            InstanceKind::Port => {
-                                this.show_modpack(Some(clicked.id["port:".len()..].into()))
-                            }
-                            InstanceKind::Pack => this.show_modpack(None),
+                            InstanceKind::Port | InstanceKind::Pack => {}
                         }
                         cx.notify();
                     }))
@@ -481,16 +475,7 @@ impl Launcher {
             _ => "Create",
         };
         let save = button("instance-save", label, Kind::Primary, &t);
-        // A modpack becomes an instance by being imported, on the Mods page.
-        let import = (!editing && !busy).then(|| {
-            button("instance-import", "Import a modpack…", Kind::Ghost, &t)
-                .mr_auto()
-                .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                    this.instances.dialog = None;
-                    this.show_modpack(None);
-                    cx.notify();
-                }))
-        });
+        let import: Option<gpui::Stateful<Div>> = None;
         let foot = div()
             .flex()
             .justify_end()

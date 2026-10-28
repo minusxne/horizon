@@ -308,8 +308,8 @@ pub(super) fn stop_on_quit() {
 /// else the name the game made up for them (`skyline-player.txt`).
 fn own_name(accounts: &Accounts) -> Option<String> {
     accounts
-        .selected()
-        .map(|a| a.name.clone())
+        .offline_selected
+        .clone()
         .or_else(crate::offline_name)
 }
 
@@ -505,7 +505,8 @@ impl Launcher {
         let overview = self.page == Page::Servers
             && self.servers.open.is_some()
             && self.servers.tab == Tab::Overview;
-        let mut changed = self.internet_tick(overview);
+        let _ = overview;
+        let mut changed = false;
         while let Ok(event) = self.servers.rx.try_recv() {
             changed = true;
             self.servers_event(event);
@@ -1042,8 +1043,7 @@ impl Launcher {
                 }
             }
             Field::Port => self.save_port(),
-            Field::Token => self.save_token(),
-            Field::Email => self.invite_friend(),
+            Field::Token | Field::Email => {}
             Field::InstanceName | Field::InstanceGroup | Field::ConsoleSearch => {}
             Field::PreLaunch | Field::Wrapper | Field::LaunchEnv => self.save_launch(),
             Field::OfflineName => self.offline_name_enter(),
@@ -1693,8 +1693,8 @@ impl Launcher {
                     .child(row),
             );
         }
-        tab.child(self.internet_panel(port as u16, cx))
-            .child(self.server_console(status.running(), cx))
+        let _ = port;
+        tab.child(self.server_console(status.running(), cx))
     }
 
     fn server_console(&mut self, running: bool, cx: &mut Context<Self>) -> Div {

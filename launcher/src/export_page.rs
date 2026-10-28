@@ -54,10 +54,7 @@ impl Launcher {
             .map(|w| w.0.clone())
             .collect();
         let task = cx.background_executor().spawn(async move {
-            let linked = match format {
-                Format::Mrpack => export::linkable(&i.home, &export::from_modrinth),
-                Format::Zip => Vec::new(),
-            };
+            let linked: Vec<export::Linked> = Vec::new();
             let out = export::free_path(&backend::data_dir().join("exports"), &i.name, format);
             export::export(&i.home, &i.name, format, &worlds, &linked, &out).map(|done| {
                 let linked = match done.linked {

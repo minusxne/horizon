@@ -185,6 +185,8 @@ struct Launcher {
     shortcuts: shortcut_page::Shortcuts,
     /// The name the game made up for an offline player (`skyline-player.txt`), for the top bar.
     offline_name: Option<String>,
+    /// Why the last offline name couldn't be added or picked.
+    name_error: Option<String>,
     /// The player's servers, for the sidebar until the Servers page has read them.
     side_servers: Vec<horizon_launcher::servers::Entry>,
     /// The pixel art made for this window (`art.rs`), and pictures downloaded by URL.
@@ -297,6 +299,8 @@ impl Launcher {
             aside: while_playing::Aside::new(window.window_handle()),
             shortcuts: Default::default(),
             offline_name: offline_name(),
+            name_error: None,
+            install_started: None,
             side_servers: horizon_launcher::servers::list(),
             art: art::Art::default(),
             scale: window.scale_factor(),
@@ -492,6 +496,8 @@ impl Launcher {
                         Job::Server => {}
                     }
                 }
+                // Online-only messages Skyline no longer sends.
+                _ => {}
             }
         }
         changed |= self.servers_tick();
@@ -540,9 +546,7 @@ impl Launcher {
     /// the window must keep drawing meanwhile. `Msg::Removed` ends it.
     fn remove(&mut self, tag: &str) {
         self.confirm_remove = None;
-        if self.removing.is_some()
-            || !self.installed.iter().any(|t| t == tag)
-        {
+        if self.removing.is_some() || !self.installed.iter().any(|t| t == tag) {
             return;
         }
         self.install_error = None;
@@ -1461,12 +1465,18 @@ impl Launcher {
                     })),
             );
         }
-        let foot = div().mt_auto().flex().flex_col().gap(px(2.)).pt(px(12.)).child(
-            caps(format!("Skyline {}  ·  offline", backend::VERSION))
-                .px(px(8.))
-                .pt(px(6.))
-                .text_color(t.muted),
-        );
+        let foot = div()
+            .mt_auto()
+            .flex()
+            .flex_col()
+            .gap(px(2.))
+            .pt(px(12.))
+            .child(
+                caps(format!("Skyline {}  ·  offline", backend::VERSION))
+                    .px(px(8.))
+                    .pt(px(6.))
+                    .text_color(t.muted),
+            );
         div()
             .id("sidebar")
             .flex()
@@ -2152,7 +2162,6 @@ impl Launcher {
             )
     }
 
-
     /// Settings' Game arguments row: the extra arguments the game starts with, kept in
     /// `settings.json` and appended to the launcher's own (quotes group a word with spaces).
     fn game_args_row(&self, n: usize, cx: &mut Context<Self>) -> Div {
@@ -2227,7 +2236,10 @@ impl Launcher {
     fn use_version(&mut self, tag: &str) {
         self.settings.selected = Some(tag.to_string());
         self.settings.save();
-        if self.selected_instance().is_some_and(|i| i.version.is_some()) {
+        if self
+            .selected_instance()
+            .is_some_and(|i| i.version.is_some())
+        {
             self.pin_version(Some(tag.to_string()));
         }
     }
@@ -2311,7 +2323,10 @@ impl Launcher {
             } else if prepared {
                 trf("Minecraft {version} · prepared", &[("version", &version)])
             } else {
-                trf("Minecraft {version} · not prepared yet", &[("version", &version)])
+                trf(
+                    "Minecraft {version} · not prepared yet",
+                    &[("version", &version)],
+                )
             };
             let right: AnyElement = if removing {
                 div()
@@ -2320,7 +2335,11 @@ impl Launcher {
                     .gap(px(10.))
                     .w(px(180.))
                     .child(progress_bar(None, &t))
-                    .child(text(theme::MICRO).text_color(t.muted).child(tr("Removing…")))
+                    .child(
+                        text(theme::MICRO)
+                            .text_color(t.muted)
+                            .child(tr("Removing…")),
+                    )
                     .into_any_element()
             } else {
                 let (use_tag, prep_tag, rm_tag) = (tag.clone(), tag.clone(), tag.clone());
@@ -2346,12 +2365,13 @@ impl Launcher {
                     if self.preparing || self.client.is_some() {
                         prepare = disabled(prepare);
                     } else {
-                        prepare = prepare.on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                            this.use_version(&prep_tag);
-                            this.prepare(backend::MinecraftFrom::Install);
-                            this.go(Page::Play);
-                            cx.notify();
-                        }));
+                        prepare =
+                            prepare.on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
+                                this.use_version(&prep_tag);
+                                this.prepare(backend::MinecraftFrom::Install);
+                                this.go(Page::Play);
+                                cx.notify();
+                            }));
                     }
                     row = row.child(prepare);
                 }
@@ -2364,27 +2384,39 @@ impl Launcher {
                 row.child(
                     button(
                         format!("remove-{tag}"),
-                        if confirming { "Remove for good" } else { "Remove" },
-                        if confirming { Kind::Secondary } else { Kind::Ghost },
+                        if confirming {
+                            "Remove for good"
+                        } else {
+                            "Remove"
+                        },
+                        if confirming {
+                            Kind::Secondary
+                        } else {
+                            Kind::Ghost
+                        },
                         &t,
                     )
                     .when(confirming, |b| b.text_color(t.danger))
-                    .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                        if this.confirm_remove.as_ref() == Some(&rm_tag) {
-                            this.remove(&rm_tag);
-                        } else {
-                            this.confirm_remove = Some(rm_tag.clone());
-                        }
-                        cx.notify();
-                    })),
+                    .on_click(cx.listener(
+                        move |this, _: &ClickEvent, _, cx| {
+                            if this.confirm_remove.as_ref() == Some(&rm_tag) {
+                                this.remove(&rm_tag);
+                            } else {
+                                this.confirm_remove = Some(rm_tag.clone());
+                            }
+                            cx.notify();
+                        },
+                    )),
                 )
                 .when(confirming, |d| {
-                    d.child(button(format!("keep-{tag}"), "Keep", Kind::Ghost, &t).on_click(
-                        cx.listener(|this, _: &ClickEvent, _, cx| {
-                            this.confirm_remove = None;
-                            cx.notify();
-                        }),
-                    ))
+                    d.child(
+                        button(format!("keep-{tag}"), "Keep", Kind::Ghost, &t).on_click(
+                            cx.listener(|this, _: &ClickEvent, _, cx| {
+                                this.confirm_remove = None;
+                                cx.notify();
+                            }),
+                        ),
+                    )
                 })
                 .into_any_element()
             };

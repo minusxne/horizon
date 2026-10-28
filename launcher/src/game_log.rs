@@ -33,8 +33,7 @@ pub fn matches(line: &str, search: &str) -> bool {
 /// name kept in each game folder (`skyline-player.txt`), and the computer's user name.
 pub fn names(homes: &[&Path]) -> Vec<String> {
     let accounts = crate::account::Accounts::load();
-    let mut names: Vec<String> = accounts.accounts.into_iter().map(|a| a.name).collect();
-    names.extend(accounts.offline);
+    let mut names: Vec<String> = accounts.offline;
     for home in homes {
         if let Ok(name) = std::fs::read_to_string(home.join("skyline-player.txt")) {
             names.push(name.trim().to_string());

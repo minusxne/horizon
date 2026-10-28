@@ -45,7 +45,9 @@ pub fn name_problem(name: &str) -> Option<String> {
     } else if name.len() > 16 {
         Some("A name is at most 16 characters.".into())
     } else if !valid_offline_name(name) {
-        Some("A name has no spaces and only plain letters, digits and symbols (A-Z, 0-9, _).".into())
+        Some(
+            "A name has no spaces and only plain letters, digits and symbols (A-Z, 0-9, _).".into(),
+        )
     } else {
         None
     }

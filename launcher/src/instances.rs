@@ -7,9 +7,7 @@
 //! chooses about an instance (its name, icon, group) is kept in `instances.json` in the
 //! launcher's data folder, so renaming one never moves a folder.
 use crate::backend;
-use crate::browser::horizon::pack as registry_pack;
 use crate::launch::Launch;
-use crate::modpacks;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
@@ -22,6 +20,20 @@ pub const DEFAULT: &str = "horizon";
 const FILE: &str = "instances.json";
 /// Where new instances live, in the game's home.
 const OWN: &str = "instances";
+
+/// A folder name for `name`: its letters and digits in lower case, words joined by `-`.
+pub fn slug(name: &str) -> String {
+    let words: Vec<String> = name
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .map(str::to_ascii_lowercase)
+        .collect();
+    if words.is_empty() {
+        "pack".into()
+    } else {
+        words.join("-")
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
@@ -200,20 +212,6 @@ fn list_in(game_home: &Path, data: &Path) -> Vec<Instance> {
         let dir = game_home.join(OWN).join(&slug);
         found.push((slug.clone(), slug, Kind::Own, dir.clone(), dir));
     }
-    for p in modpacks::list_in(&game_home.join("ports")) {
-        let home = modpacks::profile_home(&p.work);
-        found.push((
-            format!("port:{}", p.slug),
-            p.title().into(),
-            Kind::Port,
-            p.work,
-            home,
-        ));
-    }
-    for p in registry_pack::list_in(&game_home.join("skyline-packs")) {
-        let home = registry_pack::home(&p.work);
-        found.push((format!("pack:{}", p.id), p.name, Kind::Pack, p.work, home));
-    }
     let mut out: Vec<Instance> = found
         .into_iter()
         .map(|(id, name, kind, work, home)| {
@@ -322,7 +320,7 @@ fn create_in(
             from.name
         ));
     }
-    let base = modpacks::slug(name);
+    let base = slug(name);
     let taken = |s: &str| s == DEFAULT || game_home.join(OWN).join(s).exists();
     let slug = (1..)
         .map(|n| {
@@ -475,7 +473,12 @@ pub fn apply(cmd: &mut Command, instance: &Instance) -> Result<(), String> {
             cmd.current_dir(&instance.home)
                 .env("SKYLINE_HOME", &instance.home);
         }
-        Kind::Port | Kind::Pack => modpacks::apply_profile(cmd, &instance.work)?,
+        Kind::Port | Kind::Pack => {
+            return Err(format!(
+                "{} is a modpack, which Skyline no longer plays.",
+                instance.name
+            ))
+        }
     }
     follow_player(&backend::game_home(), &instance.home);
     Ok(())

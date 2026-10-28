@@ -82,11 +82,10 @@ pub(crate) const CLIENT: &str = if cfg!(windows) {
 /// The agent `url` is fetched with: the launcher's own user agent, through the player's proxy when
 /// one is set (`proxy`).
 fn agent(url: &str) -> ureq::Agent {
-    crate::proxy::agent(
-        ureq::AgentBuilder::new().user_agent(&format!("skyline-launcher/{VERSION}")),
-        url,
-    )
-    .build()
+    let _ = url;
+    ureq::AgentBuilder::new()
+        .user_agent(&format!("skyline-launcher/{VERSION}"))
+        .build()
 }
 
 pub(crate) fn get(url: &str) -> Result<ureq::Response, String> {
@@ -491,12 +490,8 @@ pub(crate) fn fetch_small(url: &str) -> Result<Option<Vec<u8>>, String> {
 
 /// The SHA-256 the release's signed checksums give for `asset`, or why it must not be installed.
 fn signed_digest(tag: &str, asset: &str) -> Result<String, String> {
-    crate::signed::digest(
-        tag,
-        asset,
-        &horizon_release_sign::trusted_keys(),
-        fetch_small,
-    )
+    let _ = (tag, asset);
+    Err("Skyline doesn't download releases: it is offline only.".into())
 }
 
 /// Downloads `url` into `to`; the file is kept only if its SHA-256 is `sha256`, the signed (or
@@ -1327,7 +1322,10 @@ fn server_jar_candidates(version: &str, minecraft: &Path) -> Vec<PathBuf> {
     let in_version = minecraft.join("versions").join(version);
     found.push(in_version.join("server.jar"));
     found.push(in_version.join(format!("{version}-server.jar")));
-    for dir in installed().iter().map(|t| version_dir(t).join(".local/server-jars")) {
+    for dir in installed()
+        .iter()
+        .map(|t| version_dir(t).join(".local/server-jars"))
+    {
         found.push(dir.join(format!("server-{version}.jar")));
         found.push(dir.join(format!("{version}.jar")));
     }
@@ -1449,7 +1447,10 @@ pub fn preparer(
                     jar.display()
                 )
             })?;
-        log(format!("Using the {version} server jar at {}", found.display()));
+        log(format!(
+            "Using the {version} server jar at {}",
+            found.display()
+        ));
         fs::create_dir_all(jar.parent().unwrap()).map_err(|e| e.to_string())?;
         let partial = jar.with_extension("partial");
         fs::copy(&found, &partial)
@@ -1871,7 +1872,12 @@ pub fn has_program(tag: &str) -> bool {
 }
 
 /// The programs a Skyline build folder holds, the game's first.
-const PROGRAMS: [&str; 4] = ["skyline", "skyline-ctl", "skyline-prepare", "skyline-server"];
+const PROGRAMS: [&str; 4] = [
+    "skyline",
+    "skyline-ctl",
+    "skyline-prepare",
+    "skyline-server",
+];
 
 /// Where a picked folder keeps the built game: the folder itself, or its `target/release` (a
 /// source checkout).
@@ -1898,11 +1904,27 @@ fn added_name(picked: &Path, taken: &[String]) -> String {
         .find(|n| !matches!(*n, "release" | "debug" | "target" | "bin"))
         .unwrap_or("local")
         .chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c == '.' || c == '-' { c } else { '-' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '.' || c == '-' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect();
-    let base = if base.is_empty() { "local".into() } else { base };
+    let base = if base.is_empty() {
+        "local".into()
+    } else {
+        base
+    };
     (1..)
-        .map(|n| if n == 1 { base.clone() } else { format!("{base}-{n}") })
+        .map(|n| {
+            if n == 1 {
+                base.clone()
+            } else {
+                format!("{base}-{n}")
+            }
+        })
         .find(|n| !taken.contains(n) && !version_dir(n).exists())
         .unwrap_or(base)
 }
@@ -1982,18 +2004,9 @@ pub fn need_prepared(tag: &str) -> Result<(), String> {
 /// the gate, a sign-in that can't be renewed (no network, expired) still lets the game start,
 /// offline.
 pub fn client(tag: &str) -> Result<Command, String> {
-    let (session, offline) = account::session_for_game(&game_home())
-        .map_err(|refused| format!("{refused} Sign in with `skyline-launcher account sign-in`."))?;
     need_prepared(tag)?;
     complete_assets(tag);
-    crate::browser::horizon::before_play(&game_home());
     let mut cmd = client_command(tag);
-    if let Some(file) = session {
-        cmd.arg("--session-file").arg(file);
-    }
-    if let Some(e) = offline {
-        eprintln!("Playing offline: {e}");
-    }
     append_game_args(&mut cmd);
     Ok(cmd)
 }
@@ -2543,11 +2556,9 @@ pub enum Msg {
     Owner(bool),
     /// The owner gate's answer for the game about to start: the selected account's session
     /// file (none = offline) and why it plays offline, if it does.
-    Session(Result<(Option<PathBuf>, Option<String>), crate::account::NoOwner>),
-    /// A modpack step's line (`modpacks`).
-    PackLine(String),
-    /// A modpack step ended: the pack as it now is.
-    PackDone(Result<Box<crate::modpacks::Imported>, String>),
+    Session(Result<(Option<PathBuf>, Option<String>), String>),
+    /// The game about to start is prepared and its assets complete: it can be started.
+    Ready,
     /// How many play Skyline now, or none when the server can't be reached (`telemetry`).
     Playing(Option<u64>),
     /// The nightly being installed, done this far (`nightly`).

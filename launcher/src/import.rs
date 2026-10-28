@@ -4,7 +4,7 @@
 //! - A `.mrpack` that needs no mod loader (only `minecraft` in its dependencies), such as
 //!   [`crate::export`] writes, or a `.zip` laid out as a game folder: a new instance. Its
 //!   `overrides/` (and `client-overrides/`) go into the instance's folder; each of its `files`
-//!   is downloaded from Modrinth and checked against its SHA-512 (`browser::download`).
+//!   must already be in it: Skyline downloads nothing.
 //! - A `.mrpack` for a mod loader, or a CurseForge modpack zip (`manifest.json`): a Java
 //!   modpack, for the Modpacks import (`modpacks::import`).
 //! - A zip with `pack.mcmeta`: a data pack (`data/`) or a resource pack; with `shaders/`, or a
@@ -12,7 +12,6 @@
 //!
 //! Only what an instance holds is taken from a shared zip ([`crate::export::FILES`],
 //! [`crate::export::FOLDERS`], `saves/`), and every path is checked to stay inside its folder.
-use crate::browser::{download, FileRef};
 use crate::export::{FILES, FOLDERS};
 use crate::instances::{self, Instance};
 use crate::packs;
@@ -209,20 +208,9 @@ fn fill(
             continue;
         }
         let relative = f["path"].as_str().unwrap_or_default();
-        let to = target(home, relative)
-            .ok_or_else(|| format!("{relative} isn't a place an instance keeps files."))?;
-        let file = FileRef {
-            url: f["downloads"][0].as_str().unwrap_or_default().to_string(),
-            name: to.file_name().unwrap().to_string_lossy().into_owned(),
-            size: f["fileSize"].as_u64().unwrap_or(0),
-            sha512: f["hashes"]["sha512"].as_str().map(str::to_ascii_lowercase),
-            sha256: None,
-            sha1: f["hashes"]["sha1"].as_str().map(str::to_ascii_lowercase),
-            primary: true,
-        };
-        let folder = to.parent().expect("inside home");
-        download::fetch(&file, folder, &|p| progress(&file.name, p))
-            .map_err(|e| format!("{relative}: {e}"))?;
+        return Err(format!(
+            "{relative} would have to be downloaded, and Skyline is offline: share the instance as a .zip instead."
+        ));
     }
     Ok(())
 }
