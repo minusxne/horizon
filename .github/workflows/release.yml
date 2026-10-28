@@ -84,7 +84,7 @@ jobs:
           set -euo pipefail
           file=$(bash tools/package_skyline.sh ${{ matrix.name }} "$VERSION" dist)
           ls -l dist
-          if [[ "${{ matrix.name }}" == deb ]]; then dpkg-deb --info "$file"; dpkg-deb --contents "$file" | head -20; fi
+          if [[ "${{ matrix.name }}" == deb ]]; then dpkg-deb --info "$file"; dpkg-deb --contents "$file" | sed -n '1,20p'; fi
       - uses: actions/upload-artifact@v4
         with:
           name: skyline-${{ matrix.name }}
