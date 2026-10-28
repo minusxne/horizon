@@ -202,9 +202,8 @@ impl Launcher {
                         (Some(_), None) => tr("Ready").into(),
                     },
                 ),
-                InstanceKind::Port | InstanceKind::Pack => (false, tr("Modpack").into()),
             };
-            let dot = matches!(i.kind, InstanceKind::Default | InstanceKind::Own).then(|| {
+            let dot = Some(
                 div()
                     .absolute()
                     .left(px(42.))
@@ -212,8 +211,8 @@ impl Launcher {
                     .size(px(10.))
                     .bg(if prepared { t.success } else { t.warn })
                     .border_2()
-                    .border_color(t.side)
-            });
+                    .border_color(t.side),
+            );
             let icon = self.instance_icon(&i, 44.);
             let clicked = i.clone();
             out.push(
@@ -239,13 +238,8 @@ impl Launcher {
                             ),
                     )
                     .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                        match clicked.kind {
-                            InstanceKind::Default | InstanceKind::Own => {
-                                this.select_instance(&clicked);
-                                this.go(Page::Play);
-                            }
-                            InstanceKind::Port | InstanceKind::Pack => {}
-                        }
+                        this.select_instance(&clicked);
+                        this.go(Page::Play);
                         cx.notify();
                     }))
                     .into_any_element(),

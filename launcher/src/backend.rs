@@ -1,7 +1,7 @@
-//! Everything that is not UI: GitHub, installs, resource preparation, the game's processes and
-//! updates. The GUI, the CLI and the MCP server all go through this module. Functions here
-//! block; the GUI runs them on threads and reads their messages.
-use crate::{account, mojang, sources};
+//! Everything that is not UI: installed versions, resource preparation and the game's processes.
+//! The GUI and the CLI both go through this module. Nothing here reaches the network. Functions
+//! here block; the GUI runs them on threads and reads their messages.
+use crate::sources;
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
@@ -9,11 +9,8 @@ use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 
-pub const REPO: &str = "horizon-rust/horizon";
-pub const README_URL: &str = "https://github.com/horizon-rust/horizon/blob/main/launcher/README.md";
-/// The players' page on connecting an AI agent (the website's docs/agents.md).
-/// This launcher's version: the release workflow sets `SKYLINE_LAUNCHER_VERSION` from the
-/// tag it builds (no version-bump commits); other builds say Cargo.toml's.
+/// This launcher's version: a build can set `SKYLINE_LAUNCHER_VERSION`; other builds say
+/// Cargo.toml's.
 pub const VERSION: &str = version_or(option_env!("SKYLINE_LAUNCHER_VERSION"));
 /// Launcher releases are tagged `launcher@X.Y.Z` from 0.2 on (docs/versioning.md), and Skyline's
 /// own `vX.Y.Z`. Before 0.2 they were `launcher-vX.Y.Z` and `vYYYY.MM.DD[.N]`: every 0.2 tag is
@@ -29,44 +26,6 @@ const fn version_or(injected: Option<&'static str>) -> &'static str {
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize)]
-pub struct Release {
-    pub tag: String,
-    pub name: String,
-    pub body: String,
-    pub date: String,
-    pub asset: Option<(String, u64)>,
-    /// A GitHub pre-release: the Alpha builds from before every release went out as the release
-    /// (v0.2.1 on, docs/release-flow.md). Listed and installed by hand, never as an update.
-    pub prerelease: bool,
-}
-
-#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
-pub const ASSET: Option<&str> = Some("horizon-linux-x86_64.tar.gz");
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-pub const ASSET: Option<&str> = Some("horizon-macos-arm64.zip");
-#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-pub const ASSET: Option<&str> = Some("horizon-windows-x64.zip");
-#[cfg(not(any(
-    all(target_os = "linux", target_arch = "x86_64"),
-    all(target_os = "macos", target_arch = "aarch64"),
-    all(target_os = "windows", target_arch = "x86_64")
-)))]
-pub const ASSET: Option<&str> = None;
-
-#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
-pub const LAUNCHER_ASSET: Option<&str> = Some("skyline-launcher-linux-x86_64.tar.gz");
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-pub const LAUNCHER_ASSET: Option<&str> = Some("skyline-launcher-macos-arm64.zip");
-#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-pub const LAUNCHER_ASSET: Option<&str> = Some("skyline-launcher-windows-x64.zip");
-#[cfg(not(any(
-    all(target_os = "linux", target_arch = "x86_64"),
-    all(target_os = "macos", target_arch = "aarch64"),
-    all(target_os = "windows", target_arch = "x86_64")
-)))]
-pub const LAUNCHER_ASSET: Option<&str> = None;
-
 const LAUNCHER_BINARY: &str = if cfg!(windows) {
     "skyline-launcher.exe"
 } else {
@@ -79,67 +38,11 @@ pub(crate) const CLIENT: &str = if cfg!(windows) {
     "skyline"
 };
 
-/// The agent `url` is fetched with: the launcher's own user agent, through the player's proxy when
-/// one is set (`proxy`).
-fn agent(url: &str) -> ureq::Agent {
-    let _ = url;
-    ureq::AgentBuilder::new()
-        .user_agent(&format!("skyline-launcher/{VERSION}"))
-        .build()
-}
-
-pub(crate) fn get(url: &str) -> Result<ureq::Response, String> {
-    let mut request = agent(url).get(url);
-    // CI runners share addresses and hit GitHub's anonymous rate limit; they pass their own token.
-    if let Some(token) = std::env::var("SKYLINE_GITHUB_TOKEN")
-        .ok()
-        .filter(|t| !t.is_empty())
-    {
-        if url.starts_with("https://api.github.com/") {
-            request = request.set("Authorization", &format!("Bearer {token}"));
-        }
-    }
-    request.call().map_err(|e| match e {
-        ureq::Error::Status(403, _) => {
-            "GitHub's rate limit was reached. Try again in a few minutes.".into()
-        }
-        ureq::Error::Status(code, _) => format!("{url} answered {code}"),
-        ureq::Error::Transport(t) => format!("No connection: {t}"),
-    })
-}
-
-/// A Skyline game tag: `v` then a digit (`v2026.10.13`). Launcher tags never match.
-pub fn is_game_tag(tag: &str) -> bool {
-    tag.strip_prefix('v')
-        .is_some_and(|rest| rest.starts_with(|c: char| c.is_ascii_digit()))
-}
-
 /// The launcher version in a `launcher@X.Y.Z` (or `launcher-vX.Y.Z`) tag, or None for any other tag.
 pub fn launcher_version(tag: &str) -> Option<&str> {
     tag.strip_prefix(LAUNCHER_TAG_PREFIX)
         .or_else(|| tag.strip_prefix(OLD_LAUNCHER_TAG_PREFIX))
         .filter(|v| v.starts_with(|c: char| c.is_ascii_digit()))
-}
-
-/// The tag this launcher was released as. launcher.yml gives it (`SKYLINE_LAUNCHER_TAG`); a release
-/// built before it did gave only the version, of a `launcher-v` tag; a build from source is
-/// Cargo.toml's version on the 0.2 line.
-pub fn own_tag() -> String {
-    own_tag_of(
-        option_env!("SKYLINE_LAUNCHER_TAG"),
-        option_env!("SKYLINE_LAUNCHER_VERSION"),
-    )
-}
-
-fn own_tag_of(tag: Option<&str>, injected: Option<&str>) -> String {
-    match (
-        tag.filter(|t| !t.is_empty()),
-        injected.filter(|v| !v.is_empty()),
-    ) {
-        (Some(tag), _) => tag.to_string(),
-        (None, Some(version)) => format!("{OLD_LAUNCHER_TAG_PREFIX}{version}"),
-        (None, None) => format!("{LAUNCHER_TAG_PREFIX}{}", env!("CARGO_PKG_VERSION")),
-    }
 }
 
 /// Where a tag or version stands among Skyline's releases (docs/versioning.md): the tags from
@@ -230,180 +133,6 @@ pub fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
     release_order(a).cmp(&release_order(b))
 }
 
-/// Why this build never lists releases, installs updates or replaces itself.
-pub const OFFLINE_SNAPSHOT: &str =
-    "This is an offline snapshot of Skyline: it never looks for releases or updates.";
-
-/// Every published release of the repository: none in the offline snapshot, which never asks
-/// GitHub, so no update, nightly or new version is ever found or installed.
-fn release_list() -> Result<serde_json::Value, String> {
-    Err(OFFLINE_SNAPSHOT.into())
-}
-
-/// The releases in `list` whose tag passes `keep`, newest first, with the asset named `asset`.
-pub(crate) fn parse_releases(
-    list: &serde_json::Value,
-    asset: Option<&str>,
-    keep: fn(&str) -> bool,
-) -> Vec<Release> {
-    let mut out = Vec::new();
-    for r in list.as_array().into_iter().flatten() {
-        let tag = r["tag_name"].as_str().unwrap_or_default();
-        if r["draft"].as_bool().unwrap_or(false) || !keep(tag) {
-            continue;
-        }
-        let found = r["assets"].as_array().into_iter().flatten().find_map(|a| {
-            (Some(a["name"].as_str()?) == asset).then(|| {
-                Some((
-                    a["browser_download_url"].as_str()?.to_string(),
-                    a["size"].as_u64()?,
-                ))
-            })?
-        });
-        out.push(Release {
-            tag: tag.into(),
-            name: r["name"].as_str().unwrap_or_default().into(),
-            body: r["body"].as_str().unwrap_or_default().replace("\r\n", "\n"),
-            date: r["published_at"]
-                .as_str()
-                .unwrap_or_default()
-                .chars()
-                .take(10)
-                .collect(),
-            asset: found,
-            prerelease: r["prerelease"].as_bool().unwrap_or(false),
-        });
-    }
-    out.sort_by(|a, b| compare_versions(&b.tag, &a.tag));
-    out
-}
-
-fn is_launcher_tag(tag: &str) -> bool {
-    launcher_version(tag).is_some()
-}
-
-/// Published Skyline releases, newest first. Drafts never reach the anonymous API, and launcher
-/// releases are left out.
-pub fn releases() -> Result<Vec<Release>, String> {
-    Ok(parse_releases(&release_list()?, ASSET, is_game_tag))
-}
-
-/// The launcher releases in `list` (the newest 100 releases). Game releases come out several times
-/// a day, so the newest launcher release can be older than all of those: then the newest
-/// `launcher@` and `launcher-v` tags are looked up one by one (a draft's tag is skipped: it has no
-/// public release).
-fn launcher_releases_in(list: &serde_json::Value) -> Vec<Release> {
-    launcher_releases_in_with(list, |url| {
-        get(&url)?.into_json().map_err(|e| e.to_string())
-    })
-}
-
-fn launcher_releases_in_with(
-    list: &serde_json::Value,
-    json: impl Fn(String) -> Result<serde_json::Value, String>,
-) -> Vec<Release> {
-    let found = parse_releases(list, LAUNCHER_ASSET, is_launcher_tag);
-    if found.iter().any(|r| r.asset.is_some()) {
-        return found;
-    }
-    let api = format!("https://api.github.com/repos/{REPO}");
-    let mut tags = Vec::new();
-    for prefix in [LAUNCHER_TAG_PREFIX, OLD_LAUNCHER_TAG_PREFIX] {
-        // Every `launcher@` tag is newer than every `launcher-v` one: those only when there is none.
-        if tags.is_empty() {
-            if let Ok(refs) = json(format!("{api}/git/matching-refs/tags/{prefix}")) {
-                tags = newest_launcher_tags(&refs);
-            }
-        }
-    }
-    for tag in tags.into_iter().take(3) {
-        if let Ok(release) = json(format!("{api}/releases/tags/{tag}")) {
-            let one = parse_releases(
-                &serde_json::json!([release]),
-                LAUNCHER_ASSET,
-                is_launcher_tag,
-            );
-            if one.iter().any(|r| r.asset.is_some()) {
-                return one;
-            }
-        }
-    }
-    found
-}
-
-/// The launcher tags in GitHub's matching-refs answer, newest first.
-fn newest_launcher_tags(refs: &serde_json::Value) -> Vec<String> {
-    let mut tags: Vec<String> = refs
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|r| r["ref"].as_str()?.strip_prefix("refs/tags/"))
-        .filter(|t| is_launcher_tag(t))
-        .map(String::from)
-        .collect();
-    tags.sort_by(|a, b| compare_versions(b, a));
-    tags
-}
-
-/// The newest Skyline release that has a build for this platform.
-pub fn latest(releases: &[Release]) -> Option<&Release> {
-    releases.iter().find(|r| r.asset.is_some())
-}
-
-/// The releases a launcher installs by itself: every one that is published as a release, so
-/// GitHub's latest when it comes out. The pre-releases of the old Alpha channel are left out.
-pub fn installable_updates(releases: &[Release]) -> Vec<Release> {
-    releases.iter().filter(|r| !r.prerelease).cloned().collect()
-}
-
-/// How often a launcher left open looks for new releases: they come out several times a day.
-pub const CHECK_EVERY: std::time::Duration = std::time::Duration::from_secs(30 * 60);
-
-/// The community, sponsor and website links, from `launcher/links.json` on main, so they can change
-/// without a launcher release. An empty address hides its button.
-#[derive(Clone, Debug, PartialEq, serde::Serialize)]
-pub struct Links {
-    pub discord: String,
-    pub sponsor: String,
-    pub website: String,
-}
-
-impl Default for Links {
-    /// None: the offline snapshot shows no outside link (an empty address hides its button).
-    fn default() -> Self {
-        Self {
-            discord: String::new(),
-            sponsor: String::new(),
-            website: String::new(),
-        }
-    }
-}
-
-impl Links {
-    /// Reads links.json. A key that is missing keeps its default, an empty one hides the link,
-    /// and text that is not a JSON object gives the defaults.
-    pub fn parse(text: &str) -> Self {
-        let mut links = Self::default();
-        if let Ok(serde_json::Value::Object(map)) = serde_json::from_str(text) {
-            for (key, slot) in [
-                ("discord", &mut links.discord),
-                ("sponsor", &mut links.sponsor),
-                ("website", &mut links.website),
-            ] {
-                if let Some(url) = map.get(key).and_then(|v| v.as_str()) {
-                    *slot = url.trim().to_string();
-                }
-            }
-        }
-        links
-    }
-}
-
-/// The links: none in the offline snapshot, which shows no outside link and never fetches them.
-pub fn links() -> Links {
-    Links::default()
-}
-
 /// The launcher's data folder; `SKYLINE_LAUNCHER_HOME` overrides it (for tests and scripts).
 pub fn data_dir() -> PathBuf {
     if let Some(home) = std::env::var_os("SKYLINE_LAUNCHER_HOME").filter(|h| !h.is_empty()) {
@@ -470,140 +199,6 @@ fn installed_in(versions: &Path) -> Vec<String> {
         .collect();
     tags.sort_by(|a, b| compare_versions(b, a));
     tags
-}
-
-/// A small release file (its checksums or their signature), whole; None when it has none.
-pub(crate) fn fetch_small(url: &str) -> Result<Option<Vec<u8>>, String> {
-    let response = match get(url) {
-        Ok(response) => response,
-        Err(e) if e.ends_with("answered 404") => return Ok(None),
-        Err(e) => return Err(e),
-    };
-    let mut body = Vec::new();
-    response
-        .into_reader()
-        .take(1 << 20)
-        .read_to_end(&mut body)
-        .map_err(|e| format!("Download interrupted: {e}"))?;
-    Ok(Some(body))
-}
-
-/// The SHA-256 the release's signed checksums give for `asset`, or why it must not be installed.
-fn signed_digest(tag: &str, asset: &str) -> Result<String, String> {
-    let _ = (tag, asset);
-    Err("Skyline doesn't download releases: it is offline only.".into())
-}
-
-/// Downloads `url` into `to`; the file is kept only if its SHA-256 is `sha256`, the signed (or
-/// pinned) one. A `size` of 0 takes the server's Content-Length for the progress.
-pub(crate) fn download(
-    url: &str,
-    size: u64,
-    sha256: &str,
-    to: &Path,
-    progress: &impl Fn(f32),
-) -> Result<(), String> {
-    let response = get(url)?;
-    let size = match size {
-        0 => response
-            .header("Content-Length")
-            .and_then(|n| n.parse().ok())
-            .unwrap_or(0),
-        n => n,
-    };
-    let mut reader = response.into_reader();
-    let mut file = fs::File::create(to).map_err(|e| e.to_string())?;
-    let mut hash = horizon_release_sign::Sha256::default();
-    let (mut done, mut buf) = (0u64, vec![0u8; 1 << 16]);
-    loop {
-        let n = reader
-            .read(&mut buf)
-            .map_err(|e| format!("Download interrupted: {e}"))?;
-        if n == 0 {
-            break;
-        }
-        hash.update(&buf[..n]);
-        file.write_all(&buf[..n]).map_err(|e| e.to_string())?;
-        done += n as u64;
-        progress((done as f32 / size.max(1) as f32).min(1.0) * 0.9);
-    }
-    let name = url.rsplit('/').next().unwrap_or(url);
-    horizon_release_sign::check(name, sha256, &hash.hex()).inspect_err(|_| {
-        let _ = fs::remove_file(to);
-    })
-}
-
-fn unpack(archive: &Path, url: &str, to: &Path) -> Result<(), String> {
-    let file = fs::File::open(archive).map_err(|e| e.to_string())?;
-    if url.ends_with(".tar.gz") {
-        tar::Archive::new(flate2::read::GzDecoder::new(file))
-            .unpack(to)
-            .map_err(|e| e.to_string())
-    } else {
-        zip::ZipArchive::new(file)
-            .and_then(|mut z| z.extract(to))
-            .map_err(|e| e.to_string())
-    }
-}
-
-/// Downloads one release, checks it against its signed checksums and unpacks it; `progress` gets
-/// the fraction done.
-pub fn install(release: &Release, progress: impl Fn(f32)) -> Result<(), String> {
-    let tag = release.tag.as_str();
-    if !is_game_tag(tag) {
-        return Err(format!("{tag} is not a Skyline release."));
-    }
-    let sha256 = signed_digest(tag, ASSET.unwrap_or_default())?;
-    install_as(release, tag, &sha256, progress)
-}
-
-/// Downloads `release`'s archive for this platform, checks it against `sha256` (its signed
-/// checksum), and unpacks it as the installed version `tag`.
-pub(crate) fn install_as(
-    release: &Release,
-    tag: &str,
-    sha256: &str,
-    progress: impl Fn(f32),
-) -> Result<(), String> {
-    let (url, size) = release
-        .asset
-        .clone()
-        .ok_or_else(|| format!("{tag} has no build for this platform."))?;
-    let root = versions_dir();
-    let partial = root.join(format!(".{tag}.partial"));
-    let _ = fs::remove_dir_all(&partial);
-    fs::create_dir_all(&partial).map_err(|e| e.to_string())?;
-    let archive = partial.join("download");
-    download(&url, size, sha256, &archive, &progress)?;
-    let unpacked = partial.join("unpacked");
-    unpack(&archive, &url, &unpacked)?;
-    progress(0.97);
-    // The archives hold one top folder (horizon-linux-x86_64/...); the version folder is its contents.
-    let entries: Vec<_> = fs::read_dir(&unpacked)
-        .map_err(|e| e.to_string())?
-        .flatten()
-        .collect();
-    let top = match entries.as_slice() {
-        [only] if only.path().is_dir() => only.path(),
-        _ => unpacked.clone(),
-    };
-    if !top.join(CLIENT).exists() {
-        return Err(format!("The download has no {CLIENT}"));
-    }
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let _ = fs::set_permissions(top.join(CLIENT), fs::Permissions::from_mode(0o755));
-    }
-    let target = version_dir(tag);
-    let _ = fs::remove_dir_all(&target);
-    fs::rename(&top, &target).map_err(|e| e.to_string())?;
-    fs::write(target.join(COMPLETE), "").map_err(|e| e.to_string())?;
-    let _ = fs::remove_dir_all(&partial);
-    reuse_prepared(&root, tag);
-    complete_assets(tag);
-    progress(1.0);
-    Ok(())
 }
 
 pub fn remove(tag: &str) -> Result<(), String> {
@@ -1201,8 +796,8 @@ fn preparer_binary(dir: &Path) -> Option<PathBuf> {
 
 /// The Java home for this version: a runtime for precompiled exporters, a JDK for older
 /// preparers or changed sources. Forward the selection to external preparers too.
-/// Else try the official launcher's Java in `games`, then download the runtime named by
-/// `manifest` into Skyline's game folder (Mojang's runtimes are whole JDKs).
+/// Else try the official launcher's Java in `games` (Mojang's runtimes are whole JDKs). Nothing
+/// is downloaded.
 fn java(
     major: i64,
     compiler: bool,
@@ -1231,34 +826,12 @@ fn java(
         Ok(jdk) => return Ok(jdk.home()),
         Err(e) => e,
     };
-    let component = read_json(manifest)
-        .and_then(|json| json["javaVersion"]["component"].as_str().map(String::from))
-        .ok_or_else(|| missing.clone())?;
-    // Mojang builds its Linux Java for glibc: without glibc's loader (NixOS without nix-ld,
-    // musl distributions) it cannot start, so don't download it.
-    if cfg!(all(target_os = "linux", target_arch = "x86_64")) && !Path::new(GLIBC_LOADER).exists() {
-        return Err(format!(
-            "{missing}\n  • Minecraft's own Java from Mojang needs glibc ({GLIBC_LOADER} is missing; on NixOS, enable programs.nix-ld), so install compatible Java instead."
-        ));
-    }
-    let fetch = |url: &str| -> Result<Vec<u8>, String> {
-        let mut body = Vec::new();
-        get(url)?
-            .into_reader()
-            .read_to_end(&mut body)
-            .map_err(|e| e.to_string())?;
-        Ok(body)
-    };
-    let runtime = data_dir().join("minecraft").join("runtime");
-    let home = mojang::java_runtime(&component, &runtime, 8, &fetch, &mojang::CANCEL, log)
-        .map_err(|e| {
-        format!("{missing}\n  • Skyline also tried to download Minecraft's own Java from Mojang, but: {e}")
-    })?;
-    find(major, &[home]).map(|jdk| jdk.home())
+    let _ = (manifest, log);
+    Err(format!(
+        "{missing}\n  • Skyline is offline and downloads no Java: install Java {major} (a JDK), or \
+         let Prism Launcher or the official launcher install Minecraft's own Java."
+    ))
 }
-
-/// The dynamic loader glibc programs on x86-64 Linux start through.
-const GLIBC_LOADER: &str = "/lib64/ld-linux-x86-64.so.2";
 
 /// Runs `cmd` with Java at `home`: JAVA_HOME names it and its `bin` leads the PATH, as the
 /// versions' own preparers look for Java.
@@ -1301,16 +874,6 @@ fn assets_folder(
             chosen.to_path_buf()
         }
     }
-}
-
-/// Where the preparation takes Minecraft's files from.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum MinecraftFrom {
-    /// The player's own install (any launcher's); Mojang only when none has the version and an
-    /// account that owns the game is signed in.
-    Install,
-    /// Mojang, for the signed-in account that owns the game ("Download and prepare").
-    Mojang,
 }
 
 /// Where a Minecraft server jar may already be on this computer, the likeliest first.
@@ -1361,7 +924,6 @@ pub fn use_server_jar(version: &str, picked: &Path) -> Result<PathBuf, String> {
 pub fn preparer(
     tag: &str,
     minecraft: &Path,
-    from: MinecraftFrom,
     log: &dyn Fn(String),
 ) -> Result<(Preparer, PathBuf), String> {
     let version = game_version(tag);
@@ -1380,14 +942,7 @@ pub fn preparer(
                 .map(|f| sources::known_folders(sources::Os::current(), &f))
                 .unwrap_or_default(),
         );
-        let fetch = |url: &str| -> Result<Vec<u8>, String> {
-            let mut body = Vec::new();
-            get(url)?
-                .into_reader()
-                .read_to_end(&mut body)
-                .map_err(|e| e.to_string())?;
-            Ok(body)
-        };
+        let fetch = offline_fetch;
         let linked = data_dir().join("linked-minecraft");
         let resolved = sources::resolve(minecraft, &pins, &known, &linked, &fetch, log);
         if reused {
@@ -1490,6 +1045,15 @@ pub fn preparer(
     Ok((Preparer::Process(cmd), minecraft))
 }
 
+/// What preparing does where it would once have downloaded a file: it says where to get it.
+fn offline_fetch(url: &str) -> Result<Vec<u8>, String> {
+    let name = url.rsplit('/').next().unwrap_or(url);
+    Err(format!(
+        "is not on this computer, and Skyline downloads nothing: play this Minecraft version once \
+         in the official launcher so it keeps {name}, or pick its folder"
+    ))
+}
+
 /// Copies the pinned version's sounds from the player's own launcher install into the version's
 /// resources (`skyline-prepare sounds`), each line to `log`. Sound is optional, so a launcher
 /// install without them is a line in the log, never a failed preparation. The version's own
@@ -1560,17 +1124,6 @@ pub fn game_home() -> PathBuf {
     let data = dirs::data_dir().unwrap_or_else(std::env::temp_dir);
     horizon_core::rebrand::migrate_data_dirs(&data);
     data.join("skyline")
-}
-
-/// Whether No AI is on: every AI feature hidden and off (`horizon_core::no_ai`, kept in the
-/// game's `skyline-extras.txt` so the game reads the same switch).
-pub fn no_ai() -> bool {
-    horizon_core::no_ai::is_on(&game_home())
-}
-
-/// Turns No AI on or off for the launcher and the game.
-pub fn set_no_ai(on: bool) -> Result<(), String> {
-    horizon_core::no_ai::set(&game_home(), on).map_err(|e| format!("Could not save No AI: {e}"))
 }
 
 // ----- Logs and crash reports ---------------------------------------------------------------------
@@ -2000,24 +1553,13 @@ pub fn need_prepared(tag: &str) -> Result<(), String> {
     }
 }
 
-/// The client's command, once the owner gate lets it start and its resources are prepared. Past
-/// the gate, a sign-in that can't be renewed (no network, expired) still lets the game start,
-/// offline.
+/// The client's command, once its resources are prepared.
 pub fn client(tag: &str) -> Result<Command, String> {
     need_prepared(tag)?;
     complete_assets(tag);
     let mut cmd = client_command(tag);
     append_game_args(&mut cmd);
     Ok(cmd)
-}
-
-/// Start the game straight into a friend's world: `--server friend:CODE`.
-pub fn join_friend(cmd: &mut Command, code: &str) -> Result<(), String> {
-    horizon_friends::invite::parse_detailed(code).map_err(|e| e.to_string())?;
-    let code: String = code.chars().filter(|c| !c.is_whitespace()).collect();
-    cmd.arg("--server")
-        .arg(format!("{}{code}", horizon_friends::ADDRESS_PREFIX));
-    Ok(())
 }
 
 /// The dedicated server's command in `folder`, once prepared and the EULA is agreed to.
@@ -2031,21 +1573,6 @@ pub fn server(tag: &str, folder: &Path, accept_eula: bool) -> Result<Command, St
     }
     fs::create_dir_all(folder).map_err(|e| e.to_string())?;
     Ok(server_command(tag, folder))
-}
-
-/// One release's notes: the tag given, or the newest.
-pub fn release_notes(tag: Option<&str>) -> Result<Release, String> {
-    let releases = releases()?;
-    match tag {
-        Some(tag) => releases
-            .into_iter()
-            .find(|r| r.tag == tag)
-            .ok_or_else(|| format!("No Skyline release is tagged {tag}.")),
-        None => releases
-            .into_iter()
-            .next()
-            .ok_or_else(|| "No release is published yet.".into()),
-    }
 }
 
 /// A process whose output is kept: the last `LOG_KEEP` lines, and its result once it ends.
@@ -2116,417 +1643,10 @@ impl Logged {
     }
 }
 
-// ----- Updates -----------------------------------------------------------------------------------
-
-/// What a check found: a Skyline build newer than every installed one, and a newer launcher.
-#[derive(Clone, Debug, Default, serde::Serialize)]
-pub struct Updates {
-    pub horizon: Option<Release>,
-    pub launcher: Option<Release>,
-}
-
-/// The newest Skyline release with a build here, if it is newer than every installed version.
-pub fn horizon_update(releases: &[Release], installed: &[String]) -> Option<Release> {
-    let newest = latest(releases)?;
-    let newer = installed
-        .iter()
-        .all(|t| compare_versions(&newest.tag, t).is_gt());
-    newer.then(|| newest.clone())
-}
-
-/// The newest launcher release with an archive for this platform, if newer than this launcher
-/// ([`own_tag`]: a launcher from before 0.2 takes any `launcher@` release).
-pub fn launcher_update(releases: &[Release]) -> Option<Release> {
-    launcher_update_from(releases, &own_tag())
-}
-
-fn launcher_update_from(releases: &[Release], own: &str) -> Option<Release> {
-    releases
-        .iter()
-        .find(|r| r.asset.is_some())
-        .filter(|r| compare_versions(&r.tag, own).is_gt())
-        .cloned()
-}
-
-/// Load the game's release list and both update kinds from the same GitHub response.
-/// Publish the game releases before any fallback lookups for older launcher tags, so those
-/// lookups cannot hold up the release pages or opening animation. A list error reaches both.
-pub fn releases_and_updates(
-    on_releases: impl FnOnce(Result<Vec<Release>, String>),
-) -> Result<Updates, String> {
-    releases_and_updates_with(release_list, installed, launcher_releases_in, on_releases)
-}
-
-fn releases_and_updates_with(
-    load: impl FnOnce() -> Result<serde_json::Value, String>,
-    installed: impl FnOnce() -> Vec<String>,
-    launchers: impl FnOnce(&serde_json::Value) -> Vec<Release>,
-    on_releases: impl FnOnce(Result<Vec<Release>, String>),
-) -> Result<Updates, String> {
-    let list = match load() {
-        Ok(list) => list,
-        Err(e) => {
-            on_releases(Err(e.clone()));
-            return Err(e);
-        }
-    };
-    let releases = parse_releases(&list, ASSET, is_game_tag);
-    let horizon = horizon_update(&installable_updates(&releases), &installed());
-    on_releases(Ok(releases));
-    Ok(Updates {
-        horizon,
-        launcher: launcher_update(&launchers(&list)),
-    })
-}
-
-/// A fresh release-list request for both kinds of update (plus older-launcher fallback if needed).
-pub fn check_updates() -> Result<Updates, String> {
-    releases_and_updates(|_| {})
-}
-
-/// Whether a version installed as an update becomes the selected one: only when the player was
-/// on the newest installed version before (or had none).
-pub fn select_after_update(selected: Option<&str>, installed_before: &[String]) -> bool {
-    match selected {
-        None => true,
-        Some(s) => installed_before.first().is_none_or(|newest| newest == s),
-    }
-}
-
-/// Installs `tag` (or with "latest" the newest release, pre-releases left out), then updates the selection as
-/// `select_after_update` says when `as_update`, or always selects it otherwise.
-pub fn install_tag(tag: &str, as_update: bool, progress: impl Fn(f32)) -> Result<String, String> {
-    let releases = releases()?;
-    let release = if tag == "latest" {
-        releases
-            .iter()
-            .find(|r| r.asset.is_some() && !r.prerelease)
-            .ok_or("No release has a build for this platform yet.")?
-    } else {
-        releases
-            .iter()
-            .find(|r| r.tag == tag)
-            .ok_or_else(|| format!("No Skyline release is tagged {tag}."))?
-    };
-    if release.asset.is_none() {
-        return Err(format!("{} has no build for this platform.", release.tag));
-    }
-    let before = installed();
-    install(release, progress)?;
-    let mut settings = Settings::load();
-    if !as_update || select_after_update(settings.selected.as_deref(), &before) {
-        settings.selected = Some(release.tag.clone());
-        settings.save();
-    }
-    Ok(release.tag.clone())
-}
-
-/// The launcher's own path, read once at start: after a self-update the running file is gone.
+/// The launcher's own path, read once at start.
 pub fn exe_path() -> &'static Path {
     static EXE: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
     EXE.get_or_init(|| std::env::current_exe().unwrap_or_else(|_| PathBuf::from(LAUNCHER_BINARY)))
-}
-
-/// The offline snapshot never replaces itself.
-pub fn self_update_allowed() -> bool {
-    false
-}
-
-/// The version in `skyline-launcher --version`'s output (`skyline-launcher 0.1.5`).
-fn parse_version_output(out: &str) -> Option<&str> {
-    out.trim()
-        .strip_prefix("skyline-launcher ")
-        .map(str::trim)
-        .filter(|v| !v.is_empty())
-}
-
-/// The version of the launcher binary now at `path`, which is not this process's once another
-/// update (the command line, another window) has replaced the file.
-fn installed_launcher_version(path: &Path) -> Option<String> {
-    let mut cmd = crate::process::command(path);
-    cmd.arg("--version")
-        .stdin(Stdio::null())
-        .stderr(Stdio::null());
-    let out = cmd.output().ok()?;
-    parse_version_output(&String::from_utf8_lossy(&out.stdout)).map(String::from)
-}
-
-/// Puts `new` at `exe`, the path this launcher started from. The running process keeps its
-/// file (unlinked) and works on. Unix only: `self_replace` asks the system where the running
-/// binary is, and Linux answers "<path> (deleted)" once the file has been replaced, so a second
-/// update in the same run failed with "No such file or directory". Windows keeps a running
-/// binary locked, so there `self_replace` moves it aside first.
-#[cfg(unix)]
-fn replace_binary(new: &Path, exe: &Path) -> std::io::Result<()> {
-    use std::os::unix::fs::PermissionsExt;
-    let dir = exe.parent().ok_or_else(|| {
-        std::io::Error::new(std::io::ErrorKind::NotFound, "the launcher has no folder")
-    })?;
-    let name = exe.file_name().unwrap_or_default().to_string_lossy();
-    let temp = dir.join(format!(".{name}.update-{}", std::process::id()));
-    let mode = fs::metadata(exe).map_or(0o755, |m| m.permissions().mode() | 0o111);
-    let result = fs::copy(new, &temp)
-        .and_then(|_| fs::set_permissions(&temp, fs::Permissions::from_mode(mode)))
-        .and_then(|_| fs::rename(&temp, exe));
-    if result.is_err() {
-        let _ = fs::remove_file(&temp);
-    }
-    result
-}
-
-#[cfg(not(unix))]
-fn replace_binary(new: &Path, _exe: &Path) -> std::io::Result<()> {
-    self_replace::self_replace(new)
-}
-
-/// The app bundle the launcher runs from (`…/Skyline.app` for `…/Skyline.app/Contents/MacOS/
-/// skyline-launcher`), or None for a bare binary, as launchers before the .app shipped.
-pub fn app_bundle(exe: &Path) -> Option<&Path> {
-    let macos = exe.parent()?;
-    let contents = macos.parent()?;
-    let app = contents.parent()?;
-    (macos.file_name()? == "MacOS"
-        && contents.file_name()? == "Contents"
-        && app.extension()? == "app")
-        .then_some(app)
-}
-
-/// Finds the first `*.app` folder under `dir`.
-fn find_app(dir: &Path) -> Option<PathBuf> {
-    for entry in fs::read_dir(dir).ok()?.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if path.extension().is_some_and(|e| e == "app") {
-                return Some(path);
-            }
-            if let Some(found) = find_app(&path) {
-                return Some(found);
-            }
-        }
-    }
-    None
-}
-
-/// Whether the bundle's signature (Developer ID or ad hoc) is whole: every file it seals is there
-/// and unchanged.
-#[cfg(target_os = "macos")]
-fn signature_holds(app: &Path) -> bool {
-    Command::new("codesign")
-        .args(["--verify", "--deep", "--strict"])
-        .arg(app)
-        .stderr(std::process::Stdio::null())
-        .status()
-        .is_ok_and(|s| s.success())
-}
-
-/// Puts the bundle `new` in place of `app`: copied beside it first (`ditto` keeps its links,
-/// modes and signature) and checked, then the old one is moved aside and the new one renamed in,
-/// so `app` is never half written, and checked again where it lands (the old one comes back if it
-/// doesn't hold). The running launcher keeps its open files and works on.
-#[cfg(target_os = "macos")]
-fn replace_bundle(new: &Path, app: &Path) -> Result<(), String> {
-    let dir = app.parent().ok_or("The app has no folder.")?;
-    let name = app.file_name().unwrap_or_default().to_string_lossy();
-    let staged = dir.join(format!(".{name}.update-{}", std::process::id()));
-    let old = dir.join(format!(".{name}.old-{}", std::process::id()));
-    let _ = fs::remove_dir_all(&staged);
-    let copied = Command::new("ditto")
-        .arg(new)
-        .arg(&staged)
-        .status()
-        .map_err(|e| format!("ditto: {e}"))?;
-    if !copied.success() {
-        let _ = fs::remove_dir_all(&staged);
-        return Err(format!(
-            "Could not copy the new app next to {}.",
-            app.display()
-        ));
-    }
-    if !signature_holds(&staged) {
-        let _ = fs::remove_dir_all(&staged);
-        return Err(
-            "The downloaded app's signature doesn't hold; the launcher stays as it is.".into(),
-        );
-    }
-    fs::rename(app, &old).map_err(|e| {
-        let _ = fs::remove_dir_all(&staged);
-        format!("Could not move {} aside: {e}", app.display())
-    })?;
-    if let Err(e) = fs::rename(&staged, app) {
-        let _ = fs::rename(&old, app);
-        let _ = fs::remove_dir_all(&staged);
-        return Err(format!(
-            "Could not put the new app at {}: {e}",
-            app.display()
-        ));
-    }
-    if !signature_holds(app) {
-        let failed = dir.join(format!(".{name}.failed-{}", std::process::id()));
-        if fs::rename(app, &failed).is_ok() && fs::rename(&old, app).is_ok() {
-            let _ = fs::remove_dir_all(&failed);
-        }
-        return Err(format!(
-            "The new app's signature doesn't hold at {}; the launcher stays as it was.",
-            app.display()
-        ));
-    }
-    let _ = fs::remove_dir_all(&old);
-    Ok(())
-}
-
-#[cfg(not(target_os = "macos"))]
-fn replace_bundle(_new: &Path, _app: &Path) -> Result<(), String> {
-    Err("App bundles are a macOS thing.".into())
-}
-
-/// Downloads a launcher release and puts its binary in place of this one. The running process
-/// keeps working; `restart` starts the new one. When the file there already is that release or
-/// a newer one (updated from the command line or another window), there is nothing to do.
-pub fn self_update(release: &Release, progress: impl Fn(f32)) -> Result<(), String> {
-    let (url, size) = release
-        .asset
-        .clone()
-        .ok_or("This launcher release has no build for this platform.")?;
-    let target = launcher_version(&release.tag).unwrap_or("0");
-    if installed_launcher_version(exe_path())
-        .is_some_and(|v| v != VERSION && compare_versions(&v, target).is_ge())
-    {
-        progress(1.0);
-        return Ok(());
-    }
-    let sha256 = signed_digest(&release.tag, LAUNCHER_ASSET.unwrap_or_default())?;
-    let work = data_dir().join(".launcher-update");
-    let _ = fs::remove_dir_all(&work);
-    fs::create_dir_all(&work).map_err(|e| e.to_string())?;
-    let archive = work.join("download");
-    download(&url, size, &sha256, &archive, &progress)?;
-    let unpacked = work.join("unpacked");
-    unpack(&archive, &url, &unpacked)?;
-    // A launcher inside Skyline.app replaces the whole bundle (its Info.plist, icon and
-    // signature belong with the binary); a bare binary, as older launchers are, only the binary,
-    // which the macOS archive also holds (Skyline.app/Contents/MacOS/skyline-launcher).
-    if let Some(app) = app_bundle(exe_path()) {
-        if let Some(new) = find_app(&unpacked) {
-            replace_bundle(&new, app)?;
-            let _ = fs::remove_dir_all(&work);
-            progress(1.0);
-            return Ok(());
-        }
-    }
-    let binary =
-        find_file(&unpacked, LAUNCHER_BINARY).ok_or("The download has no launcher binary.")?;
-    replace_binary(&binary, exe_path()).map_err(|e| {
-        format!(
-            "Could not replace the launcher at {}: {e}",
-            exe_path().display()
-        )
-    })?;
-    let _ = fs::remove_dir_all(&work);
-    progress(1.0);
-    Ok(())
-}
-
-fn find_file(dir: &Path, name: &str) -> Option<PathBuf> {
-    for entry in fs::read_dir(dir).ok()?.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if let Some(found) = find_file(&path, name) {
-                return Some(found);
-            }
-        } else if entry.file_name() == name {
-            return Some(path);
-        }
-    }
-    None
-}
-
-/// Starts the launcher again (the updated binary) with the same arguments in place of this one:
-/// on Unix the process becomes the new binary (exec), on Windows the new one starts and this one
-/// exits. Returns only when the new binary could not start.
-pub fn restart() -> String {
-    let mut cmd = Command::new(exe_path());
-    cmd.args(std::env::args_os().skip(1));
-    #[cfg(unix)]
-    let error = {
-        use std::os::unix::process::CommandExt;
-        cmd.exec()
-    };
-    #[cfg(not(unix))]
-    let error = match cmd.spawn() {
-        Ok(_) => std::process::exit(0),
-        Err(e) => e,
-    };
-    format!(
-        "Could not start {}: {error}. Close the launcher and open it again.",
-        exe_path().display()
-    )
-}
-
-/// Plain text from markdown, for terminals: headings on their own lines, bullets as "- ",
-/// links followed by their address.
-pub fn markdown_to_text(md: &str) -> String {
-    use pulldown_cmark::{Event, Parser, Tag, TagEnd};
-    let mut out = String::new();
-    let mut links = Vec::new();
-    let mut lists: Vec<Option<u64>> = Vec::new();
-    for event in Parser::new(md) {
-        match event {
-            Event::Start(Tag::Item) => {
-                let depth = lists.len().saturating_sub(1);
-                out.push_str(&"  ".repeat(depth));
-                match lists.last_mut() {
-                    Some(Some(n)) => {
-                        out.push_str(&format!("{n}. "));
-                        *n += 1;
-                    }
-                    _ => out.push_str("- "),
-                }
-            }
-            Event::Start(Tag::List(start)) => {
-                if !out.ends_with('\n') && !out.is_empty() {
-                    out.push('\n');
-                }
-                lists.push(start)
-            }
-            Event::End(TagEnd::List(_)) => {
-                lists.pop();
-                if lists.is_empty() {
-                    out.push('\n');
-                }
-            }
-            Event::Start(Tag::Link { dest_url, .. }) => links.push(dest_url.to_string()),
-            Event::End(TagEnd::Link) => {
-                if let Some(url) = links.pop() {
-                    out.push_str(&format!(" ({url})"));
-                }
-            }
-            Event::End(TagEnd::Heading(_)) => out.push_str("\n\n"),
-            Event::End(TagEnd::Paragraph) => {
-                out.push_str(if lists.is_empty() { "\n\n" } else { "\n" })
-            }
-            Event::End(TagEnd::Item) if !out.ends_with('\n') => out.push('\n'),
-            Event::End(TagEnd::CodeBlock) => out.push('\n'),
-            Event::Text(t) | Event::Code(t) => out.push_str(&t),
-            Event::SoftBreak | Event::HardBreak => out.push('\n'),
-            Event::Rule => out.push_str("---\n\n"),
-            _ => {}
-        }
-    }
-    out.trim_end().to_string() + "\n"
-}
-
-/// The first sentence-like line of a release's notes, for a one-line summary.
-pub fn notes_summary(body: &str) -> Option<String> {
-    let text = markdown_to_text(body);
-    let line = text
-        .lines()
-        .map(str::trim)
-        .find(|l| l.len() > 24 && !l.starts_with("---"))?;
-    let line = line.trim_start_matches("- ");
-    Some(match line.char_indices().nth(140) {
-        Some((i, _)) => format!("{}…", line[..i].trim_end()),
-        None => line.to_string(),
-    })
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -2537,34 +1657,14 @@ pub enum Job {
 }
 
 pub enum Msg {
-    Releases(Result<Vec<Release>, String>),
-    Links(Links),
-    Progress(String, f32),
-    Installed(String, Result<(), String>),
     /// A version's files are gone (or could not be deleted).
     Removed(String, Result<(), String>),
     Line(Job, String),
     Exit(Job, Result<(), String>),
-    Updates(Result<Updates, String>),
-    LauncherProgress(f32),
-    LauncherUpdated(Result<(), String>),
     /// `reuse_prepared_everywhere` prepared these versions.
     Reused(Vec<(String, String)>),
-    /// Whether secrets are kept in the OS keychain (else only until the launcher closes).
-    Keychain(bool),
-    /// Whether an account in the launcher owned the game at its last check (the owner gate).
-    Owner(bool),
-    /// The owner gate's answer for the game about to start: the selected account's session
-    /// file (none = offline) and why it plays offline, if it does.
-    Session(Result<(Option<PathBuf>, Option<String>), String>),
     /// The game about to start is prepared and its assets complete: it can be started.
     Ready,
-    /// How many play Skyline now, or none when the server can't be reached (`telemetry`).
-    Playing(Option<u64>),
-    /// The nightly being installed, done this far (`nightly`).
-    NightlyProgress(f32),
-    /// A nightly check ended: the version installed (None: already up to date), or why not.
-    Nightly(Result<Option<String>, String>),
 }
 
 /// A running process; its output arrives as `Msg::Line`, its end as `Msg::Exit`.
@@ -2697,10 +1797,6 @@ pub struct Settings {
     pub instance: Option<String>,
     pub minecraft_dir: Option<PathBuf>,
     pub server_dir: Option<PathBuf>,
-    /// Unset means on: only a player who turned it off has `false` here. 0.1.1 wrote its
-    /// `auto_install` (off by default) for everyone, so this is a new key and that one is ignored.
-    #[serde(default)]
-    pub install_new_versions: Option<bool>,
     /// Off by default, so the opening animation shows unless the player turns it off.
     #[serde(default)]
     pub skip_opening: bool,
@@ -2712,28 +1808,9 @@ pub struct Settings {
     /// default. Appended after the launcher's own arguments, so they can add to or override them.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub game_args: String,
-    /// The HTTP proxy every download goes through (`proxy`), such as `http://127.0.0.1:7890`.
-    /// Unset means none: the environment's `HTTPS_PROXY` and `HTTP_PROXY` apply instead.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub proxy: Option<String>,
     /// Dark, Light, or the system's: the launcher's look. Dark by default.
     #[serde(default)]
     pub appearance: Appearance,
-    /// The player has read what the "I'm playing" ping holds (`telemetry::PING`): on the
-    /// first-run question, or on the Play page once if they answered that before it existed.
-    #[serde(default)]
-    pub ping_notice_seen: bool,
-    /// The player without an account that owns the game has read, once, why the launcher needs
-    /// one now (the owner gate's screen).
-    #[serde(default)]
-    pub owner_notice_seen: bool,
-    /// Seconds the sidebar's partner banner has been on screen, over every start, up to
-    /// `partner::SEEN_BEFORE_HIDE`: only then can the player hide it.
-    #[serde(default)]
-    pub partner_seen_secs: u64,
-    /// The player hid the sidebar's partner banner. The Servers page keeps its own.
-    #[serde(default)]
-    pub partner_hidden: bool,
     /// What the window does while the game runs. Stays by default.
     #[serde(default)]
     pub while_playing: WhilePlaying,
@@ -2748,10 +1825,6 @@ pub struct Settings {
     /// The window's language. Unset follows the system's (`i18n::Language::system`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub language: Option<crate::i18n::Language>,
-    /// The player turned Nightly on (`nightly`): the nightly build installs and updates in its own
-    /// instance. Off by default.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub nightly: bool,
 }
 
 impl Settings {
@@ -2804,11 +1877,6 @@ impl Settings {
     pub fn language(&self) -> crate::i18n::Language {
         self.language.unwrap_or_else(crate::i18n::Language::system)
     }
-    /// Whether new Skyline versions are installed automatically.
-    /// Never in the offline snapshot: it stays on the versions installed here.
-    pub fn auto_install(&self) -> bool {
-        false
-    }
     pub fn save(&self) {
         let _ = fs::create_dir_all(data_dir());
         let _ = fs::write(
@@ -2818,9 +1886,6 @@ impl Settings {
     }
 }
 
-#[cfg(test)]
-#[path = "backend/release_loading_tests.rs"]
-mod release_loading_tests;
 
 #[cfg(test)]
 #[path = "backend/java_tests.rs"]
@@ -3025,93 +2090,6 @@ mod tests {
     }
 
     #[test]
-    fn tags_never_mix() {
-        assert!(is_game_tag("v2026.10.13"));
-        assert!(!is_game_tag("launcher-v0.2.0"));
-        assert!(!is_game_tag("vnext"));
-        assert_eq!(launcher_version("launcher-v0.2.0"), Some("0.2.0"));
-        assert_eq!(launcher_version("launcher@0.2.0"), Some("0.2.0"));
-        assert!(!is_game_tag("launcher@0.2.0"));
-        assert!(is_game_tag("v0.2.0"));
-        assert!(is_launcher_tag("launcher@0.2.0"));
-        assert_eq!(launcher_version("v2026.10.13"), None);
-        assert_eq!(launcher_version("launcher-vx"), None);
-        let list = serde_json::json!([
-            {"tag_name": "v2026.10.12", "assets": [{"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "u", "size": 1}]},
-            {"tag_name": "launcher-v9.0.0", "assets": [{"name": "skyline-launcher-linux-x86_64.tar.gz", "browser_download_url": "u", "size": 1}]},
-            {"tag_name": "v2026.10.13", "assets": []},
-            {"tag_name": "launcher-v0.0.1", "draft": true, "assets": []},
-        ]);
-        let game: Vec<_> = parse_releases(&list, ASSET, is_game_tag)
-            .into_iter()
-            .map(|r| r.tag)
-            .collect();
-        assert_eq!(game, ["v2026.10.13", "v2026.10.12"]);
-        let launcher: Vec<_> = parse_releases(&list, LAUNCHER_ASSET, is_launcher_tag)
-            .into_iter()
-            .map(|r| r.tag)
-            .collect();
-        assert_eq!(launcher, ["launcher-v9.0.0"]);
-    }
-
-    /// Rolling a release back (`gh release edit <tag> --draft`, docs/release-flow.md) makes the
-    /// previous one the newest again: it is what `install latest` and the update check offer.
-    #[test]
-    fn withdrawn_release_is_never_offered() {
-        let asset = ASSET.unwrap_or("horizon-linux-x86_64.tar.gz");
-        let list = serde_json::json!([
-            {"tag_name": "v2026.10.15.1", "draft": true, "assets": [{"name": asset, "browser_download_url": "bad", "size": 1}]},
-            {"tag_name": "v2026.10.15", "assets": [{"name": asset, "browser_download_url": "good", "size": 1}]},
-            {"tag_name": "v2026.10.14", "assets": [{"name": asset, "browser_download_url": "old", "size": 1}]},
-        ]);
-        let releases = parse_releases(&list, Some(asset), is_game_tag);
-        assert!(releases.iter().all(|r| r.tag != "v2026.10.15.1"));
-        assert_eq!(
-            latest(&releases).map(|r| r.tag.as_str()),
-            Some("v2026.10.15")
-        );
-        let offered = |installed: &[&str]| {
-            let installed: Vec<String> = installed.iter().map(|t| t.to_string()).collect();
-            horizon_update(&releases, &installed).map(|r| r.tag)
-        };
-        assert_eq!(offered(&["v2026.10.14"]), Some("v2026.10.15".into()));
-        assert_eq!(offered(&[]), Some("v2026.10.15".into()));
-        // Who installed the withdrawn one is not told to "update" to an older version.
-        assert_eq!(offered(&["v2026.10.15.1", "v2026.10.14"]), None);
-    }
-
-    /// Every release is published as the release, and launchers update to it. The pre-releases
-    /// of the old Alpha channel (v0.2.1 on) are only installed by hand: a launcher that
-    /// had one installed waits for the next release instead of going back.
-    #[test]
-    fn updates_follow_every_release_and_leave_the_old_alpha_ones_out() {
-        let asset = ASSET.unwrap_or("horizon-linux-x86_64.tar.gz");
-        let list = serde_json::json!([
-            {"tag_name": "v0.2.13", "assets": [{"name": asset, "browser_download_url": "n", "size": 1}]},
-            {"tag_name": "v0.2.12", "prerelease": true, "assets": [{"name": asset, "browser_download_url": "a", "size": 1}]},
-            {"tag_name": "v0.2.0", "assets": [{"name": asset, "browser_download_url": "s", "size": 1}]},
-        ]);
-        let releases = parse_releases(&list, Some(asset), is_game_tag);
-        assert_eq!(
-            releases.iter().map(|r| r.prerelease).collect::<Vec<_>>(),
-            [false, true, false]
-        );
-        let offered = |releases: &[Release], installed: &[&str]| {
-            let installed: Vec<String> = installed.iter().map(|t| t.to_string()).collect();
-            horizon_update(&installable_updates(releases), &installed).map(|r| r.tag)
-        };
-        assert_eq!(offered(&releases, &[]), Some("v0.2.13".into()));
-        assert_eq!(offered(&releases, &["v0.2.0"]), Some("v0.2.13".into()));
-        assert_eq!(offered(&releases, &["v0.2.12"]), Some("v0.2.13".into()));
-        assert_eq!(offered(&releases, &["v0.2.13"]), None);
-        // Before the first release of the single channel: the old Alpha one stays where it is.
-        let before = &releases[1..];
-        assert_eq!(offered(before, &["v0.2.0"]), None);
-        assert_eq!(offered(before, &["v0.2.12", "v0.2.0"]), None);
-        assert_eq!(CHECK_EVERY.as_secs(), 30 * 60);
-    }
-
-    #[test]
     fn the_window_stays_while_playing_unless_picked() {
         assert_eq!(Settings::parse("{}").while_playing, WhilePlaying::Stay);
         let hide = Settings::parse(r#"{"while_playing": "hide", "game_args": "--x"}"#);
@@ -3219,199 +2197,6 @@ mod tests {
                 .filter(|v| !v.is_empty())
                 .unwrap_or(env!("CARGO_PKG_VERSION"))
         );
-        // Self-update compares releases with that version: this launcher's own release is no update.
-        let r = |tag: String| Release {
-            tag,
-            name: String::new(),
-            body: String::new(),
-            date: String::new(),
-            asset: Some(("u".into(), 1)),
-            prerelease: false,
-        };
-        assert!(launcher_update(&[r(own_tag())]).is_none());
-        assert_eq!(launcher_version(&own_tag()), Some(VERSION));
-        assert_eq!(
-            parse_version_output(&format!("skyline-launcher {VERSION}\n")),
-            Some(VERSION)
-        );
-    }
-
-    #[test]
-    fn a_launcher_knows_which_line_it_was_released_on() {
-        // launcher.yml gives the tag; before it did, a release had only its `launcher-v` version.
-        assert_eq!(
-            own_tag_of(Some("launcher@0.2.3"), Some("0.2.3")),
-            "launcher@0.2.3"
-        );
-        assert_eq!(
-            own_tag_of(Some("launcher-v0.17.0"), Some("0.17.0")),
-            "launcher-v0.17.0"
-        );
-        assert_eq!(own_tag_of(None, Some("0.16.0")), "launcher-v0.16.0");
-        assert_eq!(own_tag_of(Some(""), Some("0.16.0")), "launcher-v0.16.0");
-        // A build from source is on the 0.2 line.
-        assert_eq!(
-            own_tag_of(None, None),
-            format!("launcher@{}", env!("CARGO_PKG_VERSION"))
-        );
-    }
-
-    /// The update path to 0.2 (docs/versioning.md): launchers from before it take the last
-    /// `launcher-v` release, which takes every `launcher@` one.
-    #[test]
-    fn launchers_from_before_0_2_update_to_it() {
-        let r = |tag: &str| Release {
-            tag: tag.into(),
-            name: String::new(),
-            body: String::new(),
-            date: String::new(),
-            asset: Some(("u".into(), 1)),
-            prerelease: false,
-        };
-        let mut list = vec![
-            r("launcher-v0.16.0"),
-            r("launcher@0.2.0"),
-            r("launcher-v0.17.0"),
-            r("launcher@0.2.1"),
-        ];
-        list.sort_by(|a, b| compare_versions(&b.tag, &a.tag));
-        let tags: Vec<_> = list.iter().map(|r| r.tag.as_str()).collect();
-        assert_eq!(
-            tags,
-            [
-                "launcher@0.2.1",
-                "launcher@0.2.0",
-                "launcher-v0.17.0",
-                "launcher-v0.16.0"
-            ]
-        );
-        let offered = |own: &str| launcher_update_from(&list, own).map(|r| r.tag);
-        assert_eq!(offered("launcher-v0.16.0"), Some("launcher@0.2.1".into()));
-        assert_eq!(offered("launcher-v0.17.0"), Some("launcher@0.2.1".into()));
-        assert_eq!(offered("launcher@0.2.0"), Some("launcher@0.2.1".into()));
-        assert_eq!(offered("launcher@0.2.1"), None);
-        assert_eq!(offered("launcher@0.3.0-rc.1"), None);
-        // The old launchers' own check only sees `launcher-v` tags: 0.17.0 is their way over.
-        let old_scheme: Vec<_> = list
-            .iter()
-            .filter(|r| r.tag.starts_with(OLD_LAUNCHER_TAG_PREFIX))
-            .cloned()
-            .collect();
-        assert_eq!(
-            launcher_update_from(&old_scheme, "launcher-v0.16.0").map(|r| r.tag),
-            Some("launcher-v0.17.0".into())
-        );
-    }
-
-    #[test]
-    fn game_0_2_follows_every_date_release() {
-        assert_eq!(compare_versions("v0.2.0", "v2026.10.19.15"), Greater);
-        assert_eq!(compare_versions("v0.2.0", "v2026.10.21"), Greater);
-        assert_eq!(compare_versions("v2099.12.31.9", "v0.2.0"), Less);
-        assert_eq!(compare_versions("v0.2.1", "v0.2.0"), Greater);
-        assert_eq!(compare_versions("v0.2.10", "v0.2.9"), Greater);
-        assert_eq!(compare_versions("v0.3.0", "v0.2.57"), Greater);
-        assert_eq!(compare_versions("v0.2.0", "v0.2.0"), Equal);
-        // Pre-releases come before their release and after the one before.
-        assert_eq!(compare_versions("v0.3.0-rc.1", "v0.3.0"), Less);
-        assert_eq!(compare_versions("v0.3.0-rc.1", "v0.2.9"), Greater);
-        assert_eq!(compare_versions("v0.3.0-beta.11", "v0.3.0-beta.2"), Greater);
-        assert_eq!(compare_versions("v0.3.0-rc.1", "v0.3.0-beta.9"), Greater);
-        assert_eq!(compare_versions("v0.3.0-beta.1", "v0.3.0-beta"), Greater);
-        assert_eq!(compare_versions("v0.3.0-alpha", "v0.3.0-1"), Greater);
-        assert_eq!(compare_versions("v0.2.1-beta.1", "v2026.10.21"), Greater);
-        // Launcher and game tags of 0.2 compare alike; old launcher tags stay below.
-        assert_eq!(
-            compare_versions("launcher@0.2.0", "launcher-v0.16.0"),
-            Greater
-        );
-        assert_eq!(compare_versions("launcher@0.2.0", "v0.2.0"), Equal);
-
-        let asset = ASSET.unwrap_or("horizon-linux-x86_64.tar.gz");
-        let list = serde_json::json!([
-            {"tag_name": "v0.2.0", "prerelease": true, "assets": [{"name": asset, "browser_download_url": "b", "size": 1}]},
-            {"tag_name": "v2026.10.21", "prerelease": true, "assets": [{"name": asset, "browser_download_url": "d", "size": 1}]},
-            {"tag_name": "v2026.10.19.15", "assets": [{"name": asset, "browser_download_url": "s", "size": 1}]},
-        ]);
-        let releases = parse_releases(&list, Some(asset), is_game_tag);
-        let installed = ["v2026.10.19.15".to_string(), "v2026.10.12".to_string()];
-        // A pre-release 0.2.0 is not an update; once published as the release, it is one.
-        let offered = |releases: &[Release]| {
-            horizon_update(&installable_updates(releases), &installed).map(|r| r.tag)
-        };
-        assert_eq!(offered(&releases), None);
-        let mut released = releases.clone();
-        released[0].prerelease = false;
-        assert_eq!(offered(&released), Some("v0.2.0".into()));
-        let mut sorted = vec![
-            "v2026.10.19.15".to_string(),
-            "v0.2.1".into(),
-            "v0.2.0".into(),
-            "v2026.10.21".into(),
-        ];
-        sorted.sort_by(|a, b| compare_versions(b, a));
-        assert_eq!(
-            sorted,
-            ["v0.2.1", "v0.2.0", "v2026.10.21", "v2026.10.19.15"]
-        );
-    }
-
-    #[test]
-    fn the_fallback_looks_for_0_2_launchers_first() {
-        let asset = LAUNCHER_ASSET.unwrap_or("unsupported");
-        let release = |tag: &str| serde_json::json!({"tag_name": tag, "assets": [{"name": asset, "browser_download_url": "u", "size": 1}]});
-        let asked = std::cell::RefCell::new(Vec::new());
-        let lookup = |with_new: bool| {
-            asked.borrow_mut().clear();
-            launcher_releases_in_with(&serde_json::json!([]), |url| {
-                asked
-                    .borrow_mut()
-                    .push(url.rsplit('/').next().unwrap_or("").to_string());
-                if url.ends_with("matching-refs/tags/launcher@") {
-                    Ok(serde_json::json!(if with_new {
-                        vec![serde_json::json!({"ref": "refs/tags/launcher@0.2.0"})]
-                    } else {
-                        Vec::new()
-                    }))
-                } else if url.ends_with("matching-refs/tags/launcher-v") {
-                    Ok(serde_json::json!([{"ref": "refs/tags/launcher-v0.17.0"}]))
-                } else {
-                    Ok(release(url.rsplit('/').next().unwrap_or("")))
-                }
-            })
-            .into_iter()
-            .map(|r| r.tag)
-            .collect::<Vec<_>>()
-        };
-        assert_eq!(lookup(true), ["launcher@0.2.0"]);
-        assert_eq!(*asked.borrow(), ["launcher@", "launcher@0.2.0"]);
-        // Before the first `launcher@` release, the `launcher-v` ones.
-        assert_eq!(lookup(false), ["launcher-v0.17.0"]);
-        assert_eq!(
-            *asked.borrow(),
-            ["launcher@", "launcher-v", "launcher-v0.17.0"]
-        );
-    }
-
-    #[test]
-    fn launcher_tags_from_matching_refs_newest_first() {
-        let refs = serde_json::json!([
-            {"ref": "refs/tags/launcher-v0.1.9"},
-            {"ref": "refs/tags/launcher-v0.1.10"},
-            {"ref": "refs/tags/launcher-vnext"},
-            {"ref": "refs/tags/v2026.10.15"},
-            {"ref": "refs/tags/launcher-v0.2.0"},
-            {"ref": "refs/tags/launcher@0.2.0"},
-        ]);
-        assert_eq!(
-            newest_launcher_tags(&refs),
-            [
-                "launcher@0.2.0",
-                "launcher-v0.2.0",
-                "launcher-v0.1.10",
-                "launcher-v0.1.9"
-            ]
-        );
     }
 
     #[test]
@@ -3422,88 +2207,6 @@ mod tests {
         assert_eq!(compare_versions("0.10.0", "0.9.9"), Greater);
         assert_eq!(compare_versions("launcher-v1.2", "1.2.0"), Equal);
         assert_eq!(compare_versions("1.0.0-rc1", "1.0.0"), Equal);
-    }
-
-    #[test]
-    fn updates() {
-        let r = |tag: &str| Release {
-            tag: tag.into(),
-            name: String::new(),
-            body: String::new(),
-            date: String::new(),
-            asset: Some(("u".into(), 1)),
-            prerelease: false,
-        };
-        let releases = [r("v2026.10.13"), r("v2026.10.12")];
-        assert_eq!(
-            horizon_update(&releases, &["v2026.10.12".into()]).map(|r| r.tag),
-            Some("v2026.10.13".into())
-        );
-        assert!(horizon_update(&releases, &["v2026.10.13".into()]).is_none());
-        assert!(launcher_update(&[r("launcher-v0.0.1")]).is_none());
-        assert!(launcher_update(&[r("launcher@99.0.0")]).is_some());
-        assert!(launcher_update_from(&[r("launcher-v99.0.0")], "launcher-v0.16.0").is_some());
-        let installed = ["v2026.10.12".to_string(), "v2026.10.1".to_string()];
-        assert!(select_after_update(Some("v2026.10.12"), &installed));
-        assert!(!select_after_update(Some("v2026.10.1"), &installed));
-        assert!(select_after_update(None, &installed));
-    }
-
-    #[test]
-    fn the_offline_snapshot_reaches_no_server_but_sign_in() {
-        // Refused before any lookup: no network is needed to see it.
-        for url in [
-            "https://api.github.com/repos/horizon-rust/horizon/releases",
-            "https://telemetry.playhorizon.dev/v1/items",
-            "https://api.modrinth.com/v2/search",
-        ] {
-            let e = get(url).unwrap_err();
-            assert!(e.contains("offline build"), "{url}: {e}");
-        }
-    }
-
-    #[test]
-    fn the_offline_snapshot_never_installs_new_versions() {
-        assert!(!Settings::parse("").auto_install());
-        assert!(!Settings::parse(r#"{"install_new_versions": true}"#).auto_install());
-        assert!(!self_update_allowed());
-        assert!(release_list().is_err());
-        // The selection rule is unchanged: the new version is selected only from the newest.
-        let installed = ["v2026.10.12".to_string(), "v2026.10.1".to_string()];
-        assert!(select_after_update(Some("v2026.10.12"), &installed));
-        assert!(!select_after_update(Some("v2026.10.1"), &installed));
-    }
-
-    #[test]
-    fn links_fall_back_to_the_built_in_ones() {
-        let defaults = Links::default();
-        // The offline snapshot has none, and never reads links.json.
-        assert_eq!(links(), defaults);
-        assert!(defaults.discord.is_empty() && defaults.sponsor.is_empty());
-        assert!(defaults.website.is_empty());
-        // Unreadable or missing, offline included: the defaults.
-        assert_eq!(Links::parse(""), defaults);
-        assert_eq!(Links::parse("<html>404</html>"), defaults);
-        assert_eq!(Links::parse("[1]"), defaults);
-        assert_eq!(Links::parse(r#"{"discord": 5}"#), defaults);
-        // A key that is missing keeps its default; a new address replaces it; empty hides it.
-        assert_eq!(
-            Links::parse(r#"{"discord": "https://x.y/z"}"#),
-            Links {
-                discord: "https://x.y/z".into(),
-                ..defaults.clone()
-            }
-        );
-        assert_eq!(
-            Links::parse(r#"{"discord": "", "sponsor": " "}"#),
-            Links {
-                discord: String::new(),
-                sponsor: String::new(),
-                ..defaults.clone()
-            }
-        );
-        // A key this launcher does not know is ignored.
-        assert_eq!(Links::parse(r#"{"mastodon": "https://x.y/z"}"#), defaults);
     }
 
     #[test]
@@ -3922,167 +2625,6 @@ mod tests {
     }
 
     #[test]
-    fn finds_the_app_bundle_around_the_binary() {
-        let exe = Path::new("/Applications/Skyline.app/Contents/MacOS/skyline-launcher");
-        assert_eq!(
-            app_bundle(exe),
-            Some(Path::new("/Applications/Skyline.app"))
-        );
-        assert_eq!(app_bundle(Path::new("/Users/me/skyline-launcher")), None);
-        assert_eq!(
-            app_bundle(Path::new("/x/Contents/MacOS/skyline-launcher")),
-            None
-        );
-        let work = std::env::temp_dir().join(format!("skyline-find-app-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&work);
-        fs::create_dir_all(work.join("dist/Skyline.app/Contents/MacOS")).unwrap();
-        assert_eq!(find_app(&work), Some(work.join("dist/Skyline.app")));
-        let _ = fs::remove_dir_all(&work);
-    }
-
-    /// The whole update of an app bundle, as the release ships it: signed, zipped with `ditto`,
-    /// unpacked by the launcher, swapped in place of the installed one, still valid.
-    #[cfg(target_os = "macos")]
-    #[test]
-    fn an_app_bundle_updates_in_place() {
-        use std::os::unix::fs::PermissionsExt;
-        let work = std::env::temp_dir().join(format!("skyline-bundle-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&work);
-        let make = |dir: &Path, version: &str| {
-            let app = dir.join("Skyline.app");
-            fs::create_dir_all(app.join("Contents/MacOS")).unwrap();
-            fs::create_dir_all(app.join("Contents/Resources")).unwrap();
-            let bin = app.join("Contents/MacOS/skyline-launcher");
-            fs::copy("/usr/bin/true", &bin).unwrap();
-            fs::set_permissions(&bin, fs::Permissions::from_mode(0o755)).unwrap();
-            fs::write(app.join("Contents/Resources/version"), version).unwrap();
-            fs::write(
-                app.join("Contents/Info.plist"),
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\"><dict>\
-                 <key>CFBundleExecutable</key><string>skyline-launcher</string>\
-                 <key>CFBundleIdentifier</key><string>dev.horizon.test</string>\
-                 <key>CFBundlePackageType</key><string>APPL</string></dict></plist>\n",
-            )
-            .unwrap();
-            let signed = Command::new("codesign")
-                .args(["--force", "--sign", "-"])
-                .arg(&app)
-                .status()
-                .unwrap();
-            assert!(signed.success());
-            app
-        };
-        let installed = make(&work.join("Applications"), "1.0.0");
-        let release = make(&work.join("release"), "2.0.0");
-        let zip = work.join("release.zip");
-        let zipped = Command::new("ditto")
-            .args(["-c", "-k", "--norsrc", "--noextattr", "--keepParent"])
-            .arg(&release)
-            .arg(&zip)
-            .status()
-            .unwrap();
-        assert!(zipped.success());
-        unpack(&zip, "release.zip", &work.join("unpacked")).unwrap();
-        let new = find_app(&work.join("unpacked")).unwrap();
-        replace_bundle(&new, &installed).unwrap();
-        let version = fs::read_to_string(installed.join("Contents/Resources/version")).unwrap();
-        assert_eq!(version, "2.0.0");
-        let bin = installed.join("Contents/MacOS/skyline-launcher");
-        assert!(
-            Command::new(&bin).status().unwrap().success(),
-            "still executable"
-        );
-        let valid = Command::new("codesign")
-            .args(["--verify", "--strict"])
-            .arg(&installed)
-            .status()
-            .unwrap();
-        assert!(valid.success(), "the updated bundle's signature holds");
-        let left: Vec<_> = fs::read_dir(work.join("Applications"))
-            .unwrap()
-            .flatten()
-            .map(|e| e.file_name())
-            .collect();
-        assert_eq!(
-            left,
-            ["Skyline.app"],
-            "nothing staged or moved aside is left"
-        );
-
-        // A bundle changed after it was signed is refused, and the installed one stays.
-        let tampered = make(&work.join("tampered"), "3.0.0");
-        fs::write(tampered.join("Contents/Resources/version"), "3.0.1").unwrap();
-        assert!(replace_bundle(&tampered, &installed).is_err());
-        let version = fs::read_to_string(installed.join("Contents/Resources/version")).unwrap();
-        assert_eq!(version, "2.0.0");
-        let left = fs::read_dir(work.join("Applications")).unwrap().count();
-        assert_eq!(left, 1, "nothing staged is left");
-        let _ = fs::remove_dir_all(&work);
-    }
-
-    #[test]
-    fn launcher_versions_read_from_the_binary() {
-        assert_eq!(
-            parse_version_output("skyline-launcher 0.1.5\n"),
-            Some("0.1.5")
-        );
-        assert_eq!(parse_version_output("something else"), None);
-        assert_eq!(parse_version_output(""), None);
-        // This test binary is not a launcher: no version, so an update goes ahead.
-        assert_eq!(
-            installed_launcher_version(&std::env::current_exe().unwrap()),
-            None
-        );
-        assert_eq!(
-            installed_launcher_version(Path::new("/nonexistent/skyline-launcher")),
-            None
-        );
-    }
-
-    /// The launcher's file was replaced while it ran (an update from the command line, or an
-    /// earlier one): the next replacement still lands at the path it started from.
-    #[cfg(unix)]
-    #[test]
-    #[ignore = "self-update is being removed (plan step 1)"]
-    fn a_replaced_binary_is_replaced_again_at_its_path() {
-        use std::os::unix::fs::PermissionsExt;
-        let dir =
-            std::env::temp_dir().join(format!("skyline-launcher-replace-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).unwrap();
-        let exe = dir.join("skyline-launcher");
-        fs::write(&exe, "old").unwrap();
-        // Another update swaps the file under the running launcher.
-        fs::write(dir.join("other"), "other update").unwrap();
-        fs::rename(dir.join("other"), &exe).unwrap();
-        fs::write(dir.join("new"), "new").unwrap();
-        replace_binary(&dir.join("new"), &exe).unwrap();
-        assert_eq!(fs::read_to_string(&exe).unwrap(), "new");
-        // The file there keeps its mode, made executable (the swapped-in one was 0644).
-        assert_eq!(
-            fs::metadata(&exe).unwrap().permissions().mode() & 0o777,
-            0o755
-        );
-        // Gone altogether: it is put back, executable.
-        fs::remove_file(&exe).unwrap();
-        replace_binary(&dir.join("new"), &exe).unwrap();
-        assert_eq!(fs::read_to_string(&exe).unwrap(), "new");
-        assert_eq!(
-            fs::metadata(&exe).unwrap().permissions().mode() & 0o777,
-            0o755
-        );
-        // No temporary file is left beside it.
-        let mut names: Vec<String> = fs::read_dir(&dir)
-            .unwrap()
-            .flatten()
-            .map(|e| e.file_name().to_string_lossy().into_owned())
-            .collect();
-        names.sort();
-        assert_eq!(names, ["new", "skyline-launcher"]);
-        let _ = fs::remove_dir_all(&dir);
-    }
-
-    #[test]
     fn crash_reports_are_found_and_summarised() {
         let dir =
             std::env::temp_dir().join(format!("skyline-launcher-crash-{}", std::process::id()));
@@ -4110,16 +2652,5 @@ mod tests {
         assert_eq!(tail_of(&log, 100).unwrap(), "a\nb\nc\n");
         assert!(tail_of(&dir.join("missing.log"), 5).is_err());
         let _ = fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn plain_notes() {
-        let text = markdown_to_text(
-            "# Title\n\nSome *words* and [a link](https://x.y).\n\n- one\n- two\n",
-        );
-        assert_eq!(
-            text,
-            "Title\n\nSome words and a link (https://x.y).\n\n- one\n- two\n"
-        );
     }
 }

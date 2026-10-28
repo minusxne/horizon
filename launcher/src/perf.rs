@@ -391,24 +391,8 @@ pub fn benchmark(repeats: usize) -> Result<PathBuf, String> {
     );
     report.metric("launcher.rss_mb", &rss);
     report.metric("launcher.cpu_idle_pct", &cpu);
-    let mut fetches = Vec::new();
-    for _ in 0..3 {
-        let started = Instant::now();
-        crate::backend::releases()?;
-        fetches.push(started.elapsed().as_secs_f64() * 1000.0);
-    }
-    report.metric("launcher.release_list_ms", &fetches);
     if let Some(bytes) = binary_bytes() {
         report.metric("launcher.binary_bytes", &[bytes]);
-    }
-    // Kept for upload only if the player allows benchmark uploads (the outbox checks).
-    if let Ok(data) = serde_json::to_value(report.for_upload()) {
-        let item = horizon_telemetry::Item::new(
-            horizon_telemetry::Source::Launcher,
-            crate::backend::VERSION,
-            horizon_telemetry::Payload::Benchmark(data),
-        );
-        let _ = horizon_telemetry::outbox::push(&crate::backend::game_home(), &item);
     }
     report
         .write_to(&crate::backend::data_dir().join("benchmarks"))

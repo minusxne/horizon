@@ -16,7 +16,6 @@ mod instances_page;
 mod language_page;
 mod launch_page;
 mod line_edit;
-mod markdown;
 mod multiplayer_page;
 mod packs_page;
 mod perf;
@@ -162,7 +161,6 @@ struct Launcher {
     _appearance: Subscription,
     /// The session's measurements (`perf.rs`), and when the steps they time began.
     perf: perf::Perf,
-    install_started: Option<Instant>,
     prepare_started: Option<Instant>,
     play_pressed: Option<Instant>,
     /// `skyline-launcher benchmark` started this window to measure it.
@@ -300,7 +298,6 @@ impl Launcher {
             shortcuts: Default::default(),
             offline_name: offline_name(),
             name_error: None,
-            install_started: None,
             side_servers: horizon_launcher::servers::list(),
             art: art::Art::default(),
             scale: window.scale_factor(),
@@ -496,8 +493,6 @@ impl Launcher {
                         Job::Server => {}
                     }
                 }
-                // Online-only messages Skyline no longer sends.
-                _ => {}
             }
         }
         changed |= self.servers_tick();
@@ -561,13 +556,11 @@ impl Launcher {
         });
     }
 
-    /// Prepares the selected version, its Minecraft files from the player's install or, for an
-    /// owner who asks, from Mojang.
-    fn prepare(&mut self, from: backend::MinecraftFrom) {
+    /// Prepares the selected version from the Minecraft files on this computer.
+    fn prepare(&mut self) {
         let Some(tag) = self.selected().cloned() else {
             return;
         };
-        horizon_launcher::mojang::CANCEL.store(false, Ordering::Relaxed);
         let minecraft = self
             .settings
             .minecraft_dir
@@ -578,12 +571,12 @@ impl Launcher {
         self.prepare_log
             .push_back("Checking Java and your Minecraft install".into());
         let tx = self.tx.clone();
-        // The checks may download the server jar, so they run on the thread too.
+        // The checks look through every launcher's folders, so they run on the thread too.
         std::thread::spawn(move || {
             let log = |line| {
                 let _ = tx.send(Msg::Line(Job::Prepare, line));
             };
-            let result = backend::preparer(&tag, &minecraft, from, &log)
+            let result = backend::preparer(&tag, &minecraft, &log)
                 .inspect(|(_, minecraft)| backend::sounds(&tag, minecraft, &log))
                 .and_then(|(p, _)| match p {
                     backend::Preparer::Process(cmd) => {
@@ -1711,7 +1704,7 @@ impl Launcher {
             prepare = disabled(prepare);
         } else {
             prepare = prepare.on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                this.prepare(backend::MinecraftFrom::Install);
+                this.prepare();
                 cx.notify();
             }));
         }
@@ -2368,7 +2361,7 @@ impl Launcher {
                         prepare =
                             prepare.on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                                 this.use_version(&prep_tag);
-                                this.prepare(backend::MinecraftFrom::Install);
+                                this.prepare();
                                 this.go(Page::Play);
                                 cx.notify();
                             }));

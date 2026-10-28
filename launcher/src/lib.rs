@@ -13,7 +13,6 @@ pub mod i18n;
 pub mod import;
 pub mod instances;
 pub mod launch;
-pub mod mojang;
 pub mod packs;
 pub mod process;
 pub mod screenshots;

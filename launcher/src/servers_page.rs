@@ -783,7 +783,7 @@ impl Launcher {
                     self.servers.create = None;
                     self.go(Page::Play);
                     if !self.preparing {
-                        self.prepare(backend::MinecraftFrom::Install);
+                        self.prepare();
                     }
                 }
             },

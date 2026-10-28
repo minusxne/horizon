@@ -2,10 +2,9 @@
 //! command goes through `backend`; this file only parses arguments and prints.
 use clap::{Parser, Subcommand};
 use horizon_launcher::account::{self, Accounts};
-use horizon_launcher::backend::{self, Release};
+use horizon_launcher::backend;
 use horizon_launcher::instances;
 use horizon_launcher::server_list;
-use std::io::{IsTerminal, Write};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -13,7 +12,7 @@ use std::process::Command;
 #[command(
     name = "skyline-launcher",
     version = backend::VERSION,
-    about = "Installs, prepares and starts Skyline. Without a subcommand, opens the window."
+    about = "Prepares and starts Skyline, offline. Without a subcommand, opens the window."
 )]
 struct Cli {
     /// Print JSON instead of text, where a command has something to report
@@ -77,13 +76,12 @@ enum ServersCmd {
 
 #[derive(Subcommand)]
 enum AccountCmd {
-    /// The signed-in accounts and which one plays
+    /// Your offline names and which one plays
     List,
-    /// Play as this account, or as one of your offline names
+    /// Play as one of your offline names
     Select { who: String },
-    /// Play offline (LAN, offline-mode servers) beside a signed-in account that owns the game:
-    /// as NAME (kept to switch back to; 3 to 16 letters, digits or _), or as the name the game
-    /// made up
+    /// Play as NAME (kept to switch back to; 3 to 16 letters, digits or _), or as the name the
+    /// game made up. A new name is a new player in your worlds (its UUID comes from the name)
     Offline { name: Option<String> },
     /// Forget one of your offline names
     ForgetOffline { name: String },
@@ -115,18 +113,18 @@ enum InstanceCmd {
     Select { instance: String },
     /// Keep an instance on one installed Skyline version, or "latest" to follow updates again
     Version { instance: String, version: String },
-    /// Export an instance (or a port) to share: its settings, packs, Skyline mods and the worlds
-    /// named, as a .mrpack (resource packs from Modrinth listed by download) or a zip. Never
-    /// logs, screenshots or account data; worlds go without their per-player files
+    /// Export an instance to share: its settings, packs, Skyline mods and the worlds named, as a
+    /// zip of the game folder (the default) or a .mrpack. Never logs, screenshots or account
+    /// data; worlds go without their per-player files
     Export {
         /// The instance (default: the selected one)
         instance: Option<String>,
-        #[arg(long, value_enum, default_value_t = ExportFormat::Mrpack)]
+        #[arg(long, value_enum, default_value_t = ExportFormat::Zip)]
         format: ExportFormat,
         /// A world to put in it (its name or folder); repeat for more
         #[arg(long)]
         world: Vec<String>,
-        /// Where to write it (default: "<name>.mrpack" in the current folder)
+        /// Where to write it (default: "<name>.zip" in the current folder)
         #[arg(long)]
         out: Option<PathBuf>,
     },
@@ -161,10 +159,9 @@ enum InstanceCmd {
         #[arg(long)]
         remove: bool,
     },
-    /// Import what a file is, as dropping it on the window does: a shared instance (a .mrpack
-    /// without mod loaders, such as `instance export` writes, or a game folder zip) becomes a
-    /// new instance; a Java modpack goes to the Modpacks import; a resource or shader pack into
-    /// the instance (default: the selected one)
+    /// Import what a file is, as dropping it on the window does: a shared instance (a game
+    /// folder zip, or a .mrpack without mod loaders, such as `instance export` writes) becomes a
+    /// new instance; a resource or shader pack goes into the instance (default: the selected one)
     Import {
         file: PathBuf,
         /// The instance a pack goes into
@@ -175,10 +172,10 @@ enum InstanceCmd {
 
 #[derive(Clone, Copy, clap::ValueEnum)]
 enum ExportFormat {
-    /// Modrinth's modpack format
-    Mrpack,
     /// The game folder's layout, zipped
     Zip,
+    /// Modrinth's modpack format (files only; Skyline lists no downloads)
+    Mrpack,
 }
 
 #[derive(Subcommand)]
@@ -335,31 +332,31 @@ enum MultiplayerCmd {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// List Skyline releases, or the installed versions
+    /// The versions installed here, and whether each is prepared
     Versions {
-        /// Only the versions installed here (no network)
-        #[arg(long)]
+        /// Kept for scripts: every version listed is installed
+        #[arg(long, hide = true)]
         installed: bool,
     },
-    /// Download and install a release (a tag such as v2026.10.13, or "latest")
-    Install { tag: String },
+    /// Add a Skyline build from a folder (a build's target/release folder or an unpacked
+    /// release): it is linked, not copied
+    Add { folder: PathBuf },
     /// Remove an installed version
     Remove { tag: String },
-    /// Prepare a version's resources from your own Minecraft install, or from Mojang
+    /// Prepare a version's resources from your own Minecraft install (nothing is downloaded)
     Prepare {
         /// The game folder of the official launcher, Prism Launcher, MultiMC, the Modrinth App,
         /// ATLauncher or GDLauncher (default: the launcher's, then every launcher's default)
-        #[arg(long, conflicts_with = "download")]
-        minecraft: Option<PathBuf>,
-        /// Download Minecraft from Mojang for the signed-in account that owns it, instead of
-        /// using an install
         #[arg(long)]
-        download: bool,
+        minecraft: Option<PathBuf>,
+        /// The Minecraft server jar of the same version, when it is not found on its own
+        #[arg(long)]
+        server_jar: Option<PathBuf>,
         /// The installed version (default: the selected one)
         #[arg(long)]
         version: Option<String>,
     },
-    /// Start the client (needs a signed-in Microsoft account that owns Minecraft: Java Edition)
+    /// Start the game, offline, as the selected offline name
     Play {
         #[arg(long)]
         version: Option<String>,
@@ -372,11 +369,8 @@ enum Cmd {
         /// Creative mode for a new world
         #[arg(long)]
         creative: bool,
-        /// Join a friend's world with its invite code
-        #[arg(long)]
-        join: Option<String>,
         /// Join this server at once: an address, or a server of the list by name or position
-        #[arg(long, conflicts_with_all = ["world", "join"])]
+        #[arg(long, conflicts_with = "world")]
         server: Option<String>,
         /// An extra argument for the game, passed through as-is (repeatable), for example
         /// --server-thread
@@ -394,15 +388,14 @@ enum Cmd {
         #[arg(long)]
         accept_eula: bool,
     },
-    /// Microsoft accounts: list them (the default), sign in, sign out, or pick the one that plays
+    /// Offline names: list them (the default), add one, forget one, or pick the one that plays
     Account {
         #[command(subcommand)]
         action: Option<AccountCmd>,
     },
     /// Show the launcher's settings, or set one (the Settings page): selected-version TAG,
-    /// minecraft-dir PATH, server-dir PATH ("default" resets a folder), install-new-versions
-    /// on|off, opening-animation on|off, proxy http://host:port ("default" removes it),
-    /// while-playing stay|minimize|hide (what the window does while the game runs), language
+    /// minecraft-dir PATH, server-dir PATH ("default" resets a folder), opening-animation
+    /// on|off, while-playing stay|minimize|hide (what the window does while the game runs), language
     /// system|en|fr|ru (the window's language; system follows the computer's), accent
     /// red|violet|blue|teal|green|amber|pink, background PATH (a picture behind Home; "default"
     /// shows Skyline's landscape)
@@ -469,7 +462,7 @@ enum Cmd {
         action: Option<ServersCmd>,
     },
     /// Measure the launcher: starts (the first is the cold one), page switching, idle CPU and
-    /// memory, the release list fetch; writes a benchmark report to benchmarks/ in its data folder
+    /// memory; writes a benchmark report to benchmarks/ in its data folder
     Benchmark {
         /// How many times to start it
         #[arg(long, default_value_t = 5)]
@@ -477,23 +470,17 @@ enum Cmd {
     },
 }
 
-/// The CLI's definition, for the MCP tools generated from it (cli_tools.rs).
+/// The CLI's definition.
 pub fn command() -> clap::Command {
     <Cli as clap::CommandFactory>::command()
 }
 
-/// The commands that exist for AI agents: hidden and refused while No AI is on. Every other
-/// command stays: the launcher, packagers and scripts need them, and none drives the game.
-pub const AI_COMMANDS: [&str; 0] = [];
-
 /// The keys `settings` sets.
-const SETTING_KEYS: [&str; 10] = [
+const SETTING_KEYS: [&str; 8] = [
     "selected-version",
     "minecraft-dir",
     "server-dir",
-    "install-new-versions",
     "opening-animation",
-    "proxy",
     "while-playing",
     "language",
     "accent",
@@ -514,7 +501,6 @@ fn set_setting(s: &mut backend::Settings, key: &str, value: &str) -> Result<(), 
         "selected-version" => s.selected = Some(backend::resolve_version(Some(value))?),
         "minecraft-dir" => s.minecraft_dir = folder(value),
         "server-dir" => s.server_dir = folder(value),
-        "install-new-versions" => s.install_new_versions = Some(on_off(value)?),
         "opening-animation" => s.skip_opening = !on_off(value)?,
         "while-playing" => {
             s.while_playing = backend::WhilePlaying::parse(value)
@@ -546,13 +532,6 @@ fn set_setting(s: &mut backend::Settings, key: &str, value: &str) -> Result<(), 
                 ),
             }
         }
-        "proxy" => {
-            if value == "default" || value.is_empty() {
-                s.proxy = None;
-            } else {
-                s.proxy = Some(value.trim().to_string());
-            }
-        }
         _ => return Err(format!("No setting {key}.")),
     }
     Ok(())
@@ -564,35 +543,21 @@ fn settings_json(s: &backend::Settings) -> serde_json::Value {
         "selected_version": backend::resolve_version(None).ok(),
         "minecraft_dir": s.minecraft_dir,
         "server_dir": backend::server_dir(None),
-        "install_new_versions": s.install_new_versions.unwrap_or(true),
         "opening_animation": !s.skip_opening,
         "game_args": s.game_args,
-        "proxy": s.proxy,
         "desktop_entry": s.desktop_entry.unwrap_or(true),
         "while_playing": s.while_playing.name(),
         "language": s.language.map_or("system", |l| l.code()),
         "accent": s.accent.name(),
         "background": horizon_launcher::themes::background(&backend::data_dir(), s.background.as_deref()),
-        "no_ai": backend::no_ai(),
     })
 }
 
 /// Runs a subcommand and returns the exit code, or None when the window should open.
 pub fn run() -> Option<i32> {
     use clap::FromArgMatches;
-    let no_ai = backend::no_ai();
-    let mut definition = command();
-    if no_ai {
-        // Hidden from the help too; a call still gets the refusal below.
-        for name in AI_COMMANDS {
-            definition = definition.mut_subcommand(name, |c| c.hide(true));
-        }
-    }
-    let cli = Cli::from_arg_matches(&definition.get_matches()).unwrap_or_else(|e| e.exit());
-    let command = cli.command?;
-    let result = match command {
-        command => execute(command, cli.json),
-    };
+    let cli = Cli::from_arg_matches(&command().get_matches()).unwrap_or_else(|e| e.exit());
+    let result = execute(cli.command?, cli.json);
     Some(match result {
         Ok(()) => 0,
         Err(e) => {
@@ -600,23 +565,6 @@ pub fn run() -> Option<i32> {
             1
         }
     })
-}
-
-/// Download progress on one terminal line, only when stderr is a terminal and the percentage moves.
-fn progress(label: String) -> impl Fn(f32) {
-    let last = std::cell::Cell::new(-1);
-    let tty = std::io::stderr().is_terminal();
-    move |p| {
-        let pct = (p * 100.) as i32;
-        if !tty || pct == last.replace(pct) {
-            return;
-        }
-        eprint!("\r{label} {pct:>3}%");
-        let _ = std::io::stderr().flush();
-        if p >= 1.0 {
-            eprintln!();
-        }
-    }
 }
 
 fn json(value: serde_json::Value) {
@@ -635,13 +583,6 @@ fn attached(mut cmd: Command) -> Result<(), String> {
     }
 }
 
-fn release_json(r: &Release) -> serde_json::Value {
-    serde_json::json!({
-        "tag": r.tag, "name": r.name, "date": r.date, "prerelease": r.prerelease,
-        "available_here": r.asset.is_some(), "installed": backend::installed().contains(&r.tag),
-    })
-}
-
 fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
     if matches!(command, Cmd::Versions { .. }) {
         for (tag, from) in backend::reuse_prepared_everywhere() {
@@ -651,7 +592,7 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
         }
     }
     match command {
-        Cmd::Versions { installed: true } => {
+        Cmd::Versions { .. } => {
             let installed = backend::installed();
             let selected = backend::resolve_version(None).ok();
             if as_json {
@@ -675,37 +616,16 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
                 println!("{mark} {tag}  {state}");
             }
         }
-        Cmd::Versions { installed: false } => {
-            let releases = backend::releases()?;
-            if as_json {
-                json(releases.iter().map(release_json).collect());
-                return Ok(());
-            }
-            let installed = backend::installed();
-            for r in &releases {
-                let state = match (installed.contains(&r.tag), r.asset.is_some()) {
-                    (true, _) => "installed",
-                    (false, true) => "",
-                    (false, false) => "no build for this platform",
-                };
-                println!("{:<15} {}  {}", r.tag, r.date, state);
-            }
-        }
-        Cmd::Install { tag } => {
-            let label = format!("Installing {tag}");
-            let tag = backend::install_tag(&tag, false, progress(label))?;
+        Cmd::Add { folder } => {
+            let tag = backend::add_version_from_folder(&folder)?;
             if as_json {
                 json(
-                    serde_json::json!({ "installed": tag, "prepared": backend::is_prepared(&tag) }),
+                    serde_json::json!({ "added": tag, "prepared": backend::is_prepared(&tag) }),
                 );
             } else if backend::is_prepared(&tag) {
-                println!(
-                    "Installed {tag}. It is prepared already, from another installed version."
-                );
+                println!("Added {tag}. It is prepared already.");
             } else {
-                println!(
-                    "Installed {tag}. Prepare it next: skyline-launcher prepare --version {tag}"
-                );
+                println!("Added {tag}. Prepare it next: skyline-launcher prepare --version {tag}");
             }
         }
         Cmd::Remove { tag } => {
@@ -714,18 +634,17 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
         }
         Cmd::Prepare {
             minecraft,
-            download,
+            server_jar,
             version,
         } => {
             let tag = backend::resolve_version(version.as_deref())?;
             let minecraft = backend::minecraft_dir(minecraft)?;
-            let from = if download {
-                backend::MinecraftFrom::Mojang
-            } else {
-                backend::MinecraftFrom::Install
-            };
+            if let Some(jar) = server_jar {
+                let kept = backend::use_server_jar(&backend::game_version(&tag), &jar)?;
+                eprintln!("Using the server jar {}", kept.display());
+            }
             let (preparer, minecraft) =
-                backend::preparer(&tag, &minecraft, from, &|line| eprintln!("{line}"))?;
+                backend::preparer(&tag, &minecraft, &|line| eprintln!("{line}"))?;
             backend::sounds(&tag, &minecraft, &|line| println!("{line}"));
             match preparer {
                 backend::Preparer::Process(cmd) => attached(cmd)?,
@@ -740,7 +659,6 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
             instance,
             world,
             creative,
-            join,
             server,
             arg,
         } => {
@@ -750,9 +668,6 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
             };
             let mut cmd = backend::client(&instance.resolve_version(version.as_deref())?)?;
             instances::apply(&mut cmd, &instance)?;
-            if let Some(code) = join {
-                backend::join_friend(&mut cmd, &code)?;
-            }
             if let Some(world) = world {
                 cmd.arg("--world").arg(world);
             }
