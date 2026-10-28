@@ -65,7 +65,7 @@ pub fn deadline(stream: &TcpStream, limit: Duration) -> io::Result<Deadline> {
     Ok(Deadline { _cancel: tx })
 }
 
-/// Which paths a session may take (`HORIZON_FRIENDS_PATH`).
+/// Which paths a session may take (`SKYLINE_FRIENDS_PATH`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PathMode {
     /// Direct when the ends reach each other, else the relay.
@@ -77,7 +77,7 @@ pub enum PathMode {
 }
 impl PathMode {
     pub fn from_env() -> Self {
-        match std::env::var("HORIZON_FRIENDS_PATH").as_deref() {
+        match std::env::var("SKYLINE_FRIENDS_PATH").as_deref() {
             Ok("relay") => Self::RelayOnly,
             Ok("direct") => Self::DirectOnly,
             _ => Self::Auto,
@@ -85,11 +85,11 @@ impl PathMode {
     }
 }
 
-/// A relay from `HORIZON_RELAY_URL` (tests, or players who set it in the
+/// A relay from `SKYLINE_RELAY_URL` (tests, or players who set it in the
 /// environment); the game adds its own setting. None by default: friends
 /// join from the code alone.
 pub fn relay_url() -> Option<String> {
-    std::env::var("HORIZON_RELAY_URL")
+    std::env::var("SKYLINE_RELAY_URL")
         .ok()
         .map(|s| s.trim().to_owned())
         .filter(|s| !s.is_empty())

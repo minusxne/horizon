@@ -2620,10 +2620,10 @@ mod tests {
     use super::*;
     #[test]
     fn end_identity_surface_matches_normal_surface_and_rejects_custom_rules() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
-                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3")
             });
         if !root.join("worldgen/world_presets.json").exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
@@ -2806,11 +2806,11 @@ mod tests {
 
     #[test]
     fn far_surface_matches_undecorated_land_and_keeps_end_void() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
-            .or_else(|| std::env::var_os("HORIZON_RESOURCES"))
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
+            .or_else(|| std::env::var_os("SKYLINE_RESOURCES"))
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
-                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3")
             });
         if !root.join("worldgen/world_presets.json").exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
@@ -2907,10 +2907,10 @@ mod tests {
 
     #[test]
     fn local_carver_cache_is_worker_owned_and_eviction_preserves_terrain() {
-        let root = std::env::var_os("HORIZON_RESOURCES")
+        let root = std::env::var_os("SKYLINE_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
-                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3")
             });
         if !root.join("worldgen/world_presets.json").exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
@@ -2958,10 +2958,10 @@ mod tests {
 
     /// The prepared worldgen data, if this checkout has it.
     fn prepared_data() -> Option<Arc<GeneratorData>> {
-        let root = std::env::var_os("HORIZON_RESOURCES")
+        let root = std::env::var_os("SKYLINE_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
-                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3")
             });
         if !root.join("worldgen/world_presets.json").exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
@@ -2974,7 +2974,7 @@ mod tests {
     }
 
     /// Seed 1234's strongholds where vanilla 26.3 puts them
-    /// (VanillaStructureStartOracle with HORIZON_RINGS). Each search sampled
+    /// (VanillaStructureStartOracle with SKYLINE_RINGS). Each search sampled
     /// its quarts through fresh resolvers, which broke climate ties their own
     /// way: three of the 128 were up to 6 chunks off.
     #[test]
@@ -3136,10 +3136,10 @@ mod tests {
     /// then cache eviction and explicit start invalidation with old Arcs alive.
     #[test]
     fn concurrent_neighbours_share_results_and_survive_invalidation() {
-        let root = std::env::var_os("HORIZON_RESOURCES")
+        let root = std::env::var_os("SKYLINE_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
-                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3")
             });
         if !root.join("worldgen/world_presets.json").exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());

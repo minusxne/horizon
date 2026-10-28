@@ -1,13 +1,13 @@
-//! The "No AI" switch: one setting that hides and turns off every AI feature of Horizon (the
-//! companion, agent control through the control socket, `horizon-ctl`, its MCP server and the
+//! The "No AI" switch: one setting that hides and turns off every AI feature of Skyline (the
+//! companion, agent control through the control socket, `skyline-ctl`, its MCP server and the
 //! launcher's). The launcher and the game both read and write it here, so they always agree.
 //!
-//! It is the `noAi` line of the game's `horizon-extras.txt`, in the game's home (the folder
+//! It is the `noAi` line of the game's `skyline-extras.txt`, in the game's home (the folder
 //! with `options.txt`). Missing means off: AI features are available. See docs/agent-control.md.
 use std::{fs, io, path::Path};
 
 /// The game's extras file, beside `options.txt`.
-pub const FILE: &str = "horizon-extras.txt";
+pub const FILE: &str = "skyline-extras.txt";
 /// The key No AI is kept under there.
 pub const KEY: &str = "noAi";
 /// The one line every AI surface answers with while No AI is on.
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn set_writes_only_when_needed() {
-        let home = std::env::temp_dir().join(format!("horizon-no-ai-{}", std::process::id()));
+        let home = std::env::temp_dir().join(format!("skyline-no-ai-{}", std::process::id()));
         let _ = fs::remove_dir_all(&home);
         set(&home, false).unwrap();
         assert!(!home.join(FILE).exists(), "off needs no file");

@@ -1,4 +1,4 @@
-//! Replays `tools/test_mob_ai_parity.py` scenarios on Horizon's mob AI and
+//! Replays `tools/test_mob_ai_parity.py` scenarios on Skyline's mob AI and
 //! prints each mob's AI-visible state after every tick in the format of
 //! `VanillaMobAiOracle`.
 //!
@@ -184,7 +184,7 @@ fn who(w: Option<Who>) -> String {
     }
 }
 
-/// Vanilla's goal class for a Horizon goal (most share the name).
+/// Vanilla's goal class for a Skyline goal (most share the name).
 fn goal_name(m: &Mob, name: &str) -> String {
     let vanilla = match name {
         "Float" => "FloatGoal",

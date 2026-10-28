@@ -240,7 +240,7 @@ pub struct Guest {
     pub next_window: i32,
     /// An unfinished drag in the inventory menu.
     pub drag: Option<(u8, Vec<usize>)>,
-    /// The compound this player was loaded from, for fields Horizon does not model.
+    /// The compound this player was loaded from, for fields Skyline does not model.
     pub saved: Option<horizon_world::nbt::Tag>,
     /// `ServerPlayer.seenCredits`: the end poem has been shown.
     pub seen_credits: bool,

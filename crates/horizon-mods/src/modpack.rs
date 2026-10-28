@@ -1,4 +1,4 @@
-//! `.hpack`, a Horizon modpack (docs/api/mod-index.md): registry mods
+//! `.hpack`, a Skyline modpack (docs/api/mod-index.md): registry mods
 //! played together as a profile. A zip holding `horizon-modpack.toml`, which
 //! names each mod by id, version and SHA-256 (the files themselves come from
 //! the registry), and optionally `overrides/`: settings and resource packs
@@ -19,7 +19,7 @@ const OVERRIDES: &str = "overrides/";
 const MAX_OVERRIDE: u64 = 64 << 20;
 const MAX_OVERRIDES: u64 = 256 << 20;
 /// The settings files an override may replace.
-const SETTINGS: [&str; 3] = ["options.txt", "horizon-graphics.txt", "horizon-extras.txt"];
+const SETTINGS: [&str; 3] = ["options.txt", "skyline-graphics.txt", "skyline-extras.txt"];
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -45,7 +45,7 @@ pub struct PackMod {
     pub id: String,
     pub version: String,
     pub sha256: String,
-    /// Turned on in the profile (`horizon-mods.txt`).
+    /// Turned on in the profile (`skyline-mods.txt`).
     #[serde(default = "on")]
     pub on: bool,
 }
@@ -70,7 +70,7 @@ impl Manifest {
         let m: Manifest = toml::from_str(text).map_err(|e| format!("{MANIFEST}: {e}"))?;
         if m.format != FORMAT {
             return Err(format!(
-                "{MANIFEST}: format {}; this Horizon reads {FORMAT}",
+                "{MANIFEST}: format {}; this Skyline reads {FORMAT}",
                 m.format
             ));
         }
@@ -184,7 +184,7 @@ impl Modpack {
 fn check_override(path: &str, manifest: &Manifest) -> Result<(), String> {
     let bad = || {
         format!(
-            "overrides/{path}: only {}, resourcepacks/<name>.zip and horizon-mods/{STORAGE_DIR}/<a listed mod>/ may be overridden",
+            "overrides/{path}: only {}, resourcepacks/<name>.zip and skyline-mods/{STORAGE_DIR}/<a listed mod>/ may be overridden",
             SETTINGS.join(", ")
         )
     };
@@ -241,7 +241,7 @@ sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
     }
 
     fn scratch(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("horizon-hpack-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-hpack-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
@@ -268,7 +268,7 @@ sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
         Modpack::extract_overrides(&path, &home).unwrap();
         let options = std::fs::read_to_string(home.join("options.txt")).unwrap();
         assert_eq!(options, "renderDistance:8\n");
-        let corner = home.join(format!("horizon-mods/{STORAGE_DIR}/coords_hud/corner.txt"));
+        let corner = home.join(format!("skyline-mods/{STORAGE_DIR}/coords_hud/corner.txt"));
         assert!(corner.is_file());
         std::fs::remove_dir_all(&dir).unwrap();
     }

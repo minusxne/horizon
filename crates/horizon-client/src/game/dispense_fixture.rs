@@ -1,5 +1,5 @@
 //! The Rust side of tools/test_dispenser_parity.py: with
-//! `HORIZON_DISPENSE_FIXTURE=CASES,OUTPUT` the game loads its resources, runs
+//! `SKYLINE_DISPENSE_FIXTURE=CASES,OUTPUT` the game loads its resources, runs
 //! every case (a dispenser or dropper with items, blocks and target entities
 //! around it) through `dispense_from` on a fresh headless world and prints what
 //! changed in the format of `VanillaDispenserOracle`.
@@ -96,7 +96,7 @@ impl Game<'_> {
         );
         let (input, output) = spec
             .split_once(',')
-            .ok_or("HORIZON_DISPENSE_FIXTURE=CASES,OUTPUT")?;
+            .ok_or("SKYLINE_DISPENSE_FIXTURE=CASES,OUTPUT")?;
         // Saplings and feature placers grow from the live feature registry.
         self.install_live_features();
         let text = std::fs::read_to_string(input)?;
@@ -719,7 +719,7 @@ impl Game<'_> {
     }
 
     /// A stack in a block entity's slot: a container's, a jukebox's record, a
-    /// lectern's book, or the items of a block entity Horizon keeps as saved.
+    /// lectern's book, or the items of a block entity Skyline keeps as saved.
     fn fixture_fill(&mut self, p: (i32, i32, i32), slot: usize, stack: Option<ItemStack>) {
         let jukebox =
             &*self.res.facts().get(self.world.block(p.0, p.1, p.2)).name == "minecraft:jukebox";

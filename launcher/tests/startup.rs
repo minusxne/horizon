@@ -10,7 +10,7 @@ use std::{
 };
 
 fn fixture() -> PathBuf {
-    let root = std::env::temp_dir().join(format!("horizon-startup-{}", std::process::id()));
+    let root = std::env::temp_dir().join(format!("skyline-startup-{}", std::process::id()));
     for folder in ["game/telemetry", "launcher", "data", "config", "probes"] {
         fs::create_dir_all(root.join(folder)).unwrap();
     }
@@ -28,18 +28,18 @@ fn fixture() -> PathBuf {
 fn launch(root: &Path) -> Child {
     let inherited_path = std::env::var_os("PATH").unwrap();
     let paths = std::iter::once(root.join("probes")).chain(std::env::split_paths(&inherited_path));
-    horizon_launcher::process::command(env!("CARGO_BIN_EXE_horizon-launcher"))
+    horizon_launcher::process::command(env!("CARGO_BIN_EXE_skyline-launcher"))
         .current_dir(root)
         .env("PATH", std::env::join_paths(paths).unwrap())
-        .env("HORIZON_HOME", root.join("game"))
-        .env("HORIZON_LAUNCHER_HOME", root.join("launcher"))
+        .env("SKYLINE_HOME", root.join("game"))
+        .env("SKYLINE_LAUNCHER_HOME", root.join("launcher"))
         .env("XDG_DATA_HOME", root.join("data"))
         .env("XDG_CONFIG_HOME", root.join("config"))
-        .env("HORIZON_LAUNCHER_NO_SELF_UPDATE", "1")
-        .env("HORIZON_NO_AUDIO", "1")
-        .env("HORIZON_TELEMETRY_URL", "off")
-        .env("HORIZON_STARTUP_PROBE_LOG", root.join("probes.log"))
-        .env("HORIZON_LAUNCHER_BENCH", root.join("timing.json"))
+        .env("SKYLINE_LAUNCHER_NO_SELF_UPDATE", "1")
+        .env("SKYLINE_NO_AUDIO", "1")
+        .env("SKYLINE_TELEMETRY_URL", "off")
+        .env("SKYLINE_STARTUP_PROBE_LOG", root.join("probes.log"))
+        .env("SKYLINE_LAUNCHER_BENCH", root.join("timing.json"))
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()

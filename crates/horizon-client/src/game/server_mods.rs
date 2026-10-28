@@ -384,13 +384,13 @@ mod run {
                 let state = match crate::game::render_control::parse_state(registry, &b.state) {
                     Ok(state) => state,
                     Err(e) => {
-                        log::warn!("Horizon: a server mod set {}: {e}", b.state);
+                        log::warn!("Skyline: a server mod set {}: {e}", b.state);
                         continue;
                     }
                 };
                 if let Err(e) = self.place_state([b.x, b.y, b.z], state, false) {
                     log::debug!(
-                        "Horizon: a server mod's block at {} {} {}: {e:?}",
+                        "Skyline: a server mod's block at {} {} {}: {e:?}",
                         b.x,
                         b.y,
                         b.z
@@ -565,7 +565,7 @@ mod run {
                         let over = queued.len() - MAX_QUEUED_WRITES;
                         queued.drain(..over);
                         log::warn!(
-                            "Horizon: mod {name} set more blocks than wait for their level: {over} dropped"
+                            "Skyline: mod {name} set more blocks than wait for their level: {over} dropped"
                         );
                     }
                 }

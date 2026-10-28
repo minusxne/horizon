@@ -117,7 +117,7 @@ impl Clicks {
         self.quick_crafting
     }
 
-    /// A press Horizon handled itself (a double click's `PICKUP_ALL`): its
+    /// A press Skyline handled itself (a double click's `PICKUP_ALL`): its
     /// release clicks nothing more.
     pub fn skip_release(&mut self) {
         self.quick_crafting = None;

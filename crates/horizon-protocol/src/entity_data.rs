@@ -1,6 +1,6 @@
 //! SynchedEntityData values (ClientboundSetEntityDataPacket): an entry index,
 //! the EntityDataSerializers id, and the serializer's value, ending with 0xFF.
-//! Serializers Horizon cannot decode end the list early; the entries before
+//! Serializers Skyline cannot decode end the list early; the entries before
 //! them are kept.
 use crate::{
     Result,

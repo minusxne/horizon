@@ -961,7 +961,7 @@ impl Game<'_> {
         }
     }
 
-    /// The attribute map of a living entity whose attributes Horizon does
+    /// The attribute map of a living entity whose attributes Skyline does
     /// not model, created from its type's defaults on first use.
     pub(in crate::game) fn generic_attributes(
         &mut self,

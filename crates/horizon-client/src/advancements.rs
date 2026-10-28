@@ -1229,11 +1229,11 @@ mod tests {
 
     /// The criteria an inventory change and a recipe unlock test, on vanilla's tree:
     /// `cargo test -p horizon-client --lib -- --ignored --nocapture index_on_vanilla_tree`
-    /// with HORIZON_RESOURCES set to the prepared resources.
+    /// with SKYLINE_RESOURCES set to the prepared resources.
     #[test]
     #[ignore = "needs the prepared resources"]
     fn index_on_vanilla_tree() {
-        let Some(root) = std::env::var_os("HORIZON_RESOURCES").map(std::path::PathBuf::from) else {
+        let Some(root) = std::env::var_os("SKYLINE_RESOURCES").map(std::path::PathBuf::from) else {
             return;
         };
         let data = root.join("data");
@@ -1330,9 +1330,8 @@ mod tests {
     }
     #[test]
     fn uh_oh_accepts_either_tnt_event_only_for_adult_sulfur_cubes() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(
-            "../../.local/horizon-client/26.3/data/minecraft/advancement/husbandry/uh_oh.json",
-        );
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.local/skyline/26.3/data/minecraft/advancement/husbandry/uh_oh.json");
         if !path.exists() {
             return;
         }

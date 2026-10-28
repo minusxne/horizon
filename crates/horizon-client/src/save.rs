@@ -1,4 +1,4 @@
-//! World persistence in the vanilla 26.3 layout, readable by both Horizon and
+//! World persistence in the vanilla 26.3 layout, readable by both Skyline and
 //! the vanilla game:
 //! - `level.dat` (`Data`: name, game type, time, spawn, difficulty, version)
 //!   plus the saved-data files `data/minecraft/{weather,world_clocks,
@@ -8,10 +8,10 @@
 //!   paletted sections with light, heightmaps, block entities, scheduled
 //!   block/fluid ticks) and `entities/r.X.Z.mca` (entities, `entity_nbt`).
 //!
-//! Data Horizon does not simulate (structure references, unknown block
+//! Data Skyline does not simulate (structure references, unknown block
 //! entities and entities, player fields such as the ender chest or effects,
 //! game rules) is kept from the loaded files and written back unchanged.
-//! Worlds saved by older Horizon builds (`region/`, `DIM-1/`, `Player` in
+//! Worlds saved by older Skyline builds (`region/`, `DIM-1/`, `Player` in
 //! `level.dat`) are migrated on open.
 use crate::{
     Result,
@@ -158,7 +158,7 @@ impl SessionLock {
 /// 26.3 does when it opens one: the file fixes and level.dat first
 /// (`FileFixerUpper`), then the DataFixers upgrades of every chunk, entity chunk,
 /// POI chunk, player, saved data, advancements and statistics file. Vanilla runs
-/// the latter as it reads each file; Horizon runs them all on opening, which reads
+/// the latter as it reads each file; Skyline runs them all on opening, which reads
 /// the same data. Worlds older than the ported fixes (1.17) are refused.
 pub fn upgrade_older_world(world: &Path) -> Result<()> {
     let Some(root) = read_dat(&world.join("level.dat")) else {
@@ -183,7 +183,7 @@ pub fn upgrade_older_world(world: &Path) -> Result<()> {
         .map_err(|e| format!("upgrading {}: {e}", world.display()))?;
     Ok(())
 }
-/// Move a world saved by an older Horizon build (pre-26.3 layout with a
+/// Move a world saved by an older Skyline build (pre-26.3 layout with a
 /// DataVersion that keeps vanilla from upgrading it) into the 26.3 layout.
 pub fn migrate_legacy(world: &Path) -> Result<()> {
     for (old, dimension) in [
@@ -559,7 +559,7 @@ pub fn decode_banner(tag: &Tag) -> crate::containers::Banner {
     }
 }
 /// A loaded container with a loot table and no items yet, rolled as
-/// generation rolls it (Horizon does not unpack on first open).
+/// generation rolls it (Skyline does not unpack on first open).
 fn roll_loaded_loot(
     chunk: &Chunk,
     biomes: &Biomes,
@@ -1218,7 +1218,7 @@ pub fn encode_with(
                 Some(tag) => Some((start.name.as_str().into(), tag)),
                 None => {
                     log::warn!(
-                        "Horizon: structure start {} not saved: one of its pieces cannot be",
+                        "Skyline: structure start {} not saved: one of its pieces cannot be",
                         start.name
                     );
                     None
@@ -1798,7 +1798,7 @@ fn resolve_poi(
         return Some(record.clone());
     };
     let old = read_region_record(root, cache, "poi", x, z).unwrap_or_else(|e| {
-        log::warn!("Horizon: could not read the poi record of chunk {x} {z}: {e}");
+        log::warn!("Skyline: could not read the poi record of chunk {x} {z}: {e}");
         None
     });
     let tag = match (encode_poi(chunk, tables), old) {
@@ -1933,7 +1933,7 @@ impl SaveDir {
             return Ok(());
         }
         let mut data = compound_or_empty(read_saved_data(&self.root, "chunk_tickets"));
-        // Preserve persistent tickets Horizon does not simulate.
+        // Preserve persistent tickets Skyline does not simulate.
         let mut tickets = match data.get("tickets") {
             Some(Tag::List(tickets)) => tickets
                 .iter()
@@ -2108,7 +2108,7 @@ impl SaveDir {
                     let result = write_region_records(&root, cache, folder, &records);
                     if let Err(e) = &result {
                         let message = format!("failed to write {folder} files: {e}");
-                        log::warn!("Horizon: {message}");
+                        log::warn!("Skyline: {message}");
                         *outstanding.error.lock().unwrap() = Some(message);
                     }
                     // Keep failed snapshots readable; never report them as durable.
@@ -2668,7 +2668,7 @@ pub struct Level {
     pub food_tick_timer: i32,
     /// Abilities.flying: whether creative/spectator flight is active.
     pub flying: bool,
-    /// The player compound as loaded, for fields Horizon does not model
+    /// The player compound as loaded, for fields Skyline does not model
     /// (ender chest, effects, abilities, recipe book, attributes, ...).
     pub player_extra: Option<Tag>,
 }
@@ -2930,7 +2930,7 @@ impl Level {
             _ => Vec::new(),
         };
     }
-    /// The player compound: the loaded one with Horizon's state written over it.
+    /// The player compound: the loaded one with Skyline's state written over it.
     pub fn player_tag(&self) -> Tag {
         let mut p = compound_or_empty(self.player_extra.clone());
         // Keys rewritten from scratch.
@@ -3143,7 +3143,7 @@ impl Level {
             .is_some_and(|d| d.get("Player").is_some() || d.get("WorldGenSettings").is_some());
         let mut data = compound_or_empty(existing);
         if let Tag::Compound(map) = &mut data {
-            // Pre-26.3 keys now stored elsewhere (a legacy Horizon level.dat).
+            // Pre-26.3 keys now stored elsewhere (a legacy Skyline level.dat).
             for key in [
                 "Player",
                 "WorldGenSettings",
@@ -3746,7 +3746,7 @@ impl<G: ChunkGenerator> ChunkGenerator for Persistent<G> {
             .save
             .save_protos(&saved, self.registry.registry, &self.biomes)
         {
-            log::warn!("Horizon: failed to save proto chunks: {e}");
+            log::warn!("Skyline: failed to save proto chunks: {e}");
         }
     }
     fn save_finished(&self, mut chunk: Chunk) {
@@ -3760,7 +3760,7 @@ impl<G: ChunkGenerator> ChunkGenerator for Persistent<G> {
             .save_later(&[Arc::new(chunk)], self.registry.registry, &self.biomes)
             .and_then(|_| self.save.save_entities_later(vec![(key, entities)]));
         if let Err(e) = saved {
-            log::warn!("Horizon: failed to save chunk {} {}: {e}", key.0, key.1);
+            log::warn!("Skyline: failed to save chunk {} {}: {e}", key.0, key.1);
         }
     }
     fn decorates(&self) -> bool {
@@ -3778,7 +3778,7 @@ impl<G: ChunkGenerator> ChunkGenerator for Persistent<G> {
 mod tests {
     #[test]
     fn points_of_interest_save_as_poi_sections() {
-        let Some(root) = std::env::var_os("HORIZON_TEST_RESOURCES") else {
+        let Some(root) = std::env::var_os("SKYLINE_TEST_RESOURCES") else {
             return;
         };
         let assets = crate::assets::Assets::load(&PathBuf::from(root)).expect("assets");
@@ -3840,14 +3840,14 @@ mod tests {
 
     #[test]
     fn a_chunk_that_loses_its_last_poi_saves_empty_sections() {
-        let Some(root) = std::env::var_os("HORIZON_TEST_RESOURCES") else {
+        let Some(root) = std::env::var_os("SKYLINE_TEST_RESOURCES") else {
             return;
         };
         let root = PathBuf::from(root);
         let assets = crate::assets::Assets::load(&root).expect("assets");
         let biomes = Arc::new(Biomes::load(&root).expect("biomes"));
         let bell = assets.registry.default_state("minecraft:bell").unwrap().0;
-        let dir = std::env::temp_dir().join(format!("horizon-poi-save-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-poi-save-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let save = SaveDir::new(dir.clone());
         let _ = save.tables.set(Arc::new(SaveTables::new(&assets)));
@@ -3906,7 +3906,7 @@ mod tests {
 
     #[test]
     fn unopened_rolled_containers_save_their_loot_table() {
-        let Some(root) = std::env::var_os("HORIZON_TEST_RESOURCES") else {
+        let Some(root) = std::env::var_os("SKYLINE_TEST_RESOURCES") else {
             return;
         };
         let root = PathBuf::from(root);
@@ -3984,7 +3984,7 @@ mod tests {
 
     #[test]
     fn nether_and_end_chunks_save_with_their_own_height() {
-        let Some(root) = std::env::var_os("HORIZON_TEST_RESOURCES") else {
+        let Some(root) = std::env::var_os("SKYLINE_TEST_RESOURCES") else {
             return;
         };
         let root = PathBuf::from(root);
@@ -4049,7 +4049,7 @@ mod tests {
 
     #[test]
     fn saved_far_surface_reads_builds_and_water_without_gameplay_chunks() {
-        let Some(root) = std::env::var_os("HORIZON_TEST_RESOURCES") else {
+        let Some(root) = std::env::var_os("SKYLINE_TEST_RESOURCES") else {
             return;
         };
         let root = PathBuf::from(root);
@@ -4095,7 +4095,7 @@ mod tests {
             "block_entities",
             Tag::String("not decoded by far sampling".into()),
         );
-        let dir = std::env::temp_dir().join(format!("horizon-lod-save-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-lod-save-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let save = SaveDir::new(dir.clone());
         save.write_records("region", vec![((-2, 3), Some(saved))], true)
@@ -4357,7 +4357,7 @@ mod tests {
 
     #[test]
     fn older_worlds_are_upgraded_on_opening() {
-        let dir = std::env::temp_dir().join(format!("horizon-dv-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-dv-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let level =
             |v: i32| Tag::compound([("Data", Tag::compound([("DataVersion", Tag::Int(v))]))]);
@@ -4380,7 +4380,7 @@ mod tests {
     }
     #[test]
     fn write_completion_polls_without_waiting_and_keeps_latest_snapshot() {
-        let dir = std::env::temp_dir().join(format!("horizon-save-poll-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-save-poll-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let save = super::SaveDir::new(dir.clone());
         let lock = super::SessionLock::acquire(&dir).unwrap();
@@ -4416,7 +4416,7 @@ mod tests {
 
     #[test]
     fn failed_async_writes_are_readable_and_never_reported_durable() {
-        let dir = std::env::temp_dir().join(format!("horizon-save-failure-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-save-failure-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         // A file where a directory is needed causes a real writer I/O error.
@@ -4436,7 +4436,7 @@ mod tests {
 
     #[test]
     fn session_lock_is_exclusive() {
-        let dir = std::env::temp_dir().join(format!("horizon-lock-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-lock-{}", std::process::id()));
         let first = super::SessionLock::acquire(&dir).expect("first lock");
         assert!(super::SessionLock::acquire(&dir).is_err());
         assert_eq!(
@@ -4452,7 +4452,7 @@ mod tests {
     /// world locked.
     #[test]
     fn session_lock_releases_while_a_descriptor_copy_lives() {
-        let dir = std::env::temp_dir().join(format!("horizon-lock-copy-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-lock-copy-{}", std::process::id()));
         let lock = super::SessionLock::acquire(&dir).expect("first lock");
         let copy = lock.0.try_clone().unwrap();
         drop(lock);
@@ -4918,7 +4918,7 @@ mod tests {
     }
     #[test]
     fn level_round_trips_through_the_vanilla_files() {
-        let dir = std::env::temp_dir().join(format!("horizon-level-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-level-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let mut level = Level {
             name: "Test".into(),
@@ -5097,7 +5097,7 @@ mod tests {
     fn level_save_keeps_changed_rules() {
         use crate::gamerules::{GameRules, Value};
         let dir =
-            std::env::temp_dir().join(format!("horizon-gamerules-level-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-gamerules-level-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let mut level = super::Level::default();
         level.write(&dir).unwrap();
@@ -5142,7 +5142,7 @@ mod tests {
 
     #[test]
     fn forced_chunks_survive_dimension_restarts_and_removals() {
-        let root = std::env::temp_dir().join(format!("horizon-forced-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("skyline-forced-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let dimensions = [
             "minecraft:overworld",

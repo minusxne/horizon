@@ -1,10 +1,10 @@
-//! Discord Rich Presence: "Playing Horizon" on the player's Discord profile, with what they are
+//! Discord Rich Presence: "Playing Skyline" on the player's Discord profile, with what they are
 //! doing (docs/native-client.md). A thread of its own talks to the Discord app on this computer
 //! through its local IPC socket (Discord's RPC docs: `discord-ipc-N`, frames of opcode u32 LE +
 //! length u32 LE + JSON). The game only calls [`set`] each frame: a change wakes the thread,
 //! which connects when Discord runs, retries every 15 s when it doesn't, keeps under Discord's
 //! update limit and clears the activity on quit. Nothing is sent with the setting off,
-//! or with `HORIZON_NO_DISCORD=1`.
+//! or with `SKYLINE_NO_DISCORD=1`.
 use std::collections::VecDeque;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
@@ -16,14 +16,14 @@ use serde_json::{Value, json};
 
 use crate::command::args::GameMode;
 
-/// The "Horizon" application on Discord's developer portal (public: it names the game). Its
+/// The "Skyline" application on Discord's developer portal (public: it names the game). Its
 /// Rich Presence assets: `horizon`, the logo.
 pub const DISCORD_APP_ID: &str = "1563857609738690560";
 /// Whether the application has the game-mode images (`survival`, `creative`, `adventure`,
 /// `spectator`) beside the logo; it doesn't yet.
 const MODE_IMAGES: bool = false;
 /// Points the game at a test's fake Discord (a folder holding `discord-ipc-0`).
-const IPC_DIR_ENV: &str = "HORIZON_DISCORD_IPC_DIR";
+const IPC_DIR_ENV: &str = "SKYLINE_DISCORD_IPC_DIR";
 
 /// Discord drops activity updates beyond 5 in 20 seconds.
 const BURST: usize = 5;
@@ -114,7 +114,7 @@ static THREAD: OnceLock<Thread> = OnceLock::new();
 pub fn start(enabled: bool, automated: bool) {
     let fake_discord = std::env::var_os(IPC_DIR_ENV).is_some();
     if THREAD.get().is_some()
-        || std::env::var_os("HORIZON_NO_DISCORD").is_some_and(|v| v != "0")
+        || std::env::var_os("SKYLINE_NO_DISCORD").is_some_and(|v| v != "0")
         || (automated && !fake_discord)
     {
         return;
@@ -129,7 +129,7 @@ pub fn start(enabled: bool, automated: bool) {
         Ok(handle) => {
             let _ = THREAD.set(handle.thread().clone());
         }
-        Err(e) => log::warn!("Horizon: no Discord presence: {e}"),
+        Err(e) => log::warn!("Skyline: no Discord presence: {e}"),
     }
 }
 
@@ -216,7 +216,7 @@ fn run() {
         match c.set_activity(activity(wanted.status, wanted.since)) {
             Ok(()) => sent = Some((wanted, now)),
             Err(e) => {
-                log::info!("Horizon: Discord presence disconnected ({e})");
+                log::info!("Skyline: Discord presence disconnected ({e})");
                 client = None;
                 sent = None;
             }
@@ -226,7 +226,7 @@ fn run() {
 
 /// The activity Discord shows for `status`; `None` clears it.
 fn activity(status: Status, since: Option<u64>) -> Option<Value> {
-    let mut assets = json!({"large_image": "horizon", "large_text": "Horizon"});
+    let mut assets = json!({"large_image": "horizon", "large_text": "Skyline"});
     let (details, state, party) = match status {
         Status::Off => return None,
         Status::Menus => ("In the menus", None, None),
@@ -338,11 +338,11 @@ impl Client {
             };
             match client.handshake() {
                 Ok(()) => {
-                    log::info!("Horizon: connected to Discord for Rich Presence");
+                    log::info!("Skyline: connected to Discord for Rich Presence");
                     Some(client)
                 }
                 Err(e) => {
-                    log::debug!("Horizon: Discord at {} refused: {e}", path.display());
+                    log::debug!("Skyline: Discord at {} refused: {e}", path.display());
                     None
                 }
             }
@@ -370,7 +370,7 @@ impl Client {
             match read_frame(&mut self.pipe)? {
                 (FRAME, frame) if ours(&frame) => {
                     if frame["evt"] == "ERROR" {
-                        log::info!("Horizon: Discord presence: {}", frame["data"]["message"]);
+                        log::info!("Skyline: Discord presence: {}", frame["data"]["message"]);
                     }
                     return Ok(());
                 }
@@ -493,7 +493,7 @@ mod tests {
         assert_eq!(windows[0], PathBuf::from(r"\\?\pipe\discord-ipc-0"));
 
         let fake = sockets_with(
-            env(&[("HORIZON_DISCORD_IPC_DIR", "/tmp/hz"), ("TMPDIR", "/x")]),
+            env(&[("SKYLINE_DISCORD_IPC_DIR", "/tmp/hz"), ("TMPDIR", "/x")]),
             false,
         );
         assert_eq!(fake.len(), 10);
@@ -581,7 +581,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn talks_to_discord_over_its_socket() {
-        let dir = std::env::temp_dir().join(format!("horizon-discord-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-discord-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("discord-ipc-0");
         let _ = std::fs::remove_file(&path);

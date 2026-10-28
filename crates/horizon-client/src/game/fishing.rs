@@ -875,7 +875,7 @@ impl Game<'_> {
             })
             .collect()
     }
-    /// The hook for `horizon-ctl status`.
+    /// The hook for `skyline-ctl status`.
     pub(super) fn hook_status(&self) -> Option<serde_json::Value> {
         let h = self.hook.as_ref()?;
         Some(serde_json::json!({

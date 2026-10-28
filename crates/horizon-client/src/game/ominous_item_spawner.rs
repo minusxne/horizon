@@ -25,7 +25,7 @@ pub(super) struct OminousItemSpawner {
     pub(super) position: [f64; 3],
     pub(super) spawn_item_after: i64,
     tick_count: i64,
-    /// Its UUID, and the compound it was loaded from (fields Horizon doesn't
+    /// Its UUID, and the compound it was loaded from (fields Skyline doesn't
     /// model survive a save).
     pub(super) uuid: [i32; 4],
     pub(super) raw: Option<Box<horizon_world::nbt::Tag>>,

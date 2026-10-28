@@ -964,7 +964,7 @@ impl ChatScreen {
         }
         // CommandSuggestions.updateUsageInfo: the Chat option may take the
         // commands, under the usage. (Vanilla also counts a command with a
-        // message argument, `/say hi`, as a message; Horizon's parse keeps no
+        // message argument, `/say hi`, as a message; Skyline's parse keeps no
         // argument kinds, so only a bare message does.)
         if !self.abilities.send_commands {
             self.usage.push(

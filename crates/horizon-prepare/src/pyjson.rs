@@ -322,7 +322,7 @@ impl Parser<'_> {
                             }
                             out.push(char::from_u32(code).ok_or_else(|| {
                                 self.error(
-                                    "Lone surrogate (Python keeps it; Horizon's files have none)",
+                                    "Lone surrogate (Python keeps it; Skyline's files have none)",
                                 )
                             })?);
                         }

@@ -1,4 +1,4 @@
-//! `horizon-server run`: writes `server.properties` from `server.toml`, runs the engine with the console on
+//! `skyline-server run`: writes `server.properties` from `server.toml`, runs the engine with the console on
 //! stdin, serves the control API, stops the game cleanly on Ctrl-C, SIGTERM or `stop`, and restarts it when
 //! it crashes (docs/server.md, sections 2 and 7). An update restarts the game on another release and goes
 //! back by itself when the new game doesn't come up.
@@ -63,7 +63,7 @@ enum Exit {
     /// Asked to stop, or the game ended by itself without an error (`stop` typed in its console, the EULA
     /// not agreed, the port taken): not restarted.
     Stopped,
-    /// Asked to restart (`horizon-server restart`).
+    /// Asked to restart (`skyline-server restart`).
     Restart,
     Crashed(ExitStatus),
     /// Started on another release, the game wasn't up in time and was stopped.
@@ -100,7 +100,7 @@ pub fn run(dir: &Path) -> Result<(), String> {
                 &shared,
                 "INFO",
                 &format!(
-                    "Web panel on http://{address} (`horizon-server panel` prints a login link)"
+                    "Web panel on http://{address} (`skyline-server panel` prints a login link)"
                 ),
             ),
             Err(e) => note(
@@ -269,7 +269,7 @@ fn switch(
     let Some(install) = shared.install.as_ref() else {
         shared.finish_update(
             false,
-            "Not updated: this horizon-server wasn't installed".into(),
+            "Not updated: this skyline-server wasn't installed".into(),
         );
         return None;
     };
@@ -387,12 +387,12 @@ fn up(shared: &Shared) -> bool {
 }
 
 /// Looks for a newer release a minute after the start and then every 6 hours (installed servers only;
-/// `HORIZON_NO_UPDATE_CHECK=1` turns it off). It only tells: updating stays the owner's choice.
+/// `SKYLINE_NO_UPDATE_CHECK=1` turns it off). It only tells: updating stays the owner's choice.
 fn check_updates(shared: Arc<Shared>) {
     let Some(install) = shared.install.clone() else {
         return;
     };
-    if std::env::var_os("HORIZON_NO_UPDATE_CHECK").is_some_and(|v| !v.is_empty() && v != "0") {
+    if std::env::var_os("SKYLINE_NO_UPDATE_CHECK").is_some_and(|v| !v.is_empty() && v != "0") {
         return;
     }
     let _ = thread::Builder::new()
@@ -408,7 +408,7 @@ fn check_updates(shared: Arc<Shared>) {
                             &shared,
                             "INFO",
                             &format!(
-                                "Horizon {tag} is out (this server runs {current}): `horizon-server update` \
+                                "Skyline {tag} is out (this server runs {current}): `skyline-server update` \
                                  installs it, and goes back by itself if it doesn't start"
                             ),
                         );
@@ -689,7 +689,7 @@ mod tests {
     fn installed(name: &str, releases: &[(&str, i32)]) -> (Arc<Shared>, std::path::PathBuf) {
         use std::os::unix::fs::PermissionsExt;
         let root =
-            std::env::temp_dir().join(format!("horizon-server-sw-{name}-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-server-sw-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         let root = {
             std::fs::create_dir_all(&root).unwrap();
@@ -698,8 +698,8 @@ mod tests {
         for (tag, code) in releases {
             let release = root.join("releases").join(tag);
             std::fs::create_dir_all(&release).unwrap();
-            std::fs::write(release.join("horizon-server"), "").unwrap();
-            let engine = release.join("horizon-engine");
+            std::fs::write(release.join("skyline-server"), "").unwrap();
+            let engine = release.join("skyline-engine");
             std::fs::write(&engine, format!("#!/bin/sh\nexit {code}\n")).unwrap();
             std::fs::set_permissions(&engine, std::fs::Permissions::from_mode(0o755)).unwrap();
         }
@@ -845,7 +845,7 @@ mod tests {
 
     #[test]
     fn one_supervisor_per_folder() {
-        let dir = std::env::temp_dir().join(format!("horizon-server-lock-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-server-lock-{}", std::process::id()));
         let first = lock(&dir).unwrap();
         assert!(lock(&dir).unwrap_err().contains("already running"));
         drop(first);

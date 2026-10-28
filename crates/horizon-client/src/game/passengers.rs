@@ -174,7 +174,7 @@ impl Game<'_> {
         }
     }
     /// `Husk.finalizeSpawn`: where a camel husk fits, one natural husk in ten
-    /// takes an iron spear and rides one (with a parched; Horizon seats one
+    /// takes an iron spear and rides one (with a parched; Skyline seats one
     /// rider, so the parched stands beside it).
     fn spawn_camel_husk_jockey(&mut self, id: u32, at: [f64; 3]) {
         let (bx, by, bz) = (at[0].floor(), at[1].floor(), at[2].floor());

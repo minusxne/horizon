@@ -1,4 +1,4 @@
-/// The contract between Horizon and its mods (docs/mods.md).
+/// The contract between Skyline and its mods (docs/mods.md).
 ///
 /// A mod is a WebAssembly component targeting the `mod` world. Each imported
 /// interface but `log` is a capability: the mod's manifest lists the ones it
@@ -113,7 +113,7 @@ interface command {
     run: func(line: string);
     /// `lines` (each without its slash, at most 256 a call) as `run` does,
     /// but with nothing in the chat: no feedback and no failure. In single
-    /// player and on Horizon's servers, each runs exactly as the player
+    /// player and on Skyline's servers, each runs exactly as the player
     /// typing it would (the same rights), in order, 64 a tick, and the
     /// server logs one line a batch; one that carries a chat message (`say`,
     /// `msg`) is refused. On any other server they go as chat commands, and
@@ -457,7 +457,7 @@ interface events {
 }
 
 /// Capability `recipes` (experimental): the recipes and items the game
-/// knows, for recipe viewers. In single player and on Horizon's servers
+/// knows, for recipe viewers. In single player and on Skyline's servers
 /// they are the world's; on any other server they are vanilla 26.3's (a
 /// client is sent no others), while `known` follows that server's book.
 interface recipes {

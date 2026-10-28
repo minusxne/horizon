@@ -1,4 +1,4 @@
-//! Horizon's graphics settings screens, Simple and Advanced: which settings
+//! Skyline's graphics settings screens, Simple and Advanced: which settings
 //! they show, in what groups, with what description and cost, and their
 //! input. How they look comes from `graphics_style`.
 use crate::{
@@ -16,7 +16,7 @@ pub enum Level {
     Advanced,
 }
 
-/// Horizon's own settings (`graphics::Graphics`).
+/// Skyline's own settings (`graphics::Graphics`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum H {
     Preset,
@@ -302,7 +302,7 @@ pub fn rows(level: Level) -> Vec<Row> {
 
 const UPLOAD_STEPS: [u32; 8] = [0, 256, 512, 1024, 2048, 4096, 8192, 16384];
 
-/// Horizon's graphics screens supplement the vanilla options on Video Settings.
+/// Skyline's graphics screens supplement the vanilla options on Video Settings.
 fn extra_rows(level: Level) -> Vec<Row> {
     let mut rows = rows(level);
     rows.retain(|row| !matches!(row, Row::Setting(s) if matches!(s.item, Item::Vanilla(_))));
@@ -467,7 +467,7 @@ fn max_workers() -> u32 {
 }
 
 impl Item {
-    /// False for a setting whose system is not in Horizon yet (`Opt::available`).
+    /// False for a setting whose system is not in Skyline yet (`Opt::available`).
     fn available(self) -> bool {
         !matches!(self, Item::Vanilla(o) if !o.available())
     }
@@ -713,7 +713,7 @@ impl GraphicsUi {
                     let live = item.available();
                     if hover && !live {
                         tooltip = Some(atlas.font.split(
-                            &Text::literal("This feature is not yet available in Horizon."),
+                            &Text::literal("This feature is not yet available in Skyline."),
                             170.0,
                         ));
                     }

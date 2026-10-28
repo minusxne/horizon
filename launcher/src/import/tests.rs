@@ -5,7 +5,7 @@ use std::time::Duration;
 
 fn scratch(name: &str) -> PathBuf {
     let root = std::env::temp_dir().join(format!(
-        "horizon-launcher-import-{name}-{}",
+        "skyline-launcher-import-{name}-{}",
         std::process::id()
     ));
     let _ = fs::remove_dir_all(&root);
@@ -142,7 +142,7 @@ fn an_export_comes_back_as_an_instance_and_nothing_escapes_its_folder() {
     put(&home.join("options.txt"), b"lang:fr_ch\n");
     put(&home.join("resourcepacks/Glass.zip"), b"glass");
     put(
-        &home.join("horizon-mods/coords/horizon-mod.toml"),
+        &home.join("skyline-mods/coords/horizon-mod.toml"),
         b"id = \"coords\"\n",
     );
     put(&home.join("saves/Base/region/r.0.0.mca"), b"region");
@@ -155,7 +155,7 @@ fn an_export_comes_back_as_an_instance_and_nothing_escapes_its_folder() {
         for f in [
             "options.txt",
             "resourcepacks/Glass.zip",
-            "horizon-mods/coords/horizon-mod.toml",
+            "skyline-mods/coords/horizon-mod.toml",
             "saves/Base/region/r.0.0.mca",
         ] {
             assert_eq!(

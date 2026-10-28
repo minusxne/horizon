@@ -1,4 +1,4 @@
-//! Example Horizon mod (`docs/mods.md`): `/missile` turns you into a guided
+//! Example Skyline mod (`docs/mods.md`): `/missile` turns you into a guided
 //! missile 60 blocks up. You fly along your own look, so the mouse steers;
 //! on a block or a mob a stack of primed TNT goes off, and you are put back
 //! where you launched. Built from vanilla commands (capability `command`),

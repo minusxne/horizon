@@ -73,7 +73,7 @@ fn only_skin_and_cape_sizes_are_kept() {
 
 #[test]
 fn a_kept_look_reaches_the_game_only_with_its_files() {
-    let root = std::env::temp_dir().join(format!("horizon-skins-{}", std::process::id()));
+    let root = std::env::temp_dir().join(format!("skyline-skins-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
     std::fs::create_dir_all(&root).unwrap();
     let (good, bad) = (root.join("alex.png"), root.join("big.png"));

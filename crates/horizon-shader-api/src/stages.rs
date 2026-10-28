@@ -1,5 +1,5 @@
 //! The stages a pack can fill, each a WGSL function with a fixed signature
-//! that Horizon calls inside its own passes, and the WGSL put around a
+//! that Skyline calls inside its own passes, and the WGSL put around a
 //! pack's files to build a stage: the prelude before (the inputs and the
 //! resources), the entry points after.
 use crate::inputs::{Frame, MATERIAL_INPUT, POST_INPUT, SKY_INPUT, SURFACE, Struct};
@@ -189,7 +189,7 @@ impl StageKind {
     /// Everything the pack's files may use, declared before them.
     pub fn prelude(self) -> String {
         let mut out =
-            String::from("// Horizon shader API prelude (docs/api/shaders-reference.md)\n");
+            String::from("// Skyline shader API prelude (docs/api/shaders-reference.md)\n");
         out += &Frame::WGSL.wgsl();
         out += &self.input().wgsl();
         if self == StageKind::Material {

@@ -1,9 +1,9 @@
 //! The launcher's languages: English (the strings in the code), French and Russian, the
-//! languages Horizon's own game menus have. A table per language (`launcher/lang/<code>.json`)
+//! languages Skyline's own game menus have. A table per language (`launcher/lang/<code>.json`)
 //! maps each English string to its translation; a string the table lacks shows in English.
 //!
 //! The language follows the system's unless the player picks one in Settings
-//! (`Settings::language`). Translations are Horizon's own, written for this launcher.
+//! (`Settings::language`). Translations are Skyline's own, written for this launcher.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU8, Ordering};

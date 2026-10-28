@@ -1,6 +1,6 @@
 //! The entities beyond mobs and items that a server tracks to its clients
 //! (`ChunkMap.TrackedEntity`, `ServerEntity`): boats, minecarts, armor
-//! stands, item frames, paintings and the entities Horizon keeps without
+//! stands, item frames, paintings and the entities Skyline keeps without
 //! simulating them, each as vanilla pairs it (`getAddEntityPacket` and the
 //! synched data that differs from the defaults), and who rides what.
 use super::Game;
@@ -270,7 +270,7 @@ impl Game<'_> {
 }
 
 impl Game<'_> {
-    /// Gives the entities Horizon keeps without an id one (`Entity.id`, from
+    /// Gives the entities Skyline keeps without an id one (`Entity.id`, from
     /// the same counter as the rest) before they are first tracked.
     pub(super) fn lan_assign_ids(&mut self) {
         // LeashFenceKnotEntity: one per fence post with a lead on it

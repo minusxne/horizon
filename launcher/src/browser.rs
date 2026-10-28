@@ -1,11 +1,11 @@
 //! The mod browser's sources: search Modrinth (CurseForge support is coming soon) for what
-//! Horizon loads, say how well each result runs, and download a file only after its checksum
+//! Skyline loads, say how well each result runs, and download a file only after its checksum
 //! matches (docs/mod-browser.md).
 //!
-//! Offered: Java mods (Fabric, NeoForge, Forge), whose content Horizon ports and whose jar is
+//! Offered: Java mods (Fabric, NeoForge, Forge), whose content Skyline ports and whose jar is
 //! checked before install ([`java`]), modpacks (imported and ported), resource packs
 //! (`resourcepacks/`) and data packs (into a world, [`installed::install_datapack`]). Java code
-//! itself doesn't run in Horizon (docs/mods.md).
+//! itself doesn't run in Skyline (docs/mods.md).
 pub mod curseforge;
 pub mod details;
 pub mod download;
@@ -17,11 +17,11 @@ pub mod modrinth;
 
 use serde::{Deserialize, Serialize};
 
-/// The Minecraft version Horizon plays. A version port updates it with the other `"26.3"` sites
+/// The Minecraft version Skyline plays. A version port updates it with the other `"26.3"` sites
 /// (docs/version-ports.md).
 pub const GAME: &str = "26.3";
 
-/// What a project is, as far as Horizon is concerned.
+/// What a project is, as far as Skyline is concerned.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Kind {
@@ -29,7 +29,7 @@ pub enum Kind {
     Modpack,
     /// A Java mod: its content is ported ([`java`]).
     Mod,
-    /// One of Horizon's own shader packs (`.hshader`, docs/shaders.md), from Horizon's registry
+    /// One of Skyline's own shader packs (`.hshader`, docs/shaders.md), from Skyline's registry
     /// only.
     Shader,
     /// A data pack: it goes into one world's `datapacks/` (`crate::datapacks`).
@@ -72,7 +72,7 @@ impl Kind {
 pub enum SourceId {
     Modrinth,
     CurseForge,
-    /// Horizon's own registry of reviewed mods, modpacks and resource packs ([`horizon`]).
+    /// Skyline's own registry of reviewed mods, modpacks and resource packs ([`horizon`]).
     Horizon,
 }
 
@@ -81,19 +81,19 @@ impl SourceId {
         match self {
             SourceId::Modrinth => "Modrinth",
             SourceId::CurseForge => "CurseForge",
-            SourceId::Horizon => "Horizon",
+            SourceId::Horizon => "Skyline",
         }
     }
 }
 
-/// How well a project runs in Horizon.
+/// How well a project runs in Skyline.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Support {
-    /// Made for the version Horizon plays, and Horizon reads everything it uses.
+    /// Made for the version Skyline plays, and Skyline reads everything it uses.
     Works,
     /// It loads, with the limit said.
     Partial(String),
-    /// It can't run in Horizon: never offered for install.
+    /// It can't run in Skyline: never offered for install.
     No(String),
 }
 
@@ -164,7 +164,7 @@ pub struct FileRef {
     pub name: String,
     pub size: u64,
     pub sha512: Option<String>,
-    /// What Horizon's registry lists.
+    /// What Skyline's registry lists.
     pub sha256: Option<String>,
     pub sha1: Option<String>,
     pub primary: bool,
@@ -265,11 +265,11 @@ pub trait Source: Send + Sync {
 
 /// What the launcher says wherever CurseForge would be.
 pub const CURSEFORGE_SOON: &str = "CurseForge support is coming soon.";
-/// What another source answers for shader packs: Horizon's own are on its registry only.
+/// What another source answers for shader packs: Skyline's own are on its registry only.
 pub const SHADERS_ON_HORIZON: &str =
-    "Horizon's shader packs are on Horizon's registry: pick Horizon.";
+    "Skyline's shader packs are on Skyline's registry: pick Skyline.";
 
-/// The sources this launcher uses: Modrinth and Horizon's registry. CurseForge support is coming
+/// The sources this launcher uses: Modrinth and Skyline's registry. CurseForge support is coming
 /// soon: its API needs a paid key, so no search or install goes to it; `curseforge` is kept for
 /// then.
 pub fn sources() -> Vec<Box<dyn Source>> {
@@ -281,14 +281,14 @@ pub fn source(id: SourceId) -> Option<Box<dyn Source>> {
     sources().into_iter().find(|s| s.id() == id)
 }
 
-/// How well a project of `kind` made for `game_versions` and `loaders` runs in Horizon.
+/// How well a project of `kind` made for `game_versions` and `loaders` runs in Skyline.
 pub fn support(kind: Kind, game_versions: &[String], loaders: &[String]) -> Support {
     if loaders.iter().any(|l| l == horizon::LOADER) {
-        // Made for Horizon and reviewed: it runs when it is for the version Horizon plays.
+        // Made for Skyline and reviewed: it runs when it is for the version Skyline plays.
         return match newest_release(game_versions)
             .filter(|_| !game_versions.iter().any(|v| v == GAME))
         {
-            Some(other) => Support::No(format!("Made for Horizon on {other}.")),
+            Some(other) => Support::No(format!("Made for Skyline on {other}.")),
             None => Support::Works,
         };
     }
@@ -306,9 +306,9 @@ pub fn support(kind: Kind, game_versions: &[String], loaders: &[String]) -> Supp
             }
         }
         Kind::Modpack => {
-            Support::Partial("Horizon runs the mods it can port, from your own downloads.".into())
+            Support::Partial("Skyline runs the mods it can port, from your own downloads.".into())
         }
-        Kind::Shader => Support::No("Not one of Horizon's own shader packs.".into()),
+        Kind::Shader => Support::No("Not one of Skyline's own shader packs.".into()),
         Kind::DataPack => {
             let made_for = match newest_release(game_versions) {
                 _ if game_versions.iter().any(|v| v == GAME) => String::new(),
@@ -323,7 +323,7 @@ pub fn support(kind: Kind, game_versions: &[String], loaders: &[String]) -> Supp
             } else if !game_versions.iter().any(|v| portable_version(v)) {
                 let newest = newest_release(game_versions).unwrap_or("an unknown version");
                 Support::No(format!(
-                    "Made for {newest}: Horizon ports mods made for 1.21 and later."
+                    "Made for {newest}: Skyline ports mods made for 1.21 and later."
                 ))
             } else {
                 Support::Partial(
@@ -334,9 +334,9 @@ pub fn support(kind: Kind, game_versions: &[String], loaders: &[String]) -> Supp
     }
 }
 
-/// What a data pack does in Horizon today, said before install; the install says it for the
+/// What a data pack does in Skyline today, said before install; the install says it for the
 /// pack's own files (`crate::datapacks::coverage`).
-pub const DATAPACK_SUPPORT: &str = "Horizon runs a data pack's functions, function tags, \
+pub const DATAPACK_SUPPORT: &str = "Skyline runs a data pack's functions, function tags, \
      predicates and item modifiers; not yet its recipes, loot tables, advancements, other tags \
      or worldgen.";
 

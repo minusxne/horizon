@@ -833,9 +833,10 @@ fn login_and_configure(
             _ => {}
         }
     };
-    // A Horizon client hears that this server runs its mods' quiet commands
+    // A Skyline client hears that this server runs its mods' quiet commands
     // (horizon_protocol::quiet); a vanilla one is told nothing.
-    if brand == "horizon" {
+    // Older builds sent the previous brand.
+    if brand == "skyline" || brand == "horizon" {
         send(
             c,
             cfg::Clientbound::CustomPayload(cfg::CustomPayload {

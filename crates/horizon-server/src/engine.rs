@@ -14,13 +14,13 @@ use std::{
 /// The game's program names, most specific first: the server build (the game without sound or
 /// controllers, so it needs neither ALSA nor udev on Linux; `horizon-server-linux-x86_64.tar.gz` holds it),
 /// else the full game.
-const PROGRAMS: [&str; 2] = ["horizon-engine", "horizon-client"];
+const PROGRAMS: [&str; 2] = ["skyline-engine", "skyline"];
 
 fn exe(name: &str) -> String {
     format!("{name}{}", std::env::consts::EXE_SUFFIX)
 }
 
-/// The game program: `engine.path`, else one installed beside `horizon-server` (in the release in use when
+/// The game program: `engine.path`, else one installed beside `skyline-server` (in the release in use when
 /// it was installed by the installers), else one on the PATH.
 pub fn program(config: &Config, dir: &Path) -> Result<PathBuf, String> {
     program_in(config, dir, crate::update::Install::find().as_ref())
@@ -58,7 +58,7 @@ pub fn program_in(
         })
         .find(|p| p.is_file())
         .ok_or_else(|| {
-            "the game program (horizon-client) is neither beside horizon-server nor on the PATH: \
+            "the game program (horizon-client) is neither beside skyline-server nor on the PATH: \
              install it there, or set engine.path in server.toml"
                 .into()
         })
@@ -121,22 +121,22 @@ pub fn resource_candidates(config: &Config, dir: &Path, program: Option<&Path>) 
     }
     let version = "26.3";
     let mut out = vec![dir.join("resources")];
-    // A release folder or a checkout: .local/horizon-client/<version> beside the program or above it.
+    // A release folder or a checkout: .local/skyline/<version> beside the program or above it.
     if let Some(program) = program {
         for ancestor in program.ancestors().skip(1).take(4) {
-            out.push(ancestor.join(".local/horizon-client").join(version));
+            out.push(ancestor.join(".local/skyline").join(version));
         }
     }
     out
 }
 
-/// The prepared game files: a folder holding the manifest every `horizon-prepare` run writes
+/// The prepared game files: a folder holding the manifest every `skyline-prepare` run writes
 /// (`asset-index.json` comes only with the optional sounds, which a server doesn't need).
 pub fn resources(config: &Config, dir: &Path, program: Option<&Path>) -> Result<PathBuf, String> {
     let candidates = resource_candidates(config, dir, program);
     candidates
         .iter()
-        .find(|d| d.join("horizon-resources.json").is_file())
+        .find(|d| d.join("skyline-resources.json").is_file())
         .cloned()
         .ok_or_else(|| {
             let tried: Vec<String> = candidates
@@ -144,8 +144,8 @@ pub fn resources(config: &Config, dir: &Path, program: Option<&Path>) -> Result<
                 .map(|d| format!("  {}", d.display()))
                 .collect();
             format!(
-                "no prepared game files. Horizon reads them from your own copy of Minecraft 26.3:\n\
-                 prepare them with `horizon-prepare --prepare --server-jar PATH` (or the launcher) and copy \
+                "no prepared game files. Skyline reads them from your own copy of Minecraft 26.3:\n\
+                 prepare them with `skyline-prepare --prepare --server-jar PATH` (or the launcher) and copy \
                  the folder to resources/ here, or set engine.resources in server.toml. Looked in:\n{}",
                 tried.join("\n")
             )
@@ -167,7 +167,7 @@ pub fn spawn(program: &Path, resources: &Path, dir: &Path) -> std::io::Result<Ch
         .arg(control_path(&dir))
         .args(["--dedicated", "--nogui"])
         .current_dir(&dir)
-        .env("HORIZON_NO_AUDIO", "1")
+        .env("SKYLINE_NO_AUDIO", "1")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -243,7 +243,7 @@ mod tests {
         let program = Path::new("/opt/horizon/target/release/horizon-client");
         let found = resource_candidates(&config, dir, Some(program));
         assert_eq!(found[0], Path::new("/srv/mc/resources"));
-        assert!(found.contains(&PathBuf::from("/opt/horizon/.local/horizon-client/26.3")));
+        assert!(found.contains(&PathBuf::from("/opt/horizon/.local/skyline/26.3")));
         config.engine.resources = "/data/res".into();
         assert_eq!(
             resource_candidates(&config, dir, Some(program)),
@@ -253,15 +253,15 @@ mod tests {
 
     #[test]
     fn resources_prepared_without_sounds_are_found() {
-        let root = std::env::temp_dir().join(format!("horizon-server-res-{}", std::process::id()));
-        let prepared = root.join(".local/horizon-client/26.3");
+        let root = std::env::temp_dir().join(format!("skyline-server-res-{}", std::process::id()));
+        let prepared = root.join(".local/skyline/26.3");
         std::fs::create_dir_all(&prepared).unwrap();
-        let program = root.join("horizon-client");
+        let program = root.join("skyline");
         let config = Config::default();
         let server = root.join("server");
         assert!(resources(&config, &server, Some(&program)).is_err());
-        // What `horizon-prepare` writes on every run; no asset index without `horizon-prepare sounds`.
-        std::fs::write(prepared.join("horizon-resources.json"), "{}").unwrap();
+        // What `skyline-prepare` writes on every run; no asset index without `skyline-prepare sounds`.
+        std::fs::write(prepared.join("skyline-resources.json"), "{}").unwrap();
         assert_eq!(resources(&config, &server, Some(&program)), Ok(prepared));
         std::fs::remove_dir_all(&root).unwrap();
     }
@@ -280,11 +280,11 @@ mod tests {
              error while loading shared libraries: libasound.so.2"
         ));
         assert!(text.contains("sudo apt install libasound2 libudev1"));
-        // Another library: no ALSA advice (the server build, horizon-engine, links neither).
+        // Another library: no ALSA advice (the server build, skyline-engine, links neither).
         let engine = start_failure(
-            Path::new("/opt/horizon/horizon-engine"),
+            Path::new("/opt/horizon/skyline-engine"),
             Some(127),
-            "/opt/horizon/horizon-engine: error while loading shared libraries: libgcc_s.so.1: cannot open \
+            "/opt/horizon/skyline-engine: error while loading shared libraries: libgcc_s.so.1: cannot open \
              shared object file: No such file or directory\n",
         );
         assert!(!engine.contains("libasound"), "{engine}");
@@ -356,7 +356,7 @@ mod tests {
     fn the_check_runs_the_program() {
         use std::os::unix::fs::PermissionsExt;
         let root =
-            std::env::temp_dir().join(format!("horizon-server-check-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-server-check-{}", std::process::id()));
         std::fs::create_dir_all(&root).unwrap();
         let script = |name: &str, body: &str| {
             let path = root.join(name);

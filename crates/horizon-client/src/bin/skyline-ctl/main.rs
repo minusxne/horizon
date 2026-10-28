@@ -1,5 +1,5 @@
-//! horizon-ctl: play and script a running Horizon client through its control
-//! socket, from a shell, a script or an AI agent (`horizon-ctl mcp`).
+//! skyline-ctl: play and script a running Skyline client through its control
+//! socket, from a shell, a script or an AI agent (`skyline-ctl mcp`).
 #![forbid(unsafe_code)]
 mod commands;
 mod launch;
@@ -60,7 +60,7 @@ impl Client {
     fn connect(path: &Path, timeout: Option<Duration>) -> Result<Self, Failure> {
         let stream = horizon_client::control::connect(path).map_err(|e| {
             Failure::unreachable(format!(
-                "cannot connect to {} ({e}); is the game running with --control? Start one with: horizon-ctl launch --world NAME",
+                "cannot connect to {} ({e}); is the game running with --control? Start one with: skyline-ctl launch --world NAME",
                 path.display()
             ))
         })?;
@@ -151,12 +151,12 @@ impl Session {
     /// Run one command (CLI words); Ok(reply) or a failure.
     pub fn run(&mut self, words: &[String]) -> Result<Value, Failure> {
         let Some(name) = words.first().map(String::as_str) else {
-            return Err(Failure::usage("no command; try horizon-ctl help"));
+            return Err(Failure::usage("no command; try skyline-ctl help"));
         };
         self.allowed()?;
         if words.iter().skip(1).any(|w| w == "--help" || w == "-h") {
             return Err(Failure::usage(
-                "use horizon-ctl COMMAND --help outside scripts",
+                "use skyline-ctl COMMAND --help outside scripts",
             ));
         }
         let number = |i: usize, what: &str| -> Result<f64, Failure> {
@@ -227,7 +227,7 @@ impl Session {
                 if let Some(cmd) = commands::find(name) {
                     if cmd.local {
                         return Err(Failure::usage(format!(
-                            "{name} runs only as horizon-ctl {name}, not inside a script"
+                            "{name} runs only as skyline-ctl {name}, not inside a script"
                         )));
                     }
                     if let Some(wire) = cmd.wire {
@@ -310,7 +310,7 @@ fn logs(home: &Path, words: &[String]) -> Result<Value, Failure> {
 }
 
 fn usage(name: &str) -> String {
-    commands::find(name).map_or_else(|| name.to_owned(), |c| format!("horizon-ctl {}", c.usage))
+    commands::find(name).map_or_else(|| name.to_owned(), |c| format!("skyline-ctl {}", c.usage))
 }
 
 /// Screenshot paths are written by the game process: make them absolute here.
@@ -462,7 +462,7 @@ fn main() -> ExitCode {
                 }
                 None => {
                     print(
-                        &json!({ "error": format!("unknown command {c}; horizon-ctl help lists them, horizon-ctl help --game lists the game's own"), "kind": "usage" }),
+                        &json!({ "error": format!("unknown command {c}; skyline-ctl help lists them, skyline-ctl help --game lists the game's own"), "kind": "usage" }),
                         pretty,
                     );
                     USAGE
@@ -477,7 +477,7 @@ fn main() -> ExitCode {
                 }
                 None => {
                     print(
-                        &json!({ "error": format!("no help for {c}; horizon-ctl help --game lists the game's own commands"), "kind": "usage" }),
+                        &json!({ "error": format!("no help for {c}; skyline-ctl help --game lists the game's own commands"), "kind": "usage" }),
                         pretty,
                     );
                     USAGE
@@ -485,13 +485,13 @@ fn main() -> ExitCode {
             }
         }
         Some("mcp") if session.allowed().is_err() => {
-            eprintln!("horizon-ctl mcp: {}", horizon_core::no_ai::REFUSAL);
+            eprintln!("skyline-ctl mcp: {}", horizon_core::no_ai::REFUSAL);
             DENIED
         }
         Some("mcp") => match mcp::serve(&mut session) {
             Ok(()) => 0,
             Err(e) => {
-                eprintln!("horizon-ctl mcp: {e}");
+                eprintln!("skyline-ctl mcp: {e}");
                 UNREACHABLE
             }
         },
@@ -544,7 +544,7 @@ mod tests {
 
     #[test]
     fn logs_reads_the_end_of_latest_log_and_the_newest_crash_report() {
-        let home = std::env::temp_dir().join(format!("horizon-ctl-logs-{}", std::process::id()));
+        let home = std::env::temp_dir().join(format!("skyline-ctl-logs-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&home);
         let words = |s: &str| -> Vec<String> { s.split_whitespace().map(String::from).collect() };
         let failure = logs(&home, &words("")).unwrap_err();
@@ -611,7 +611,7 @@ mod tests {
     #[test]
     fn unreachable_games_fail_with_status_3() {
         let home =
-            std::env::temp_dir().join(format!("horizon-ctl-unreachable-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-ctl-unreachable-{}", std::process::id()));
         std::fs::create_dir_all(&home).unwrap();
         let mut s = Session::new(home.join("nobody.sock"), None);
         s.home = home.clone();
@@ -625,9 +625,9 @@ mod tests {
 
     #[test]
     fn no_ai_refuses_every_command() {
-        let home = std::env::temp_dir().join(format!("horizon-ctl-no-ai-{}", std::process::id()));
+        let home = std::env::temp_dir().join(format!("skyline-ctl-no-ai-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&home);
-        let mut s = Session::new(std::env::temp_dir().join("horizon-ctl-nobody.sock"), None);
+        let mut s = Session::new(std::env::temp_dir().join("skyline-ctl-nobody.sock"), None);
         s.home = home.clone();
         assert_eq!(
             s.run(&["state".to_owned()]).unwrap_err().status,

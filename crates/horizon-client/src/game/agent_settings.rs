@@ -1,6 +1,6 @@
-//! Agent control as a setting (Horizon Settings > AI Agent): when the control socket is open, who
+//! Agent control as a setting (Skyline Settings > AI Agent): when the control socket is open, who
 //! is connected, and the details an agent needs. The socket opens when the game was started for
-//! an agent (`--control`, `--control-socket`: horizon-ctl launch, the launcher's MCP `play`) or
+//! an agent (`--control`, `--control-socket`: skyline-ctl launch, the launcher's MCP `play`) or
 //! when the player turned Agent Control on, and never under No AI (`horizon_core::no_ai`).
 //! Turning either switch in the game opens or closes it at once.
 use super::Game;
@@ -8,7 +8,7 @@ use horizon_client::{Result, control};
 use std::path::PathBuf;
 
 impl Game<'_> {
-    /// The endpoint: the one the command line gave, else the default horizon-ctl looks for.
+    /// The endpoint: the one the command line gave, else the default skyline-ctl looks for.
     fn agent_socket_path(&self) -> PathBuf {
         self.options
             .control
@@ -25,7 +25,7 @@ impl Game<'_> {
         if self.settings.extras.no_ai {
             if self.options.control.is_some() {
                 log::warn!(
-                    "Horizon: control socket not opened: {}",
+                    "Skyline: control socket not opened: {}",
                     horizon_core::no_ai::REFUSAL
                 );
             }
@@ -35,7 +35,7 @@ impl Game<'_> {
             // Asked for on the command line: failing to listen is an error.
             let server = control::Server::start(path)
                 .map_err(|e| format!("control socket {}: {e}", path.display()))?;
-            log::info!("Horizon: control socket {}", server.path().display());
+            log::info!("Skyline: control socket {}", server.path().display());
             self.control = Some(server);
         } else if self.agent_control_on {
             self.open_agent_socket();
@@ -49,10 +49,10 @@ impl Game<'_> {
         let path = self.agent_socket_path();
         match control::Server::start(&path) {
             Ok(server) => {
-                log::info!("Horizon: control socket {}", server.path().display());
+                log::info!("Skyline: control socket {}", server.path().display());
                 self.control = Some(server);
             }
-            Err(e) => log::warn!("Horizon: control socket {}: {e}", path.display()),
+            Err(e) => log::warn!("Skyline: control socket {}: {e}", path.display()),
         }
     }
 
@@ -68,7 +68,7 @@ impl Game<'_> {
             .is_some_and(|c| !c.path().as_os_str().is_empty());
         if self.settings.extras.no_ai || (changed && !wanted) {
             if open {
-                log::info!("Horizon: control socket closed");
+                log::info!("Skyline: control socket closed");
                 self.control = None;
             }
         } else if changed && wanted && self.control.is_none() {
@@ -116,21 +116,21 @@ impl Game<'_> {
         lines
     }
 
-    /// What Copy Connection Details puts on the clipboard: the socket, a horizon-ctl line to try,
+    /// What Copy Connection Details puts on the clipboard: the socket, a skyline-ctl line to try,
     /// and an MCP client's config for this game.
     pub(super) fn agent_details(&self) -> String {
         let socket = self.agent_socket_path();
         let ctl = std::env::current_exe()
             .unwrap_or_default()
             .with_file_name(if cfg!(windows) {
-                "horizon-ctl.exe"
+                "skyline-ctl.exe"
             } else {
-                "horizon-ctl"
+                "skyline-ctl"
             });
         let config = serde_json::json!({ "mcpServers": { "horizon-game": {
             "command": ctl, "args": ["--socket", socket, "mcp"] } } });
         format!(
-            "Horizon agent control (this computer only)\nSocket: {}\nTry it: \"{}\" --socket \"{}\" state\nMCP config:\n{}\n",
+            "Skyline agent control (this computer only)\nSocket: {}\nTry it: \"{}\" --socket \"{}\" state\nMCP config:\n{}\n",
             socket.display(),
             ctl.display(),
             socket.display(),

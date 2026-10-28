@@ -119,9 +119,9 @@ const MIN_SECTIONS: usize = 1600;
 
 /// Whether flat draws apply: the backend emulates multi-draw, and vertex
 /// shaders can read storage buffers large enough for an index page.
-/// `HORIZON_FLAT_DRAWS=1` draws every frame flat, `0` none.
+/// `SKYLINE_FLAT_DRAWS=1` draws every frame flat, `0` none.
 pub fn wanted(adapter: &wgpu::Adapter, device: &wgpu::Device) -> bool {
-    match std::env::var("HORIZON_FLAT_DRAWS").as_deref() {
+    match std::env::var("SKYLINE_FLAT_DRAWS").as_deref() {
         Ok("0") => return false,
         Ok("1") => return supported(adapter, device),
         _ => {}
@@ -357,7 +357,7 @@ impl Flat {
             phase1_calls: 0,
             solid_calls: 0,
             shadow_calls: [0; 2],
-            min_sections: if std::env::var("HORIZON_FLAT_DRAWS").as_deref() == Ok("1") {
+            min_sections: if std::env::var("SKYLINE_FLAT_DRAWS").as_deref() == Ok("1") {
                 0
             } else {
                 MIN_SECTIONS

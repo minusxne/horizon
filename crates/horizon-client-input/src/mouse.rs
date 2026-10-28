@@ -209,7 +209,7 @@ impl MouseLook {
     }
 
     /// `onMove` with the pointer grabbed, for relative motion an agent makes
-    /// (`horizon-ctl mouse-move`): added to the frame's accumulated movement.
+    /// (`skyline-ctl mouse-move`): added to the frame's accumulated movement.
     pub fn add_motion(&mut self, dx: f64, dy: f64) {
         self.accumulated_dx += dx;
         self.accumulated_dy += dy;

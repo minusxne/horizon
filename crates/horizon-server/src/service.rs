@@ -1,6 +1,6 @@
-//! `horizon-server service install|uninstall|print`: run the server at boot or login under the system's own
+//! `skyline-server service install|uninstall|print`: run the server at boot or login under the system's own
 //! service manager (docs/server.md, section 3): a systemd unit on Linux, a launchd agent on macOS, a task at
-//! logon on Windows. The service runs `horizon-server run`, which restarts the game if it crashes; the
+//! logon on Windows. The service runs `skyline-server run`, which restarts the game if it crashes; the
 //! service manager restarts the supervisor itself.
 
 use std::{
@@ -31,7 +31,7 @@ pub fn name(dir: &Path) -> String {
     format!("horizon-server-{clean}")
 }
 
-/// The program the service runs: the `horizon-server` on the PATH (the installer's launcher, which keeps
+/// The program the service runs: the `skyline-server` on the PATH (the installer's launcher, which keeps
 /// running the current version after an update), else this program, through the installer's `current`
 /// link when it runs from an installed release.
 fn program() -> Result<PathBuf, String> {
@@ -39,7 +39,7 @@ fn program() -> Result<PathBuf, String> {
         .map(|p| std::env::split_paths(&p).collect::<Vec<_>>())
         .unwrap_or_default()
         .into_iter()
-        .map(|d| d.join(format!("horizon-server{}", std::env::consts::EXE_SUFFIX)))
+        .map(|d| d.join(format!("skyline-server{}", std::env::consts::EXE_SUFFIX)))
         .find(|p| p.is_file());
     match on_path {
         Some(path) => Ok(path),
@@ -75,7 +75,7 @@ pub fn systemd_unit(program: &Path, dir: &Path, user: Option<&str>) -> String {
     };
     format!(
         "[Unit]
-Description=Horizon server in {dir}
+Description=Skyline server in {dir}
 Documentation=https://github.com/horizon-rust/horizon/blob/main/docs/server.md
 Wants=network-online.target
 After=network-online.target
@@ -400,10 +400,10 @@ mod tests {
     #[test]
     fn an_installed_release_runs_through_current() {
         let root =
-            std::env::temp_dir().join(format!("horizon-service-current-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-service-current-{}", std::process::id()));
         let release = root.join("releases/v1");
         std::fs::create_dir_all(&release).unwrap();
-        let exe = release.join("horizon-server");
+        let exe = release.join("skyline-server");
         std::fs::write(&exe, "").unwrap();
         // Not the release in use (or no installer layout): this program as it is.
         assert_eq!(through_current(&exe), exe);

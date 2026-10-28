@@ -1,9 +1,9 @@
-//! Which Horizon release this build is (docs/versioning.md). Not Minecraft's version: that is
+//! Which Skyline release this build is (docs/versioning.md). Not Minecraft's version: that is
 //! [`crate::version`], generated from the game's own files.
 
-/// The release's version (`0.2.3`, no `v`): release.yml builds every release with `HORIZON_VERSION`
+/// The release's version (`0.2.3`, no `v`): release.yml builds every release with `SKYLINE_VERSION`
 /// set from its tag, so there are no version-bump commits. None for a build from source.
-pub const RELEASE: Option<&str> = match option_env!("HORIZON_VERSION") {
+pub const RELEASE: Option<&str> = match option_env!("SKYLINE_VERSION") {
     Some(version) if !version.is_empty() => Some(version),
     _ => None,
 };
@@ -16,8 +16,8 @@ pub const VERSION: &str = match RELEASE {
 };
 
 /// A nightly's date and commit (`2026-10-28 0c02067`): nightly-build.yml builds the opt-in Nightly
-/// channel with `HORIZON_NIGHTLY` set (docs/release-flow.md). None for a release or a build from source.
-pub const NIGHTLY: Option<&str> = match option_env!("HORIZON_NIGHTLY") {
+/// channel with `SKYLINE_NIGHTLY` set (docs/release-flow.md). None for a release or a build from source.
+pub const NIGHTLY: Option<&str> = match option_env!("SKYLINE_NIGHTLY") {
     Some(nightly) if !nightly.is_empty() => Some(nightly),
     _ => None,
 };
@@ -56,7 +56,7 @@ mod tests {
     fn the_version_is_the_release_or_the_crate() {
         assert_eq!(
             super::RELEASE,
-            option_env!("HORIZON_VERSION").filter(|v| !v.is_empty())
+            option_env!("SKYLINE_VERSION").filter(|v| !v.is_empty())
         );
         assert_eq!(
             super::VERSION,

@@ -2,11 +2,11 @@
 //! `[panel] bind` (127.0.0.1:8130 by default; a tailnet address to reach it from the owner's devices). It
 //! uses the control API's routes with a browser session instead of the token.
 //!
-//! - **Login.** `horizon-server panel` asks the API for a link with a one-time code, good for 10 minutes;
+//! - **Login.** `skyline-server panel` asks the API for a link with a one-time code, good for 10 minutes;
 //!   opening it swaps the code for an `HttpOnly; SameSite=Strict` session cookie. Anyone who can read the
 //!   server folder's token can make a link, and no one else can. Sessions end when the supervisor does.
 //! - **Rebinding and CSRF.** The `Host` header must name the panel's own address (`localhost` too on
-//!   loopback, a MagicDNS name on a tailnet). Every POST needs the `X-Horizon: 1` header, which a page from
+//!   loopback, a MagicDNS name on a tailnet). Every POST needs the `X-Skyline: 1` header, which a page from
 //!   another site can't send without the browser asking first.
 //! - **The page** loads nothing from elsewhere (a strict Content-Security-Policy) and can't be framed.
 
@@ -70,7 +70,7 @@ impl Auth {
             self.failures.push_back(Instant::now());
             return Err(page_error(
                 403,
-                "This login link was used already or has expired. Run `horizon-server panel` for a new one.",
+                "This login link was used already or has expired. Run `skyline-server panel` for a new one.",
             ));
         };
         self.codes.remove(i);
@@ -97,7 +97,7 @@ impl Auth {
 
 fn page_error(status: u16, message: &str) -> Response {
     let body = format!(
-        "<!doctype html><meta charset=utf-8><title>Horizon server</title>\
+        "<!doctype html><meta charset=utf-8><title>Skyline server</title>\
          <link rel=stylesheet href=/panel.css><main class=message><p>{}</p></main>",
         message
             .replace('&', "&amp;")
@@ -175,7 +175,7 @@ fn handle(shared: &Arc<Shared>, address: SocketAddr, request: &Request) -> Respo
         _ => {}
     }
     if method == "POST" && request.header("x-horizon") != Some("1") {
-        return Response::error(403, "missing the X-Horizon header");
+        return Response::error(403, "missing the X-Skyline header");
     }
     if (method, path) == ("POST", "/logout") {
         shared.panel.lock().unwrap().sign_out(request);
@@ -190,11 +190,11 @@ fn handle(shared: &Arc<Shared>, address: SocketAddr, request: &Request) -> Respo
     if !shared.panel.lock().unwrap().signed_in(request) {
         return Response::error(
             401,
-            "sign in with a link from `horizon-server panel` on the server",
+            "sign in with a link from `skyline-server panel` on the server",
         );
     }
     if path == "/api/v1/panel/login" {
-        return Response::error(403, "login links come from `horizon-server panel` only");
+        return Response::error(403, "login links come from `skyline-server panel` only");
     }
     api::route(shared, request)
 }
@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn sign_in_with_a_link() {
-        let dir = std::env::temp_dir().join(format!("horizon-server-panel-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-server-panel-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let shared = Shared::new(&dir);
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -298,14 +298,14 @@ mod tests {
         };
         assert!(post("").starts_with("HTTP/1.1 403"));
         assert!(!shared.restart.load(std::sync::atomic::Ordering::SeqCst));
-        assert!(post("X-Horizon: 1\r\n").starts_with("HTTP/1.1 200"));
+        assert!(post("X-Skyline: 1\r\n").starts_with("HTTP/1.1 200"));
         assert!(shared.restart.load(std::sync::atomic::Ordering::SeqCst));
         // Login links come only from the token API.
         assert!(
             send(
                 address,
                 &format!(
-                    "POST /api/v1/panel/login HTTP/1.1\r\n{host}{with_cookie}X-Horizon: 1\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                    "POST /api/v1/panel/login HTTP/1.1\r\n{host}{with_cookie}X-Skyline: 1\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
                 ),
             )
             .0

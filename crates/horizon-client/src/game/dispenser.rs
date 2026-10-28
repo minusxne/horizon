@@ -1,5 +1,5 @@
 //! Dispenser behaviours: `DispenserBlock.getDispenseMethod(..).dispense` with
-//! every `DispenseItemBehavior` registration of vanilla that Horizon has the
+//! every `DispenseItemBehavior` registration of vanilla that Skyline has the
 //! entities for. A behaviour returns what is left in the slot and the level
 //! event it plays (`DefaultDispenseItemBehavior.dispense` then plays that
 //! event and the smoke animation, event 2000).
@@ -212,7 +212,7 @@ fn equine(s: Species) -> bool {
             | Species::TraderLlama
     )
 }
-/// Mobs whose body slot Horizon keeps in `extra.head` (no helmet slot is drawn).
+/// Mobs whose body slot Skyline keeps in `extra.head` (no helmet slot is drawn).
 pub(super) fn body_in_head(s: Species) -> bool {
     equine(s)
         || matches!(s, Species::Wolf | Species::HappyGhast | Species::SulfurCube)

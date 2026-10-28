@@ -1,6 +1,6 @@
-//! docs/api/server-reference.md: `horizon-server`'s commands, every `server.toml` key and the control API's
+//! docs/api/server-reference.md: `skyline-server`'s commands, every `server.toml` key and the control API's
 //! endpoints, generated from the source, and the tests that fail when it is out of date. Update it with:
-//! `HORIZON_WRITE_DOCS=1 cargo test -p horizon-server reference`.
+//! `SKYLINE_WRITE_DOCS=1 cargo test -p horizon-server reference`.
 
 use crate::{api::ROUTES, config};
 use std::fmt::Write;
@@ -42,25 +42,25 @@ pub fn markdown() -> String {
     let w = &mut out;
     let _ = writeln!(
         w,
-        "<!-- Generated from crates/horizon-server/src (the help text, config::TEMPLATE, api::ROUTES) by reference.rs; a test fails when this file is out of date. Update it with: HORIZON_WRITE_DOCS=1 cargo test -p horizon-server reference -->"
+        "<!-- Generated from crates/horizon-server/src (the help text, config::TEMPLATE, api::ROUTES) by reference.rs; a test fails when this file is out of date. Update it with: SKYLINE_WRITE_DOCS=1 cargo test -p horizon-server reference -->"
     );
     let _ = writeln!(w, "# Server reference\n");
     let _ = writeln!(
         w,
-        "Everything `horizon-server` offers a host or a tool: its commands, every `server.toml` key and the \
+        "Everything `skyline-server` offers a host or a tool: its commands, every `server.toml` key and the \
          control API. How to host: [hosting.md](../hosting.md); the design: [server.md](../server.md); \
          stability and versions: [stability.md](stability.md).\n"
     );
 
-    let _ = writeln!(w, "## Commands\n\n`horizon-server help` prints:\n");
+    let _ = writeln!(w, "## Commands\n\n`skyline-server help` prints:\n");
     let _ = writeln!(w, "```text\n{}```\n", crate::HELP);
 
     let _ = writeln!(w, "## `server.toml`\n");
     let (sections, keys) = template();
     let _ = writeln!(
         w,
-        "{} Unknown keys are refused. `horizon-server init` writes this file with these defaults; \
-         `horizon-server config set SECTION.KEY=VALUE` changes it.\n",
+        "{} Unknown keys are refused. `skyline-server init` writes this file with these defaults; \
+         `skyline-server config set SECTION.KEY=VALUE` changes it.\n",
         sections[0].1
     );
     for (i, (section, note)) in sections.iter().enumerate() {
@@ -124,7 +124,7 @@ fn the_server_reference_is_up_to_date() {
         .join("../..")
         .join(DOC);
     let want = markdown();
-    if std::env::var_os("HORIZON_WRITE_DOCS").is_some() {
+    if std::env::var_os("SKYLINE_WRITE_DOCS").is_some() {
         std::fs::write(&path, &want).unwrap();
     }
     let have = std::fs::read_to_string(&path)
@@ -132,7 +132,7 @@ fn the_server_reference_is_up_to_date() {
         .replace("\r\n", "\n");
     assert!(
         have == want,
-        "{DOC} is out of date: HORIZON_WRITE_DOCS=1 cargo test -p horizon-server reference"
+        "{DOC} is out of date: SKYLINE_WRITE_DOCS=1 cargo test -p horizon-server reference"
     );
 }
 

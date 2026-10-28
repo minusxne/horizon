@@ -7,7 +7,7 @@ const TAG: &str = "v2026.10.19";
 
 fn folder(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!(
-        "horizon-release-sign-{name}-{}",
+        "skyline-release-sign-{name}-{}",
         std::process::id()
     ));
     let _ = std::fs::remove_dir_all(&dir);

@@ -287,7 +287,7 @@ pub trait LegacyPiece: std::fmt::Debug + Send + Sync {
     fn bounding_box(&self) -> BoundingBox;
     /// The vanilla StructurePieceType id, for diagnostics and comparisons.
     fn type_name(&self) -> &'static str;
-    /// `StructurePiece.createTag`; None while Horizon cannot save this type,
+    /// `StructurePiece.createTag`; None while Skyline cannot save this type,
     /// and then its start is not saved.
     fn save(&self) -> Option<Compound> {
         None

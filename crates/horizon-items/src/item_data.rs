@@ -58,7 +58,7 @@ pub struct StackData {
     pub stew_effects: Vec<(Arc<str>, i32)>,
     /// `minecraft:map_post_processing`: 0 lock, 1 scale.
     pub map_post_processing: Option<u8>,
-    /// Components Horizon does not model (lore, custom data, item name,
+    /// Components Skyline does not model (lore, custom data, item name,
     /// max stack size...), kept as their saved values in key order.
     pub other: Vec<(String, Tag)>,
 }
@@ -138,7 +138,7 @@ pub const OMINOUS_LAYERS: [(&str, &str); 8] = [
 ];
 
 /// The raid captain banner's default tooltip setting, stored by vanilla as a
-/// component but represented by `StackData::ominous_banner` in Horizon.
+/// component but represented by `StackData::ominous_banner` in Skyline.
 fn ominous_tooltip_display() -> Tag {
     Tag::compound([(
         "hidden_components",

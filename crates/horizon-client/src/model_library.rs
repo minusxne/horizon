@@ -97,7 +97,7 @@ impl ParsedModels {
                     match read() {
                         Ok(model) => Arc::new(model),
                         Err(e) if or_missing => {
-                            log::warn!("Horizon: missing block model {name}: {e}");
+                            log::warn!("Skyline: missing block model {name}: {e}");
                             skipped.insert(name);
                             continue;
                         }
@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn shared_views_preserve_resolution_errors_builtins_and_reload() -> Result<()> {
         let fixture = Fixture(
-            std::env::temp_dir().join(format!("horizon-shared-models-{}", std::process::id())),
+            std::env::temp_dir().join(format!("skyline-shared-models-{}", std::process::id())),
         );
         fixture.write("horizon:parent", r##"{"textures":{"side":"#all","all":"block/stone"},"elements":[{"from":[0,0,0],"to":[16,8,16],"faces":{"up":{"texture":"#side"}}}]}"##);
         fixture.write("horizon:nested/child", r#"{"parent":"horizon:parent","textures":{"all":"block/glass"},"display":{"gui":{"rotation":[30,45,0]}}}"#);

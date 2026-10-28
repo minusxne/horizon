@@ -1666,14 +1666,14 @@ mod tests {
         assert_eq!(reduced.get(0, 0, 16).spans, [span(0, 4, 1)]);
     }
     #[test]
-    #[ignore = "requires prepared models/textures in HORIZON_TEST_RESOURCES"]
+    #[ignore = "requires prepared models/textures in SKYLINE_TEST_RESOURCES"]
     fn real_mesh_clips_near_chunks_and_preserves_water_and_edited_surfaces() -> crate::Result<()> {
         use crate::{
             assets::Assets, biome::Biomes, light::LightTables, mesher::MeshTables,
             testgen::TestTerrain,
         };
         let root = std::path::PathBuf::from(
-            std::env::var_os("HORIZON_TEST_RESOURCES").expect("HORIZON_TEST_RESOURCES"),
+            std::env::var_os("SKYLINE_TEST_RESOURCES").expect("SKYLINE_TEST_RESOURCES"),
         );
         let assets = Arc::new(Assets::load(&root)?);
         let render = Arc::new(assets.reload(&root)?);

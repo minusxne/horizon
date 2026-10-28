@@ -697,11 +697,11 @@ mod tests {
 
     /// The prepared resources' items, or None (the test is skipped) without them.
     fn rules() -> Option<ItemRules> {
-        let root = std::env::var_os("HORIZON_RESOURCES")
+        let root = std::env::var_os("SKYLINE_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("items.json").exists() {

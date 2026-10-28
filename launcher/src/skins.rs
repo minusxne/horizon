@@ -1,6 +1,6 @@
 //! Offline skins and capes: a PNG the player picks for an offline name, kept in the launcher's
 //! `skins/` folder, with its model (classic arms or slim). The game gets them in
-//! `HORIZON_OFFLINE_SKIN`, `HORIZON_OFFLINE_SKIN_MODEL` and `HORIZON_OFFLINE_CAPE` when that
+//! `SKYLINE_OFFLINE_SKIN`, `SKYLINE_OFFLINE_SKIN_MODEL` and `SKYLINE_OFFLINE_CAPE` when that
 //! name plays; a game that doesn't read them yet draws the default skin, as before.
 //!
 //! Skins are the layout every Java Edition skin uses: 64×64, or the older 64×32 (whose left arm
@@ -8,9 +8,9 @@
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-pub const SKIN_ENV: &str = "HORIZON_OFFLINE_SKIN";
-pub const MODEL_ENV: &str = "HORIZON_OFFLINE_SKIN_MODEL";
-pub const CAPE_ENV: &str = "HORIZON_OFFLINE_CAPE";
+pub const SKIN_ENV: &str = "SKYLINE_OFFLINE_SKIN";
+pub const MODEL_ENV: &str = "SKYLINE_OFFLINE_SKIN_MODEL";
+pub const CAPE_ENV: &str = "SKYLINE_OFFLINE_CAPE";
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

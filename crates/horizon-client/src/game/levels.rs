@@ -359,7 +359,7 @@ impl Game<'_> {
         self.close_idle_levels()
     }
 
-    /// `tick_server` as a server thread runs it. With `HORIZON_SPIKES=MS`, a
+    /// `tick_server` as a server thread runs it. With `SKYLINE_SPIKES=MS`, a
     /// tick longer than MS is logged with its thread CPU time and spans.
     pub(super) fn tick_server_timed(&mut self, paused: bool) -> Result<()> {
         let Some(threshold) = self.options.spikes else {
@@ -377,7 +377,7 @@ impl Game<'_> {
                     format!(", cpu {:.1} ms", (end - start).as_secs_f32() * 1000.0)
                 });
             log::info!(
-                "Horizon: slow tick {wall:.1} ms{cpu} ({} mobs): {}",
+                "Skyline: slow tick {wall:.1} ms{cpu} ({} mobs): {}",
                 self.mobs.len(),
                 horizon_client::spans::describe(&spans)
             );

@@ -3,7 +3,7 @@ name = "horizon-prepare"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Prepares Horizon's resources from the player's own Minecraft: imports and checks the pinned jars, runs the vanilla exporters, writes the resource folder"
+description = "Prepares Skyline's resources from the player's own Minecraft: imports and checks the pinned jars, runs the vanilla exporters, writes the resource folder"
 
 [dependencies]
 crc32fast = "1"
@@ -19,5 +19,5 @@ libc = "0.2"
 sha2 = "0.10"
 
 [[bin]]
-name = "horizon-prepare"
+name = "skyline-prepare"
 path = "src/main.rs"

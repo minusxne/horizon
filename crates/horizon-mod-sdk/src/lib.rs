@@ -1,4 +1,4 @@
-//! Write Horizon mods in Rust (`docs/mods.md`).
+//! Write Skyline mods in Rust (`docs/mods.md`).
 //!
 //! A mod is a type implementing [`Mod`], exported with [`export_mod!`] from
 //! a `cdylib` crate built for `wasm32-unknown-unknown`;

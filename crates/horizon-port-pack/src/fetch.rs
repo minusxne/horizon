@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn copies_the_players_jars_and_lists_what_needs_a_key() {
-        let root = std::env::temp_dir().join(format!("horizon-fetch-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("skyline-fetch-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let (work, mine) = (root.join("work"), root.join("instance/mods"));
         fs::create_dir_all(&mine).unwrap();

@@ -4,7 +4,7 @@
 //! `SHA256SUMS.sig`: one base64 Ed25519 signature per line, each over `horizon release <tag>\n`
 //! followed by SHA256SUMS's bytes, so a signed list can't be passed off under another tag.
 //! release.yml and launcher.yml sign with the key(s) in the `release` environment's secrets
-//! (tools/ci/sign_release.sh, OpenSSL only); the launcher and `horizon-server update` check a
+//! (tools/ci/sign_release.sh, OpenSSL only); the launcher and `skyline-server update` check a
 //! download against the public keys built in from `release-keys.txt` before installing it, and
 //! refuse it otherwise.
 //!
@@ -106,7 +106,7 @@ pub fn verify(
         });
     if !signed {
         return Err(format!(
-            "{tag}'s signature doesn't match Horizon's release key, so it was not installed. \
+            "{tag}'s signature doesn't match Skyline's release key, so it was not installed. \
              The download may have been tampered with: please report it on Discord or GitHub."
         ));
     }
@@ -166,7 +166,7 @@ fn digest_in(
 ) -> Result<String, String> {
     let (Some(sums), Some(signature)) = (sums, signature) else {
         return Err(format!(
-            "{name} is not signed, and Horizon installs only signed releases: pick a newer version."
+            "{name} is not signed, and Skyline installs only signed releases: pick a newer version."
         ));
     };
     verify(signed_for, sums, signature, keys)?

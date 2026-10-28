@@ -1,4 +1,4 @@
-//! Horizon's official keystrokes overlay, formerly the built-in extra:
+//! Skyline's official keystrokes overlay, formerly the built-in extra:
 //! forward, left, back and right as the player bound them, the two mouse
 //! buttons (with clicks per second) and the space bar, lit while held,
 //! drawn as the extra drew them. It redraws in the frame hook only when

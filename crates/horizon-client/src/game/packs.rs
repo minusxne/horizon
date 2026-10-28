@@ -23,7 +23,7 @@ use std::{
 pub fn cache_dir() -> PathBuf {
     std::env::current_dir()
         .unwrap_or_default()
-        .join(".horizon-cache/resourcepacks")
+        .join(".skyline-cache/resourcepacks")
 }
 pub fn packs_dir() -> PathBuf {
     std::env::current_dir()
@@ -40,14 +40,14 @@ pub fn open_folder(dir: &Path) {
         "xdg-open"
     };
     if let Err(e) = std::process::Command::new(program).arg(dir).spawn() {
-        log::warn!("Horizon: could not open {}: {e}", dir.display());
+        log::warn!("Skyline: could not open {}: {e}", dir.display());
     }
 }
 /// `Util.getPlatform().openUri`: the system browser on the link. The offline snapshot opens no
 /// outside link (a chat or server link is copied by its other button instead), only local paths.
 pub fn open_uri(uri: &str) {
     if uri.contains("://") && !uri.starts_with("file://") {
-        log::info!("Horizon: this offline build opens no outside link: {uri}");
+        log::info!("Skyline: this offline build opens no outside link: {uri}");
         return;
     }
     open_folder(Path::new(uri));
@@ -142,7 +142,7 @@ impl Game<'_> {
             return;
         }
         if let Err(e) = self.reload_selected_packs() {
-            log::warn!("Horizon: resource reload failed: {e}");
+            log::warn!("Skyline: resource reload failed: {e}");
             if self.screen != super::Screen::Options {
                 self.open_options_at(
                     self.title.is_some(),

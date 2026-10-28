@@ -7,7 +7,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 /// Hosts a file may come from: Modrinth's and CurseForge's file servers, and the release assets
-/// of Horizon's registry.
+/// of Skyline's registry.
 const HOSTS: [&str; 5] = [
     "https://cdn.modrinth.com/",
     "https://edge.forgecdn.net/",
@@ -29,7 +29,7 @@ pub(super) fn agent(url: &str) -> ureq::Agent {
     horizon_port_pack::net::keep("browser", spec.as_deref(), |proxy| {
         let builder = ureq::AgentBuilder::new()
             .user_agent(&format!(
-                "horizon-rust/horizon horizon-launcher/{} (github.com/horizon-rust/horizon)",
+                "horizon-rust/horizon skyline-launcher/{} (github.com/horizon-rust/horizon)",
                 crate::backend::VERSION
             ))
             .timeout_connect(std::time::Duration::from_secs(15))
@@ -45,7 +45,7 @@ pub(super) fn agent(url: &str) -> ureq::Agent {
 pub fn refuse(file: &FileRef) -> Option<String> {
     if !HOSTS.iter().any(|h| file.url.starts_with(h)) {
         return Some(format!(
-            "{} isn't on Modrinth's, CurseForge's or Horizon's file servers.",
+            "{} isn't on Modrinth's, CurseForge's or Skyline's file servers.",
             file.url
         ));
     }

@@ -1,4 +1,4 @@
-//! Horizon mods in the game (`docs/mods.md`): loading the ones turned on,
+//! Skyline mods in the game (`docs/mods.md`): loading the ones turned on,
 //! their tick, frame, chat and command hooks, their HUD panels and what
 //! they print. With no mod on, `horizon_mods::Mods` holds no engine and
 //! every hook here returns after one check.
@@ -234,14 +234,14 @@ pub(super) fn content_root(
                 id: m.id.clone(),
                 content,
             }),
-            Err(e) => log::warn!("Horizon: mod {} content not loaded: {e}", m.id),
+            Err(e) => log::warn!("Skyline: mod {} content not loaded: {e}", m.id),
         }
     }
-    match mod_content::resource_root(root, &mods, &here.join(".horizon-cache")) {
+    match mod_content::resource_root(root, &mods, &here.join(".skyline-cache")) {
         Ok(out) => {
             if out != root {
                 log::info!(
-                    "Horizon: content from {} mod(s) in {}",
+                    "Skyline: content from {} mod(s) in {}",
                     mods.len(),
                     out.display()
                 );
@@ -249,7 +249,7 @@ pub(super) fn content_root(
             out
         }
         Err(e) => {
-            log::warn!("Horizon: content mods not loaded: {e}");
+            log::warn!("Skyline: content mods not loaded: {e}");
             root.to_owned()
         }
     }
@@ -264,7 +264,7 @@ impl Game<'_> {
         let found = horizon_mods::find(&dir).len() + self.mods.dev.len();
         if found > 0 {
             log::warn!(
-                "Horizon: {found} mod(s) not started: this build has no mod runtime (build with --features mods)"
+                "Skyline: {found} mod(s) not started: this build has no mod runtime (build with --features mods)"
             );
         }
     }
@@ -289,7 +289,7 @@ impl Game<'_> {
 
 #[cfg(feature = "mods")]
 impl Game<'_> {
-    /// Reads `horizon-mods/` and the dev mods, and starts the ones turned on.
+    /// Reads `skyline-mods/` and the dev mods, and starts the ones turned on.
     pub(super) fn start_mods(&mut self) {
         let dir = Self::options_path().with_file_name(mod_list::DIR);
         let dev = &self.mods.dev;
@@ -620,7 +620,7 @@ impl Game<'_> {
             if self.options.execution_role.is_client() {
                 self.system_message(Text::literal("Mods reloaded").with_color(text::GRAY));
             } else {
-                log::info!("Horizon: mods reloaded");
+                log::info!("Skyline: mods reloaded");
             }
         }
     }
@@ -833,7 +833,7 @@ impl Game<'_> {
         }
     }
     /// The player bound the key row that waited to `key`: the mod's key
-    /// follows it now and at the next start (`horizon-mods.txt`).
+    /// follows it now and at the next start (`skyline-mods.txt`).
     fn bind_mod_key(&mut self, key: String) {
         let Some(ms) = self.mods.screen.as_mut() else {
             return;

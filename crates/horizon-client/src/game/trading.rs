@@ -332,7 +332,7 @@ impl Game<'_> {
             self.villager_traded(id);
         }
     }
-    /// Opens a merchant menu without a mob (horizon-ctl `trade`).
+    /// Opens a merchant menu without a mob (skyline-ctl `trade`).
     pub(super) fn open_merchant(&mut self, profession: &str, variant: &str, level: i32) {
         let profession = format!("minecraft:{}", profession.trim_start_matches("minecraft:"));
         let variant = format!("minecraft:{}", variant.trim_start_matches("minecraft:"));

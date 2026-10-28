@@ -1,16 +1,16 @@
-//! Mod API levels: which of the WIT contract's functions a Horizon has
+//! Mod API levels: which of the WIT contract's functions a Skyline has
 //! (`docs/api/stability.md`). Every function the game offers mods has the
-//! level it arrived at; a Horizon serves every level up to its [`LEVEL`].
+//! level it arrived at; a Skyline serves every level up to its [`LEVEL`].
 //! A mod needs the level of the newest function it imports, so a mod that
-//! calls a function this Horizon doesn't have is refused with "update
-//! Horizon" instead of a linking error, and the registry lists each
+//! calls a function this Skyline doesn't have is refused with "update
+//! Skyline" instead of a linking error, and the registry lists each
 //! version's level so the launcher can tell before it installs.
 
-/// The newest level this Horizon serves.
+/// The newest level this Skyline serves.
 pub const LEVEL: u32 = 7;
 
 /// Every function the game offers mods, as `interface.function`, with its
-/// level. Level 0 is the contract of Horizon 0.2.67 to 0.2.69. A new
+/// level. Level 0 is the contract of Skyline 0.2.67 to 0.2.69. A new
 /// function takes the next level and raises [`LEVEL`] (the `api_reference`
 /// test fails until it is listed here).
 pub const FUNCTIONS: [(&str, u32); 46] = [
@@ -86,7 +86,7 @@ pub fn read_mark(program: &[u8]) -> Option<u32> {
         .find_map(|w| std::str::from_utf8(&w[22..26]).ok()?.parse().ok())
 }
 
-/// A function's level; None for one this Horizon doesn't have.
+/// A function's level; None for one this Skyline doesn't have.
 pub fn level_of(function: &str) -> Option<u32> {
     FUNCTIONS
         .iter()
@@ -95,7 +95,7 @@ pub fn level_of(function: &str) -> Option<u32> {
 }
 
 /// The level a mod needs, from the functions it imports (as [`imports`]
-/// names them): its newest function's. A function this Horizon doesn't
+/// names them): its newest function's. A function this Skyline doesn't
 /// know comes from a newer one, so it needs more than [`LEVEL`]; that
 /// function is returned with it, for the message.
 pub fn needed<'a>(imports: impl IntoIterator<Item = &'a str>) -> (u32, Option<&'a str>) {
@@ -110,15 +110,15 @@ pub fn needed<'a>(imports: impl IntoIterator<Item = &'a str>) -> (u32, Option<&'
     needed
 }
 
-/// Why this Horizon can't run a mod that needs `level`, or None when it can.
+/// Why this Skyline can't run a mod that needs `level`, or None when it can.
 pub fn too_new(level: u32, function: Option<&str>) -> Option<String> {
     (level > LEVEL).then(|| {
         let uses = function.map_or(String::new(), |f| format!(" (it uses {f})"));
-        format!("made for a newer Horizon{uses}: update Horizon to run it")
+        format!("made for a newer Skyline{uses}: update Skyline to run it")
     })
 }
 
-/// The functions a mod's component imports from Horizon (`horizon:mods/*`),
+/// The functions a mod's component imports from Skyline (`horizon:mods/*`),
 /// as `interface.function`, in the component's order.
 #[cfg(any(feature = "runtime", feature = "index"))]
 pub fn imports(wasm: &[u8]) -> Result<Vec<String>, String> {
@@ -197,7 +197,7 @@ mod tests {
         assert_eq!(too_new(LEVEL, None), None);
         assert_eq!(
             too_new(LEVEL + 1, Some("render.set-sky")).as_deref(),
-            Some("made for a newer Horizon (it uses render.set-sky): update Horizon to run it")
+            Some("made for a newer Skyline (it uses render.set-sky): update Skyline to run it")
         );
     }
 }

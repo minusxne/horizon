@@ -689,7 +689,7 @@ impl Game<'_> {
             teleport_cooldown: 0,
         }
     }
-    /// The block entity at `pos` Horizon keeps as loaded, if any.
+    /// The block entity at `pos` Skyline keeps as loaded, if any.
     fn saved_tag(&self, pos: [i32; 3]) -> Option<&Tag> {
         self.world
             .chunks

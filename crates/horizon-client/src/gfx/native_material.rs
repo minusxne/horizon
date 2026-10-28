@@ -1,6 +1,6 @@
-//! The material stage of Horizon's own shader packs (docs/shaders.md): the pack's `material`
+//! The material stage of Skyline's own shader packs (docs/shaders.md): the pack's `material`
 //! function gives the lit colour of each point of a block's surface, before the alpha test and
-//! fog. Terrain still draws with Horizon's meshes, culling and draw lists; only its pipelines
+//! fog. Terrain still draws with Skyline's meshes, culling and draw lists; only its pipelines
 //! change. Their shader is the pack's stage (`CheckedStage::source`), then a copy of
 //! terrain.wgsl's terrain section whose names all take a `horizon_terrain_` prefix
 //! (`wgsl_prefix.rs`), then entries that hand the pack what vanilla's `fs_solid` and
@@ -113,7 +113,7 @@ fn vanilla_terrain() -> String {
 /// The terrain shader for the pack's material stage `source`.
 fn shader_source(source: &str) -> String {
     format!(
-        "{source}\n// Horizon's terrain (terrain.wgsl)\n{}{ENTRIES}",
+        "{source}\n// Skyline's terrain (terrain.wgsl)\n{}{ENTRIES}",
         vanilla_terrain()
     )
 }
@@ -291,7 +291,7 @@ mod tests {
             assert!(terrain.contains(&format!("{PREFIX}{name}")), "{name}");
         }
         assert!(!terrain.contains("fs_sky"), "the sky stays out");
-        // A pack may use any name Horizon's terrain uses unprefixed.
+        // A pack may use any name Skyline's terrain uses unprefixed.
         let own = "override gain: f32;\nconst PI: f32 = 3.0;\n\
             fn sprite(c: vec4<f32>) -> vec4<f32> { return c * PI; }\n\
             fn apply_fog(c: vec4<f32>) -> vec4<f32> { return c * gain; }\n\

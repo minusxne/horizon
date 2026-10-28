@@ -100,7 +100,7 @@ fn message(font: &Font, contents: &Text, width: f32) -> Element {
     }
 }
 
-/// `InputControlHandlers`: the control for input `i`, if Horizon has it.
+/// `InputControlHandlers`: the control for input `i`, if Skyline has it.
 fn input(font: &Font, i: usize, control: &Control) -> Option<Element> {
     Some(match control {
         Control::Text {

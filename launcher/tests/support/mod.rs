@@ -9,7 +9,7 @@ pub fn console_probe() -> &'static Path {
     static PROBE: OnceLock<PathBuf> = OnceLock::new();
     PROBE.get_or_init(|| {
         let root =
-            std::env::temp_dir().join(format!("horizon-console-probe-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-console-probe-{}", std::process::id()));
         fs::create_dir_all(&root).unwrap();
         let executable = root.join("console-probe.exe");
         let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/support/console_probe.rs");

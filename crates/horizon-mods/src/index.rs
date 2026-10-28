@@ -47,9 +47,9 @@ pub enum Kind {
     NativeMod,
     /// A `.hpack`: registry mods played together as a profile.
     Modpack,
-    /// A resource pack (`.zip` with `pack.mcmeta`) made or tested for Horizon.
+    /// A resource pack (`.zip` with `pack.mcmeta`) made or tested for Skyline.
     ResourcePack,
-    /// A Horizon shader pack (`.hshader`, the native WGSL format of
+    /// A Skyline shader pack (`.hshader`, the native WGSL format of
     /// docs/shaders.md; not the shaders/-folder packs, which stay on Modrinth).
     Shader,
     Other(String),
@@ -224,7 +224,7 @@ impl Index {
         let head: Head = serde_json::from_str(text).map_err(|e| format!("not a mod index: {e}"))?;
         if head.schema > SCHEMA {
             return Err(format!(
-                "the mod index is schema {}; this build reads {SCHEMA}: update Horizon",
+                "the mod index is schema {}; this build reads {SCHEMA}: update Skyline",
                 head.schema
             ));
         }
@@ -336,7 +336,7 @@ impl Index {
     }
 
     /// A project's newest version for Minecraft `game` that wasn't taken
-    /// down and that a Horizon serving mod API `level` can run (an unknown
+    /// down and that a Skyline serving mod API `level` can run (an unknown
     /// level counts as runnable: the game still checks when it starts it).
     pub fn installable<'a>(
         &self,
@@ -484,7 +484,7 @@ pub fn check_file(
     };
     if matches!(project.kind, Kind::Other(_)) {
         return Err(format!(
-            "this Horizon can't install a {} yet",
+            "this Skyline can't install a {} yet",
             project.kind.name()
         ));
     }
@@ -610,7 +610,7 @@ pub fn inspect(kind: &Kind, path: &Path) -> Result<Facts, String> {
                 ..Facts::default()
             })
         }
-        Kind::Other(name) => Err(format!("this Horizon can't read a {name} yet")),
+        Kind::Other(name) => Err(format!("this Skyline can't read a {name} yet")),
     }
 }
 

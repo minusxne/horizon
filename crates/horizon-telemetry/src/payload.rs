@@ -63,7 +63,7 @@ pub struct Item {
     /// Days since 1970 (UTC): no finer time is kept.
     pub day: u32,
     pub source: Source,
-    /// The Horizon release (`v0.4.2`), or the launcher's version.
+    /// The Skyline release (`v0.4.2`), or the launcher's version.
     pub version: String,
     #[serde(flatten)]
     pub payload: Payload,

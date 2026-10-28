@@ -1,4 +1,4 @@
-//! Reading past the data components Horizon doesn't interpret: each
+//! Reading past the data components Skyline doesn't interpret: each
 //! function consumes exactly what its vanilla StreamCodec writes
 //! (DataComponents' `networkSynchronized` codecs; a component without one
 //! goes as its persistent Codec's NBT, `ByteBufCodecs.fromCodecWithRegistries`).

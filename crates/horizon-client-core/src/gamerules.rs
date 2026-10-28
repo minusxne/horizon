@@ -287,7 +287,7 @@ mod tests {
         let back = GameRules::from_nbt(&rules.to_nbt().tag);
         assert_eq!(back, rules);
         assert!(back.bool("keep_inventory"));
-        let dir = std::env::temp_dir().join(format!("horizon-gamerules-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-gamerules-{}", std::process::id()));
         rules.save(&dir).unwrap();
         assert_eq!(GameRules::load(&dir), rules);
         let _ = fs::remove_dir_all(dir);

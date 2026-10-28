@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn servers_dat_round_trips() {
-        let dir = std::env::temp_dir().join(format!("horizon-servers-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-servers-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("servers.dat");
         let list = vec![

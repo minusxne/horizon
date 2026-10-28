@@ -357,7 +357,7 @@ impl Game<'_> {
                 "naive"
             }
         ));
-        // system_specs (no Java line: Horizon has no JVM).
+        // system_specs (no Java line: Skyline has no JVM).
         if let Some(r) = self.renderer.as_ref() {
             static CPU: std::sync::OnceLock<String> = std::sync::OnceLock::new();
             d.group(
@@ -416,7 +416,7 @@ impl Game<'_> {
                 ],
             );
         }
-        // Horizon's own: the shader pack's GPU time per pass (an empty group would move others).
+        // Skyline's own: the shader pack's GPU time per pass (an empty group would move others).
         let pass_lines = self.renderer.as_ref().map_or_else(Vec::new, |r| {
             debug_overlay::shader_pass_lines(&r.shader_pass_times())
         });
@@ -658,7 +658,7 @@ impl Game<'_> {
                 self.debug_charts.toggle_lightmap(&mut self.debug);
                 true
             }
-            // Screens and overlays Horizon does not draw yet (the debug
+            // Screens and overlays Skyline does not draw yet (the debug
             // options screen, the profiler and its chart, the texture dump):
             // the keys are used up as in vanilla.
             DebugAction::DebugOptions

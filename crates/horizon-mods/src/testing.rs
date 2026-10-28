@@ -100,7 +100,7 @@ impl TestGame {
     pub fn load(hmod: &Path) -> Result<TestGame, String> {
         static RUN: AtomicUsize = AtomicUsize::new(0);
         let dir = std::env::temp_dir().join(format!(
-            "horizon-mod-test-{}-{}",
+            "skyline-mod-test-{}-{}",
             std::process::id(),
             RUN.fetch_add(1, Ordering::Relaxed)
         ));

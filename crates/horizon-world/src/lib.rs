@@ -1,4 +1,4 @@
-//! Vanilla-compatible world data for Horizon. This crate does not run gameplay.
+//! Vanilla-compatible world data for Skyline. This crate does not run gameplay.
 #![forbid(unsafe_code)]
 
 pub mod active_effect_tick;

@@ -1,4 +1,4 @@
-//! Resolution scale and FXAA (Horizon settings): the world renders into its
+//! Resolution scale and FXAA (Skyline settings): the world renders into its
 //! own target at the scaled size, then one full-screen pass copies or
 //! anti-aliases it onto the screen, under the hand and HUD. With neither on,
 //! the world renders straight to the screen.
@@ -25,11 +25,11 @@ pub struct Post {
 impl Post {
     pub fn new(device: &wgpu::Device, format: wgpu::TextureFormat) -> Self {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Horizon post"),
+            label: Some("Skyline post"),
             source: wgpu::ShaderSource::Wgsl(include_str!("../world_post.wgsl").into()),
         });
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("Horizon post bindings"),
+            label: Some("Skyline post bindings"),
             entries: &[
                 wgpu::BindGroupLayoutEntry {
                     binding: 0,
@@ -50,13 +50,13 @@ impl Post {
             ],
         });
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Horizon post"),
+            label: Some("Skyline post"),
             bind_group_layouts: &[Some(&layout)],
             ..Default::default()
         });
         let pipeline = |entry: &str| {
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("Horizon post"),
+                label: Some("Skyline post"),
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &shader,
@@ -82,7 +82,7 @@ impl Post {
             })
         };
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-            label: Some("Horizon post"),
+            label: Some("Skyline post"),
             mag_filter: wgpu::FilterMode::Linear,
             min_filter: wgpu::FilterMode::Linear,
             ..Default::default()
@@ -165,7 +165,7 @@ impl Post {
     /// Bindings that copy (or anti-alias) `view` onto the screen in `finish_with`.
     pub fn bind(&self, device: &wgpu::Device, view: &wgpu::TextureView) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Horizon post"),
+            label: Some("Skyline post"),
             layout: &self.layout,
             entries: &[
                 wgpu::BindGroupEntry {
@@ -203,7 +203,7 @@ impl Post {
             },
         })];
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("Horizon post"),
+            label: Some("Skyline post"),
             color_attachments: &attachments,
             ..Default::default()
         });

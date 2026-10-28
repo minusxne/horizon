@@ -1,6 +1,6 @@
 //! The Servers page: create a server in one dialog, then start, stop and watch it, give friends its
 //! address, manage who may join, change its settings, back it up and update it, all with buttons. Every
-//! action runs `horizon-server` or calls the running server's control API (`horizon_launcher::servers`).
+//! action runs `skyline-server` or calls the running server's control API (`horizon_launcher::servers`).
 use super::*;
 use horizon_launcher::heads;
 use horizon_launcher::servers::{
@@ -305,7 +305,7 @@ pub(super) fn stop_on_quit() {
 }
 
 /// The player's own name, to let them in on a friends-only server: the Microsoft account that plays,
-/// else the name the game made up for them (`horizon-player.txt`).
+/// else the name the game made up for them (`skyline-player.txt`).
 fn own_name(accounts: &Accounts) -> Option<String> {
     accounts
         .selected()
@@ -393,7 +393,7 @@ fn backup_label(b: &Backup) -> (String, String) {
         "auto" => "Automatic".to_string(),
         "manual" => "Made by hand".to_string(),
         "before-update" => "Before an update".to_string(),
-        // horizon-server writes the tag with dashes (before-v2026-10-19-10).
+        // skyline-server writes the tag with dashes (before-v2026-10-19-10).
         k if k.starts_with("before-v")
             && k[8..].chars().all(|c| c.is_ascii_digit() || c == '-') =>
         {
@@ -447,7 +447,7 @@ impl Launcher {
         });
     }
 
-    /// `horizon-server <args>` on the open server, as a job.
+    /// `skyline-server <args>` on the open server, as a job.
     fn server_command(&mut self, label: &str, args: Vec<String>) {
         let Some(dir) = self.servers.open.clone() else {
             return;
@@ -689,7 +689,7 @@ impl Launcher {
         });
     }
 
-    /// Queues a setting for `horizon-server config set`; they go one batch at a time.
+    /// Queues a setting for `skyline-server config set`; they go one batch at a time.
     fn set_setting(&mut self, key: &str, value: String) {
         self.servers.queued.retain(|(k, _)| k != key);
         self.servers.queued.push((key.to_string(), value));
@@ -772,7 +772,7 @@ impl Launcher {
             Fix::Prepare => match self.selected().cloned() {
                 Some(tag) if backend::is_prepared(&tag) => {
                     self.server_job("Copying the game files", move |log| {
-                        log(format!("Copying the game files prepared for Horizon {tag}"));
+                        log(format!("Copying the game files prepared for Skyline {tag}"));
                         servers::set_up(&tag)
                             .map(|_| "The game files are ready. Press Start again.".to_string())
                             .map_err(Problem::plain)
@@ -1282,7 +1282,7 @@ impl Launcher {
             let result = (|| {
                 if servers::program().is_none() {
                     let tag =
-                        tag.ok_or_else(|| Problem::plain("Install a Horizon version first."))?;
+                        tag.ok_or_else(|| Problem::plain("Install a Skyline version first."))?;
                     servers::set_up(&tag).map_err(Problem::plain)?;
                 }
                 if !dir.join("server.toml").is_file() {
@@ -2167,7 +2167,7 @@ impl Launcher {
         if self.servers.config.is_none() {
             return div().child(centered(
                 if self.older_horizon() {
-                    "This server's Horizon is too old to show its settings here. Update it on \
+                    "This server's Skyline is too old to show its settings here. Update it on \
                      the Backups tab, then they appear."
                 } else {
                     "Reading the settings…"
@@ -2371,12 +2371,12 @@ impl Launcher {
         });
         let about = match (&available, &check, &status.update_last) {
             (Some(tag), _, _) => format!(
-                "Update available: Horizon {tag} (this server runs {release}). Updating backs up \
+                "Update available: Skyline {tag} (this server runs {release}). Updating backs up \
                  the world first, and goes back by itself if the new version doesn't start."
             ),
-            (None, Some(_), _) => format!("Up to date: Horizon {release}."),
-            (None, None, Some((last, _))) => format!("Horizon {release}. {last}"),
-            (None, None, None) => format!("Horizon {release}."),
+            (None, Some(_), _) => format!("Up to date: Skyline {release}."),
+            (None, None, Some((last, _))) => format!("Skyline {release}. {last}"),
+            (None, None, None) => format!("Skyline {release}."),
         };
         let control = match available {
             Some(tag) => {
@@ -2386,7 +2386,7 @@ impl Launcher {
                         this.servers.update = None;
                         if let Some(dir) = this.servers.open.clone() {
                             let done = format!(
-                                "Updated to Horizon {tag}. The world was backed up first (Backups)."
+                                "Updated to Skyline {tag}. The world was backed up first (Backups)."
                             );
                             this.server_job(format!("Updating to {tag}"), move |log| {
                                 servers::run_streamed(&dir, &["update"], log).map(|_| done)
@@ -2430,7 +2430,7 @@ impl Launcher {
             .flex_col()
             .border_t_1()
             .border_color(t.rule)
-            .child(self.setting_row("This server's Horizon", about, control.into_any_element()));
+            .child(self.setting_row("This server's Skyline", about, control.into_any_element()));
         if self.servers.setting("updates", "keep").is_some() {
             rows = rows.child(self.setting_row(
                 "Older versions kept",
@@ -2448,7 +2448,7 @@ impl Launcher {
             .child(rows)
     }
 
-    /// The server's details came back without its settings: its horizon-server predates
+    /// The server's details came back without its settings: its skyline-server predates
     /// `config` (and `backups --json`).
     fn older_horizon(&self) -> bool {
         self.servers.service.is_some() && self.servers.config.is_none()
@@ -2558,7 +2558,7 @@ impl Launcher {
         if self.older_horizon() {
             return tab
                 .child(text(theme::UI).text_color(t.muted).child(
-                    "This server's Horizon is too old to list its backups here: they're in its \
+                    "This server's Skyline is too old to list its backups here: they're in its \
                      backups folder. Update it below.",
                 ))
                 .child(self.updates_section(status, cx));
@@ -2786,7 +2786,7 @@ impl Launcher {
                             .child("Check Minecraft accounts"),
                     )
                     .child(text(theme::CAPTION).text_color(t.muted).child(
-                        "Only if every player signs in with Microsoft. Leave it off for Horizon \
+                        "Only if every player signs in with Microsoft. Leave it off for Skyline \
                          players without an account: Friends only keeps strangers out.",
                     )),
             );

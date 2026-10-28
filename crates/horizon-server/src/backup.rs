@@ -187,7 +187,7 @@ pub fn find(dir: &Path, name: &str) -> Result<String, String> {
         .find(|b| b.name.ends_with(&label))
         .map(|b| b.name.clone())
         .ok_or_else(|| {
-            format!("no backup {name:?} in {DIR}/ (`horizon-server backups` lists them)")
+            format!("no backup {name:?} in {DIR}/ (`skyline-server backups` lists them)")
         })
 }
 
@@ -284,7 +284,7 @@ mod tests {
     #[test]
     fn back_up_and_restore() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-server-backup-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-server-backup-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let config = Config::default();
         let world = dir.join("world");

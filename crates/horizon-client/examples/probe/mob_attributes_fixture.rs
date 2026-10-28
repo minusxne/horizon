@@ -1,4 +1,4 @@
-//! Prints Horizon's mob attributes and dimensions in the format of
+//! Prints Skyline's mob attributes and dimensions in the format of
 //! `VanillaMobAttributesOracle` (tools/test_mob_attributes_parity.py).
 //!
 //! usage: mob_attributes_fixture RESOURCES OUTPUT

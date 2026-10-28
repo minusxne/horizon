@@ -107,7 +107,7 @@ const LAYOUT_RULES: [&str; 4] = [
 /// The libraries' terrain kernel field, the game's
 /// `horizon:enhanced_terrain_adaptation` (docs/mods.md).
 pub(crate) const ENHANCED_TERRAIN: &str = "enhanced_terrain_adaptation";
-pub(crate) const HORIZON_ENHANCED_TERRAIN: &str = "horizon:enhanced_terrain_adaptation";
+pub(crate) const SKYLINE_ENHANCED_TERRAIN: &str = "horizon:enhanced_terrain_adaptation";
 /// Fields of older versions the mods' codecs no longer read: their own
 /// structures ignore them, and so does carry. Repurposed's jungle fortress
 /// and End stronghold still write `vertical_distance_from_start_piece`.
@@ -132,7 +132,7 @@ pub struct Upgrade {
     pub mapped: usize,
     /// Files whose block and fluid states were written in 26.3's shape.
     pub block_states: usize,
-    /// Types left as they are (Horizon skips what it cannot run), by type.
+    /// Types left as they are (Skyline skips what it cannot run), by type.
     pub unsupported: BTreeMap<String, usize>,
     /// Rules of mapped types the game does not run, by field.
     pub rules_lost: BTreeMap<String, usize>,
@@ -294,7 +294,7 @@ fn upgrade_types(
                         "top": "none", "bottom": "none"});
                     let mut kernel = own.and_then(|a| moogs_terrain(&a, lost)).unwrap_or(none);
                     kernel["rigid_junctions"] = false.into();
-                    v[HORIZON_ENHANCED_TERRAIN] = kernel;
+                    v[SKYLINE_ENHANCED_TERRAIN] = kernel;
                 } else if v
                     .as_object_mut()
                     .and_then(|o| o.remove(ENHANCED_TERRAIN))
@@ -404,7 +404,7 @@ fn upgrade_types(
                             .as_object_mut()
                             .and_then(|o| o.remove(ENHANCED_TERRAIN));
                         if let Some(kernel) = own.and_then(|a| moogs_terrain(&a, lost)) {
-                            element[HORIZON_ENHANCED_TERRAIN] = kernel;
+                            element[SKYLINE_ENHANCED_TERRAIN] = kernel;
                         }
                     }
                     element["element_type"] = (*to).into();

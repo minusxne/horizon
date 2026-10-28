@@ -1,4 +1,4 @@
-//! Horizon launcher: installs Horizon builds, prepares them from the player's own Minecraft,
+//! Skyline launcher: installs Skyline builds, prepares them from the player's own Minecraft,
 //! and starts the client or a dedicated server.
 
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
@@ -75,10 +75,10 @@ enum Page {
 }
 
 impl Page {
-    /// `HORIZON_LAUNCHER_PAGE=mods` (or `modpacks`, `shaders`, `servers`, `versions`, `notes`,
+    /// `SKYLINE_LAUNCHER_PAGE=mods` (or `modpacks`, `shaders`, `servers`, `versions`, `notes`,
     /// `settings`) opens on that page, for screenshots; Home otherwise.
     fn from_env() -> Page {
-        match std::env::var("HORIZON_LAUNCHER_PAGE").as_deref() {
+        match std::env::var("SKYLINE_LAUNCHER_PAGE").as_deref() {
             Ok("mods" | "modpacks" | "shaders" | "datapacks") => Page::Mods,
             Ok("servers") => Page::Servers,
             Ok("versions") => Page::Versions,
@@ -158,7 +158,7 @@ struct Launcher {
     checked: Option<Instant>,
     update_error: Option<String>,
     self_update: SelfUpdate,
-    /// The Horizon version being installed as an update, and whether it becomes the selected one.
+    /// The Skyline version being installed as an update, and whether it becomes the selected one.
     update_install: Option<(String, bool)>,
     /// The install bar's previous and current fraction, so it moves rather than jumps.
     bar: (f32, f32),
@@ -236,7 +236,7 @@ struct Launcher {
     collection: collection::Collection,
     /// Settings' "Connect an AI agent" (`agents_page`).
     agents: agents_page::AgentsUi,
-    /// How many play Horizon now, while the server answers ("N playing now" on the Play page).
+    /// How many play Skyline now, while the server answers ("N playing now" on the Play page).
     playing: Option<u64>,
     tx: Sender<Msg>,
     rx: Receiver<Msg>,
@@ -246,12 +246,12 @@ struct Launcher {
     install_started: Option<Instant>,
     prepare_started: Option<Instant>,
     play_pressed: Option<Instant>,
-    /// `horizon-launcher benchmark` started this window to measure it.
+    /// `skyline-launcher benchmark` started this window to measure it.
     bench: Option<perf::Bench>,
     /// The Modpacks page: the imported packs (read when the page first opens), the one shown,
     /// the report's filter, and the pipeline step running now with its log.
     packs: Vec<horizon_launcher::modpacks::Imported>,
-    /// Modpacks installed from Horizon's registry, each its own profile.
+    /// Modpacks installed from Skyline's registry, each its own profile.
     registry_packs: Vec<horizon_launcher::browser::horizon::pack::Installed>,
     packs_loaded: Option<Instant>,
     pack_open: Option<String>,
@@ -279,7 +279,7 @@ struct Launcher {
     aside: while_playing::Aside,
     /// The selected instance's desktop shortcut (`shortcut_page.rs`).
     shortcuts: shortcut_page::Shortcuts,
-    /// The name the game made up for an offline player (`horizon-player.txt`), for the top bar.
+    /// The name the game made up for an offline player (`skyline-player.txt`), for the top bar.
     offline_name: Option<String>,
     /// The player's servers, for the sidebar until the Servers page has read them.
     side_servers: Vec<horizon_launcher::servers::Entry>,
@@ -312,11 +312,11 @@ impl Launcher {
         }
         // Release builds on Linux put their entry back in the applications menu when there is
         // none or it starts a program that is gone (a moved or deleted binary), never over one
-        // that works; `HORIZON_LAUNCHER_DESKTOP_ENTRY=1` does it in a development build.
+        // that works; `SKYLINE_LAUNCHER_DESKTOP_ENTRY=1` does it in a development build.
         if cfg!(target_os = "linux")
             && settings.desktop_entry()
             && (!cfg!(debug_assertions)
-                || std::env::var_os("HORIZON_LAUNCHER_DESKTOP_ENTRY").is_some())
+                || std::env::var_os("SKYLINE_LAUNCHER_DESKTOP_ENTRY").is_some())
         {
             std::thread::spawn(|| {
                 let _ = horizon_launcher::desktop::repair(backend::exe_path());
@@ -513,7 +513,7 @@ impl Launcher {
         });
     }
 
-    /// Installs the Horizon version the last check found, keeping the player's choice of
+    /// Installs the Skyline version the last check found, keeping the player's choice of
     /// version unless they were on the newest one.
     fn install_update(&mut self) {
         let Some(release) = self.updates.horizon.clone() else {
@@ -852,7 +852,7 @@ impl Launcher {
                                 .and_then(|since| backend::crash_report_since(&home, since));
                             if error.is_some() && report.is_none() && self.switched_to_dx12() {
                                 self.client_error = Some(
-                                    "Horizon's Vulkan renderer crashed while starting on this \
+                                    "Skyline's Vulkan renderer crashed while starting on this \
                                      graphics card, so the game now uses DirectX 12. Press Play \
                                      to start it again. Video Settings > Graphics API switches \
                                      back."
@@ -933,7 +933,7 @@ impl Launcher {
         for home in homes {
             match backend::switch_to_dx12(&home) {
                 Ok(changed) => switched |= changed,
-                Err(e) => eprintln!("Horizon launcher: could not switch to DirectX 12: {e}"),
+                Err(e) => eprintln!("Skyline launcher: could not switch to DirectX 12: {e}"),
             }
         }
         switched
@@ -1207,7 +1207,7 @@ fn version_tag(tag: &str) -> Div {
         .child(tag.trim_start_matches('v').to_string())
 }
 
-/// Horizon's mark: two stems, their reflection below, and the horizon across in the accent.
+/// Skyline's mark: two stems, their reflection below, and the horizon across in the accent.
 fn mark(size: f32, t: &Theme) -> Div {
     let u = size / 16.;
     let stem = |x: f32, y: f32, color: Hsla| {
@@ -1355,11 +1355,11 @@ pub(crate) fn open_url(cx: &mut App, url: &str) {
     if link_allowed(url) {
         cx.open_url(url);
     } else {
-        eprintln!("This offline build of Horizon opens no outside link: {url}");
+        eprintln!("This offline build of Skyline opens no outside link: {url}");
     }
 }
 
-/// Copies to the clipboard, or into `HORIZON_LAUNCHER_CLIPBOARD` when a test run sets it
+/// Copies to the clipboard, or into `SKYLINE_LAUNCHER_CLIPBOARD` when a test run sets it
 /// (`horizon_launcher::desktop_seams`).
 fn copy_to_clipboard(cx: &mut App, item: gpui::ClipboardItem) {
     let Some(file) = horizon_launcher::desktop_seams::clipboard_file() else {
@@ -1597,10 +1597,10 @@ fn centered(text_: &str, t: &Theme) -> Div {
 
 /// The name the game made up for a player without an account, once it has run.
 fn offline_name() -> Option<String> {
-    player_name(&std::fs::read_to_string(backend::game_home().join("horizon-player.txt")).ok()?)
+    player_name(&std::fs::read_to_string(backend::game_home().join("skyline-player.txt")).ok()?)
 }
 
-/// The name in `horizon-player.txt`: the game writes `name:Player12345` (horizon-client's
+/// The name in `skyline-player.txt`: the game writes `name:Player12345` (horizon-client's
 /// offline_name.rs).
 fn player_name(text: &str) -> Option<String> {
     text.lines()
@@ -1794,7 +1794,7 @@ impl Launcher {
                         .child(
                             blocks::pixel(20., FontWeight::SEMIBOLD)
                                 .text_color(t.ink)
-                                .child("HORIZON"),
+                                .child("SKYLINE"),
                         ),
                 )
             })
@@ -1811,7 +1811,7 @@ impl Launcher {
             )
     }
 
-    /// The sidebar: Horizon and the imported modpacks, the player's servers, then the
+    /// The sidebar: Skyline and the imported modpacks, the player's servers, then the
     /// launcher's own update, the community links and its version.
     fn sidebar(&mut self, cx: &mut Context<Self>) -> Stateful<Div> {
         let t = self.theme;
@@ -2204,7 +2204,7 @@ impl Launcher {
                     .child(play),
             );
 
-        // Not prepared: an owner can have Horizon download Minecraft from Mojang; without an
+        // Not prepared: an owner can have Skyline download Minecraft from Mojang; without an
         // owner there is nothing to play, so signing in comes first.
         let first = (!prepared && !self.preparing)
             .then_some(self.owner)
@@ -2212,7 +2212,7 @@ impl Launcher {
         let resources_value = match first {
             _ if self.preparing => tr("Preparing…").to_string(),
             Some(true) => trf(
-                "Not prepared. Horizon can download Minecraft {version} from Mojang for your account, or use your own install.",
+                "Not prepared. Skyline can download Minecraft {version} from Mojang for your account, or use your own install.",
                 &[("version", &version)],
             ),
             Some(false) => trf(
@@ -2358,7 +2358,7 @@ impl Launcher {
             }
         }
 
-        // The banner: Horizon's landscape (`art.rs`) under a veil of the page colour, the hero and
+        // The banner: Skyline's landscape (`art.rs`) under a veil of the page colour, the hero and
         // the Play row over it. It reaches the content's edges and the top bar.
         let (scene, scene_width) = self.art.scene(t.dark, self.scale, banner_width);
         let veil = |angle: f32, from: f32, to: f32, at: f32| {
@@ -2480,7 +2480,7 @@ impl Launcher {
         page
     }
 
-    /// "Horizon crashed": the report and the logs, and where to report it.
+    /// "Skyline crashed": the report and the logs, and where to report it.
     fn crash_notice(&self, crash: Crash, cx: &mut Context<Self>) -> Div {
         let t = self.theme;
         let mut actions = div().flex().flex_wrap().gap(px(8.)).mt(px(8.));
@@ -2556,7 +2556,7 @@ impl Launcher {
             .child(
                 text(theme::HEADING)
                     .text_color(t.ink)
-                    .child(tr("Horizon crashed")),
+                    .child(tr("Skyline crashed")),
             );
         if !crash.summary.is_empty() {
             body = body.child(div().text_color(t.ink_soft).child(crash.summary));
@@ -2603,7 +2603,7 @@ impl Launcher {
                 .and_then(|r| backend::notes_summary(&r.body)),
             _ => None,
         };
-        let title = "Horizon";
+        let title = "Skyline";
         // Never squeezed by the rows below: the ping notice can make it tall.
         let mut hero = div()
             .flex()
@@ -2925,7 +2925,7 @@ impl Launcher {
                     .child(group("AI", "terminal"))
                     .child(self.no_ai_row(n + 6, cx))
                     .child(group("About", "info-box"))
-                    .child(index_row(n + 7, "Horizon", Some(plain(&horizon)), horizon_action, &t))
+                    .child(index_row(n + 7, "Skyline", Some(plain(&horizon)), horizon_action, &t))
                     .child(index_row(
                         n + 8,
                         tr("Launcher"),
@@ -2964,7 +2964,7 @@ impl Launcher {
                             n + 11,
                             tr("Applications menu"),
                             Some(plain(if self.settings.desktop_entry() {
-                                "Horizon and its icon are in your desktop's menu."
+                                "Skyline and its icon are in your desktop's menu."
                             } else {
                                 "Not in your desktop's menu."
                             })),
@@ -2978,7 +2978,7 @@ impl Launcher {
     }
 
     /// Settings' Nightly row: off by default; on, the nightly build installs and updates in its
-    /// own instance, and the release stays one click away (the Horizon instance).
+    /// own instance, and the release stays one click away (the Skyline instance).
     fn nightly_row(&self, n: usize, cx: &mut Context<Self>) -> Div {
         let t = self.theme;
         let on = self.settings.nightly;
@@ -3006,7 +3006,7 @@ impl Launcher {
                 .and_then(|i| i.version.clone())
             {
                 Some(version) => trf(
-                    "{version} in the Nightly instance. Choose Horizon in the sidebar to play the release.",
+                    "{version} in the Nightly instance. Choose Skyline in the sidebar to play the release.",
                     &[("version", &version)],
                 ),
                 None => tr("No nightly build yet.").to_string(),
@@ -3262,7 +3262,7 @@ impl Launcher {
             Some(SignInState::Done(Ok(a))) => div().child(format!("Signed in as {}.", a.name)),
             Some(SignInState::Done(Err(e))) => div().text_color(t.danger).child(e.clone()),
             None if self.accounts.accounts.is_empty() => div().child(tr(
-                "Horizon needs a Microsoft account that owns Minecraft: Java Edition, like other launchers. It also plays online servers with your name and skin.",
+                "Skyline needs a Microsoft account that owns Minecraft: Java Edition, like other launchers. It also plays online servers with your name and skin.",
             )),
             None => div().child(tr("Add another account.")),
         };
@@ -3430,7 +3430,7 @@ impl Launcher {
     }
 
     /// Plays the selected instance straight into a world (`--world`) or a server (`--server`):
-    /// flags every Horizon release takes.
+    /// flags every Skyline release takes.
     pub(crate) fn quick_play(&mut self, flag: &'static str, value: String) {
         self.quick_play = Some((flag, value));
         self.play();
@@ -3682,7 +3682,7 @@ impl Launcher {
                                 .child("Support the work below"),
                         )
                         .child(text(theme::UI).text_color(t.muted).child(
-                            "Horizon is built in the open. Sponsors fund the next release.",
+                            "Skyline is built in the open. Sponsors fund the next release.",
                         )),
                 )
                 .child(
@@ -3969,7 +3969,7 @@ impl Render for Launcher {
                 .line_height(px(theme::WORDMARK.px * 0.5))
                 .font_weight(FontWeight::BOLD)
                 .text_color(t.ink)
-                .children("HORIZON".chars().enumerate().map(|(i, c)| {
+                .children("SKYLINE".chars().enumerate().map(|(i, c)| {
                     let at = held - i as f32 * theme::STAGGER.as_secs_f32() * 1.5;
                     let p = ease_out_cubic(at / theme::ENTER.as_secs_f32());
                     div()
@@ -4046,7 +4046,7 @@ impl Launcher {
         (reveal, held.as_secs_f32())
     }
 
-    /// `horizon-launcher benchmark`: scroll the page a little on every frame, back to the top at
+    /// `skyline-launcher benchmark`: scroll the page a little on every frame, back to the top at
     /// the bottom, so the frame times measure scrolling.
     fn bench_scroll(&mut self, window: &mut Window) {
         let handle = &self.content_scroll.handle;
@@ -4094,8 +4094,8 @@ fn key_bindings() -> Vec<KeyBinding> {
 fn menus() -> Vec<Menu> {
     vec![
         Menu {
-            name: "Horizon Launcher".into(),
-            items: vec![MenuItem::action("Quit Horizon Launcher", Quit)],
+            name: "Skyline Launcher".into(),
+            items: vec![MenuItem::action("Quit Skyline Launcher", Quit)],
         },
         Menu {
             name: "Window".into(),
@@ -4151,7 +4151,7 @@ fn main() {
                     titlebar: Some(titlebar::options()),
                     #[cfg(target_os = "linux")]
                     window_decorations: Some(gpui::WindowDecorations::Client),
-                    app_id: Some("horizon-launcher".into()),
+                    app_id: Some("skyline-launcher".into()),
                     ..Default::default()
                 },
                 |window, cx| cx.new(|cx| Launcher::new(window, cx)),
@@ -4194,10 +4194,10 @@ mod tests {
     #[test]
     fn the_app_menu_has_quit() {
         let menus = super::menus();
-        assert_eq!(menus[0].name, "Horizon Launcher");
+        assert_eq!(menus[0].name, "Skyline Launcher");
         assert!(matches!(
             &menus[0].items[0],
-            gpui::MenuItem::Action { name, .. } if name == "Quit Horizon Launcher"
+            gpui::MenuItem::Action { name, .. } if name == "Quit Skyline Launcher"
         ));
     }
 

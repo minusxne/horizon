@@ -33,7 +33,7 @@ pub const MAX_WRONG: u32 = 5;
 /// Sessions open at once (IntegratedServer.MAX_PLAYERS).
 pub const MAX_SESSIONS: usize = 8;
 /// The direct port asked for first, so a port forwarded by hand keeps
-/// working from one session to the next (`HORIZON_FRIENDS_PORT`).
+/// working from one session to the next (`SKYLINE_FRIENDS_PORT`).
 pub const DEFAULT_PORT: u16 = 25580;
 /// Code handshakes in progress at once (scanners can't pile them up).
 const MAX_HANDSHAKES: usize = 8;

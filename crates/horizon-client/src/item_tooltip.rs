@@ -899,7 +899,7 @@ mod tests {
     #[test]
     fn fireworks_use_loaded_tooltip_translations() {
         let root = std::env::temp_dir().join(format!(
-            "horizon-firework-tooltip-language-{}-{}",
+            "skyline-firework-tooltip-language-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -981,7 +981,7 @@ mod tests {
             )
         });
         let root = std::env::temp_dir().join(format!(
-            "horizon-tooltip-language-{}-{}",
+            "skyline-tooltip-language-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -1037,10 +1037,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires prepared items/language in HORIZON_TEST_RESOURCES"]
+    #[ignore = "requires prepared items/language in SKYLINE_TEST_RESOURCES"]
     fn equipment_attributes_with_prepared_items_and_language() {
         let root = std::path::PathBuf::from(
-            std::env::var_os("HORIZON_TEST_RESOURCES").expect("HORIZON_TEST_RESOURCES"),
+            std::env::var_os("SKYLINE_TEST_RESOURCES").expect("SKYLINE_TEST_RESOURCES"),
         );
         let items = crate::items::Items::catalog(&root).unwrap();
         let enchantments = crate::enchant::Enchantments::load(&root);

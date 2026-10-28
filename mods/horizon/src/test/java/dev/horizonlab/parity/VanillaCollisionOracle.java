@@ -129,7 +129,7 @@ public final class VanillaCollisionOracle {
             for (String file : List.of("block-registry.nbt", "cached-collision.nbt", "inputs.txt"))
                 generated.put(file, Files.readAllBytes(base.resolve(file)));
         }
-        System.out.printf("HORIZON_COLLISION_RESULT {\"registry_states\":%d,\"cached_states\":%d,\"uncached_states\":%d,\"unique_shapes\":%d,\"unique_grids\":%d,\"queries\":%d}%n", mapping.length,cachedCount,mapping.length-cachedCount,shapes.size(),grids.size(),cachedCount*6);
+        System.out.printf("SKYLINE_COLLISION_RESULT {\"registry_states\":%d,\"cached_states\":%d,\"uncached_states\":%d,\"unique_shapes\":%d,\"unique_grids\":%d,\"queries\":%d}%n", mapping.length,cachedCount,mapping.length-cachedCount,shapes.size(),grids.size(),cachedCount*6);
     }
     private static void values(PrintWriter out, String label, double... values) { out.print(label); for (double value : values) out.printf(" %016x",Double.doubleToLongBits(value)); out.println(); }
     private static void box(PrintWriter out, String label, AABB b) { values(out,label,b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ); }

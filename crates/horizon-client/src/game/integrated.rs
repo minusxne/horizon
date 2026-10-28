@@ -7,7 +7,7 @@
 //! into its `IntegratedServer`.
 //!
 //! On by default. `--in-frame` (or `--no-server-thread`, or
-//! `HORIZON_SERVER_THREAD=0`) runs the world in the frame instead, the
+//! `SKYLINE_SERVER_THREAD=0`) runs the world in the frame instead, the
 //! escape hatch. LAN guests and dedicated servers use the same code either
 //! way.
 use super::{
@@ -139,7 +139,7 @@ impl Integrated {
 impl Drop for Integrated {
     fn drop(&mut self) {
         if let Err(error) = self.halt() {
-            log::error!("Horizon: integrated server shutdown: {error}");
+            log::error!("Skyline: integrated server shutdown: {error}");
         }
     }
 }
@@ -262,7 +262,7 @@ impl Game<'_> {
                     &ready_tx,
                 );
                 if let Err(e) = result {
-                    log::error!("Horizon: integrated server: {e}");
+                    log::error!("Skyline: integrated server: {e}");
                     *server_flags.failure.lock().unwrap() = Some(e.to_string());
                     let _ = ready_tx.send(Err(e.to_string()));
                 }
@@ -307,7 +307,7 @@ impl Game<'_> {
         self.mods.dev = self.options.dev_mods.clone();
         self.start_mods();
         // Math.max(2, options.renderDistance): past vanilla's 32 when the
-        // window's render distance is (Horizon's options go to 64).
+        // window's render distance is (Skyline's options go to 64).
         let view_distance = self.settings.render_distance.max(2);
         let config = HubConfig {
             default_game_mode: self.level.mode(),
@@ -372,8 +372,8 @@ impl Game<'_> {
         let _ = ready.send(Ok((pipe, self.level.name.clone())));
         self.settle_spawn()?;
         if let (Some(script), Some(output)) = (
-            std::env::var_os("HORIZON_COMMAND_SCRIPT"),
-            std::env::var_os("HORIZON_COMMAND_OUTPUT"),
+            std::env::var_os("SKYLINE_COMMAND_SCRIPT"),
+            std::env::var_os("SKYLINE_COMMAND_OUTPUT"),
         ) {
             // The script owns the clock: connection setup and terrain loading
             // cannot add wall-clock-dependent world ticks to oracle output.
@@ -629,7 +629,7 @@ impl Game<'_> {
         match pending {
             Publish::Open(listener, settings) => {
                 if let Err(e) = host.hub.lan.listen_on(listener, true) {
-                    log::error!("Horizon: Open to LAN: {e}");
+                    log::error!("Skyline: Open to LAN: {e}");
                 }
                 host.settings = settings;
                 host.hub.config.force_game_mode = settings.force_game_mode;

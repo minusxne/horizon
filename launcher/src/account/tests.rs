@@ -541,7 +541,7 @@ fn long_secrets_split_into_keychain_sized_pieces() {
 
 #[test]
 fn session_files_are_private_and_complete() {
-    let dir = std::env::temp_dir().join(format!("horizon-launcher-session-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("skyline-launcher-session-{}", std::process::id()));
     let account = Account {
         uuid: UUID.into(),
         name: "Notch".into(),
@@ -579,17 +579,17 @@ fn session_files_are_private_and_complete() {
 #[test]
 fn client_id_is_configuration() {
     // The run-time variable overrides; empty means not configured.
-    std::env::set_var("HORIZON_MSA_CLIENT_ID", " ");
+    std::env::set_var("SKYLINE_MSA_CLIENT_ID", " ");
     assert_eq!(client_id(), None);
     std::env::set_var(
-        "HORIZON_MSA_CLIENT_ID",
+        "SKYLINE_MSA_CLIENT_ID",
         "00000000-1111-2222-3333-444444444444",
     );
     assert_eq!(
         client_id().as_deref(),
         Some("00000000-1111-2222-3333-444444444444")
     );
-    std::env::remove_var("HORIZON_MSA_CLIENT_ID");
+    std::env::remove_var("SKYLINE_MSA_CLIENT_ID");
 }
 
 #[test]

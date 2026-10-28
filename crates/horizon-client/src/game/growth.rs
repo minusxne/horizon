@@ -67,11 +67,11 @@ pub(super) fn install_live_features(
     match features {
         Ok(Some(features)) => {
             res.behaviours().set_live_features(Arc::new(features));
-            log::info!("Horizon: live features ready in {:?}", started.elapsed());
+            log::info!("Skyline: live features ready in {:?}", started.elapsed());
         }
         Ok(None) => {
-            log::warn!("Horizon: the worldgen bundle has no features; saplings will not grow")
+            log::warn!("Skyline: the worldgen bundle has no features; saplings will not grow")
         }
-        Err(e) => log::warn!("Horizon: live features unavailable: {e}"),
+        Err(e) => log::warn!("Skyline: live features unavailable: {e}"),
     }
 }

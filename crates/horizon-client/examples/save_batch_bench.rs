@@ -142,7 +142,7 @@ fn encoding_fixture() -> horizon_client::Result<(BlockRegistry, Biomes)> {
             ),
         ),
     ]))?;
-    let temp = std::env::temp_dir().join(format!("horizon-save-batch-{}", std::process::id()));
+    let temp = std::env::temp_dir().join(format!("skyline-save-batch-{}", std::process::id()));
     let result = (|| {
         let textures = temp.join("assets/minecraft/textures/colormap");
         let biomes = temp.join("data/minecraft/worldgen/biome");

@@ -1,4 +1,4 @@
-//! Only original Horizon classes are packaged. The pinned jars remain player supplied.
+//! Only original Skyline classes are packaged. The pinned jars remain player supplied.
 use crate::*;
 
 const SETTINGS: &str = "exporters-v1 --release -proc:none -encoding UTF-8";
@@ -74,7 +74,7 @@ fn outputs(dir: &Path) -> Result<Value, String> {
             if !name.starts_with("server/dev/horizonlab/parity/")
                 && !name.starts_with("client/dev/horizonlab/parity/")
             {
-                return Err(format!("Non-Horizon class in exporter bundle: {name}"));
+                return Err(format!("Non-Skyline class in exporter bundle: {name}"));
             }
             hashes.insert(&name, Value::Str(digest(&path, "sha256")?));
         }

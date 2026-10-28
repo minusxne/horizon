@@ -1,20 +1,20 @@
 //! Repository tasks, run with `cargo run -p xtask -- TASK`.
 //!
-//! `package BINARY OUTDIR`: a playable Horizon folder with the game binary, horizon-ctl,
-//! horizon-prepare and horizon-server (built beside it: cargo build --release -p horizon-client
-//! --bins -p horizon-prepare -p horizon-server), the exporters horizon-prepare compiles, its sources (the launcher compares
+//! `package BINARY OUTDIR`: a playable Skyline folder with the game binary, skyline-ctl,
+//! skyline-prepare and skyline-server (built beside it: cargo build --release -p horizon-client
+//! --bins -p horizon-prepare -p horizon-server), the exporters skyline-prepare compiles, its sources (the launcher compares
 //! them to its own), and PLAY.txt. It holds none of Minecraft's files: players prepare those
 //! from their own copy. .github/workflows/release.yml makes the release folders with it.
 //!
 //! `package-server ENGINE OUTDIR`: a server folder (docs/server.md): the server build of the game
 //! (`cargo build --release -p horizon-client --no-default-features`, without sound or controllers)
-//! as horizon-engine, with horizon-prepare and horizon-server from beside it and the same sources.
+//! as skyline-engine, with skyline-prepare and skyline-server from beside it and the same sources.
 //!
 //! `tokens`: writes `crates/horizon-theme/tokens.css`, the design tokens of `crates/horizon-theme` as CSS
 //! custom properties (a horizon-theme test fails when the file is out of date).
 //!
 //! `icons`: renders the icon masters in `docs/media/brand` (with `rsvg-convert`, from librsvg)
-//! into every size the platforms and the website use, and packs `packaging/icons/horizon.ico`
+//! into every size the platforms and the website use, and packs `packaging/icons/skyline.ico`
 //! and `horizon.icns`. `docs/media/brand/README.md` lists what goes where.
 
 use std::fs;
@@ -32,14 +32,14 @@ const ARCHIVED: [&str; 5] = [
     "LICENSE",
 ];
 
-/// The programs that sit beside the client: horizon-ctl, the command line and MCP server that
-/// play the game, horizon-prepare, which prepares the resources from the player's own
-/// Minecraft, and horizon-server, which hosts a server with the client as its engine
+/// The programs that sit beside the client: skyline-ctl, the command line and MCP server that
+/// play the game, skyline-prepare, which prepares the resources from the player's own
+/// Minecraft, and skyline-server, which hosts a server with the client as its engine
 /// (docs/server.md).
-const TOOLS: [&str; 3] = ["horizon-ctl", "horizon-prepare", "horizon-server"];
+const TOOLS: [&str; 3] = ["skyline-ctl", "skyline-prepare", "skyline-server"];
 
 /// The programs beside the engine in a server folder.
-const SERVER_TOOLS: [&str; 2] = ["horizon-prepare", "horizon-server"];
+const SERVER_TOOLS: [&str; 2] = ["skyline-prepare", "skyline-server"];
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -171,28 +171,28 @@ fn icons() -> Result<(), String> {
     for size in HICOLOR {
         let png = render(&square, (size, size))?;
         write(
-            &packaging.join(format!("hicolor/{size}x{size}/apps/horizon.png")),
+            &packaging.join(format!("hicolor/{size}x{size}/apps/skyline.png")),
             &png,
         )?;
     }
     write(
-        &packaging.join("hicolor/scalable/apps/horizon.svg"),
+        &packaging.join("hicolor/scalable/apps/skyline.svg"),
         &fs::read(&square).map_err(|e| format!("{}: {e}", square.display()))?,
     )?;
     let images = ICO
         .iter()
         .map(|&s| render(&square, (s, s)).map(|png| (s, png)))
         .collect::<Result<Vec<_>, _>>()?;
-    write(&packaging.join("horizon.ico"), &ico(&images))?;
+    write(&packaging.join("skyline.ico"), &ico(&images))?;
     let macos = brand.join("icon-macos.svg");
     let entries = ICNS
         .iter()
         .map(|&(kind, s)| render(&macos, (s, s)).map(|png| (kind, png)))
         .collect::<Result<Vec<_>, _>>()?;
-    write(&packaging.join("horizon.icns"), &icns(&entries))?;
+    write(&packaging.join("skyline.icns"), &icns(&entries))?;
     // The window icon the game and the launcher set at run time (X11 and Windows title bars).
     write(
-        &repo.join("crates/horizon-theme/icons/horizon-64.png"),
+        &repo.join("crates/horizon-theme/icons/skyline-64.png"),
         &render(&square, (64, 64))?,
     )?;
     // Avatars, and the website's icons (horizon-site copies docs/media/brand/web/ into its public/).
@@ -230,14 +230,14 @@ fn package(binary: &Path, out: &Path) -> Result<(), String> {
 fn package_server(engine: &Path, out: &Path) -> Result<(), String> {
     let repo = new_folder(out)?;
     copy_exporters(&repo.join("exporters"), &out.join("exporters"))?;
-    copy(engine, &out.join(program_name(engine, "horizon-engine")))?;
+    copy(engine, &out.join(program_name(engine, "skyline-engine")))?;
     copy_beside(engine, &SERVER_TOOLS, out)
 }
 
 /// Release builds supply only our compiled classes and their integrity manifest.
 fn copy_exporters(from: &Path, to: &Path) -> Result<(), String> {
     if !from.join("manifest.json").is_file() {
-        return Err("Missing exporters/manifest.json; run horizon-prepare compile-exporters and copy its bundle to exporters/".into());
+        return Err("Missing exporters/manifest.json; run skyline-prepare compile-exporters and copy its bundle to exporters/".into());
     }
     copy_exporter_tree(from, to)
 }

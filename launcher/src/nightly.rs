@@ -4,7 +4,7 @@
 //!
 //! It never touches the release: it installs as its own version, `nightly-<date>-<commit>`, and plays
 //! in its own instance, "Nightly" (`instances/nightly/` in the game's home), so the player's worlds
-//! stay where they are and choosing the Horizon instance plays the release again. Its checksums
+//! stay where they are and choosing the Skyline instance plays the release again. Its checksums
 //! must be signed for the nightly channel (`signed::nightly_digest`); the release channel refuses
 //! them.
 use crate::backend::{self, Release, ASSET};

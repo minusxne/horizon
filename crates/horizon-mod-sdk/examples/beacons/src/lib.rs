@@ -1,4 +1,4 @@
-//! Example Horizon server mod (`docs/mods.md`, "Server mods") with
+//! Example Skyline server mod (`docs/mods.md`, "Server mods") with
 //! capability `world` and typed commands: `/beacon [height]` lights a
 //! pillar of glowstone two blocks east of the player, `/ground [pos]` reads
 //! the block under their feet (or at `pos`) and its biome.

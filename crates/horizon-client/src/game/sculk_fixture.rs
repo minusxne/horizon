@@ -1,5 +1,5 @@
 //! The Rust side of tools/test_sculk_parity.py: with
-//! `HORIZON_SCULK_FIXTURE=SCENARIOS,OUTPUT` the game loads its resources and
+//! `SKYLINE_SCULK_FIXTURE=SCENARIOS,OUTPUT` the game loads its resources and
 //! runs every scenario (sculk blocks, the player with a warning level, scripted
 //! game events and block changes) through its own sculk code on a fresh
 //! headless world, ticking in `ServerLevel.tick`'s order, and prints what
@@ -162,7 +162,7 @@ impl Game<'_> {
         );
         let (input, output) = spec
             .split_once(',')
-            .ok_or("HORIZON_SCULK_FIXTURE=SCENARIOS,OUTPUT")?;
+            .ok_or("SKYLINE_SCULK_FIXTURE=SCENARIOS,OUTPUT")?;
         let text = std::fs::read_to_string(input)?;
         let mut out = std::io::BufWriter::new(std::fs::File::create(output)?);
         for s in parse(&text) {

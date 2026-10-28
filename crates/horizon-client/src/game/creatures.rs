@@ -4531,7 +4531,7 @@ fn bucketable(species: Species) -> Option<(&'static str, &'static str)> {
     })
 }
 /// Mob.getBaseExperienceReward
-/// The damage type id of a Horizon damage kind.
+/// The damage type id of a Skyline damage kind.
 pub(super) fn damage_type(kind: horizon_client::mobs::DamageKind, player: bool) -> &'static str {
     use horizon_client::mobs::DamageKind as K;
     match kind {
@@ -4563,7 +4563,7 @@ pub(super) fn damage_type(kind: horizon_client::mobs::DamageKind, player: bool) 
         K::OutOfWorld => "minecraft:out_of_world",
     }
 }
-/// A Horizon item stack as a loot stack (id, count, damage, enchantments).
+/// A Skyline item stack as a loot stack (id, count, damage, enchantments).
 fn to_loot(stack: &ItemStack) -> horizon_world::loot::LootStack {
     horizon_world::loot::LootStack {
         item: stack.item.to_string(),
@@ -4582,7 +4582,7 @@ fn to_loot(stack: &ItemStack) -> horizon_world::loot::LootStack {
         names: Vec::new(),
     }
 }
-/// A generated loot stack as a Horizon item stack.
+/// A generated loot stack as a Skyline item stack.
 fn from_loot(stack: &horizon_world::loot::LootStack) -> ItemStack {
     let mut item = ItemStack {
         item: Arc::from(stack.item.as_str()),

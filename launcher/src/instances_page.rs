@@ -37,7 +37,7 @@ const TEXTURES: [&str; 24] = [
     "book",
 ];
 
-/// Colours offered as icons: Horizon's accent and a few that sit beside it in both themes.
+/// Colours offered as icons: Skyline's accent and a few that sit beside it in both themes.
 const COLOURS: [&str; 8] = [
     "#5b3fd6", "#3f7fd6", "#2f9e8f", "#4f9e2f", "#c9a227", "#d9732f", "#c4405a", "#7d7591",
 ];
@@ -205,7 +205,7 @@ impl Launcher {
                         summary.map_or_else(|| tr("Modpack").into(), |p| p.summary()),
                     )
                 }
-                InstanceKind::Pack => (false, tr("From Horizon's registry").into()),
+                InstanceKind::Pack => (false, tr("From Skyline's registry").into()),
             };
             let dot = matches!(i.kind, InstanceKind::Default | InstanceKind::Own).then(|| {
                 div()
@@ -349,7 +349,7 @@ impl Launcher {
         );
         let from = self
             .selected_instance()
-            .map_or_else(|| "Horizon".into(), |i| i.name.clone());
+            .map_or_else(|| "Skyline".into(), |i| i.name.clone());
         let row = |label: &'static str, control: AnyElement| {
             div()
                 .flex()

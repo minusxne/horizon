@@ -59,7 +59,7 @@ fn home(name: &str) -> PathBuf {
     let mut bytes = [0u8; 6];
     getrandom::fill(&mut bytes).unwrap();
     let suffix: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-    let dir = std::env::temp_dir().join(format!("horizon-telemetry-gating-{name}-{suffix}"));
+    let dir = std::env::temp_dir().join(format!("skyline-telemetry-gating-{name}-{suffix}"));
     std::fs::create_dir_all(&dir).unwrap();
     dir
 }

@@ -113,7 +113,7 @@ pub trait Clipboard {
 #[derive(Default)]
 pub struct SystemClipboard {
     system: Option<arboard::Clipboard>,
-    /// The text Horizon last copied (`horizon-ctl status`).
+    /// The text Skyline last copied (`skyline-ctl status`).
     copied: Option<String>,
 }
 
@@ -211,7 +211,7 @@ pub fn apply(
 /// sign line, a book page).
 pub type FieldId = (&'static str, usize);
 
-/// The selection of Horizon's append-only fields, whose cursor stays at the
+/// The selection of Skyline's append-only fields, whose cursor stays at the
 /// end: Select All selects the whole value, which the next copy, cut, paste,
 /// typed text or backspace replaces. It is forgotten as soon as the field or
 /// its value changes.

@@ -160,12 +160,12 @@ pub fn read_hello(stream: &mut TcpStream) -> io::Result<Hello> {
         m if m == CODE_MAGIC => Ok(Hello::Code(session)),
         _ => Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            "not a Horizon stream",
+            "not a Skyline stream",
         )),
     }
 }
 /// The guest's side of a code session's opening: send the hello, wait for
-/// its echo (proof a Horizon host listens there).
+/// its echo (proof a Skyline host listens there).
 pub fn code_hello(stream: &mut TcpStream, session: u64) -> io::Result<()> {
     let mut hello = [0u8; 12];
     hello[..4].copy_from_slice(CODE_MAGIC);
@@ -177,7 +177,7 @@ pub fn code_hello(stream: &mut TcpStream, session: u64) -> io::Result<()> {
     if theirs != hello {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            "not a Horizon host",
+            "not a Skyline host",
         ));
     }
     Ok(())

@@ -71,8 +71,8 @@ pub fn start(dir: &Path) -> Result<(), String> {
             && status["phase"] == "running"
         {
             println!(
-                "\nThe server is running (pid {}). `horizon-server status` shows how it does, \
-                 `horizon-server stop` stops it.",
+                "\nThe server is running (pid {}). `skyline-server status` shows how it does, \
+                 `skyline-server stop` stops it.",
                 child.id()
             );
             return Ok(());
@@ -127,7 +127,7 @@ fn wait_running(client: &Client, replaced: Option<u64>) -> Result<(), String> {
         }
         if Instant::now() > deadline {
             return Err(format!(
-                "the game isn't up after {} s; `horizon-server logs` shows why",
+                "the game isn't up after {} s; `skyline-server logs` shows why",
                 START_TIMEOUT.as_secs()
             ));
         }
@@ -142,7 +142,7 @@ fn wait_running(client: &Client, replaced: Option<u64>) -> Result<(), String> {
 /// `cmd`: one console command, and what it printed.
 pub fn command(dir: &Path, words: &[String]) -> Result<(), String> {
     if words.is_empty() {
-        return Err("cmd needs a console command, for example: horizon-server cmd list".into());
+        return Err("cmd needs a console command, for example: skyline-server cmd list".into());
     }
     let client = running(dir)?;
     // A game that is starting or restarting takes the command once it is up.
@@ -256,7 +256,7 @@ fn describe(status: &Value) -> String {
         out += &format!("Updating: {busy}\n");
     } else if let Some(tag) = update["available"].as_str() {
         out += &format!(
-            "Horizon {tag} is out (this server runs {}): `horizon-server update` installs it\n",
+            "Skyline {tag} is out (this server runs {}): `skyline-server update` installs it\n",
             update["installed"].as_str().unwrap_or("?")
         );
     }
@@ -322,7 +322,7 @@ pub fn backups(dir: &Path, as_json: bool) -> Result<(), String> {
         return Ok(());
     }
     if all.is_empty() {
-        println!("No backups yet: `horizon-server backup` makes one.");
+        println!("No backups yet: `skyline-server backup` makes one.");
     }
     for b in all {
         println!("{:>10}  {}", size(b.bytes), b.name);
@@ -364,7 +364,7 @@ pub fn restore(dir: &Path, name: &str, yes: bool) -> Result<(), String> {
         print!("Restoring {name}: restarting the game with it");
         wait_running(&client, before)?;
         println!(
-            "\nThe game is running on the restored world; `horizon-server logs` has the details."
+            "\nThe game is running on the restored world; `skyline-server logs` has the details."
         );
         return Ok(());
     }
@@ -458,7 +458,7 @@ mod tests {
                 "phase": "running",
                 "update": { "installed": "v2026.10.18", "available": "v2026.10.19" }
             })),
-            "Running\nHorizon v2026.10.19 is out (this server runs v2026.10.18): `horizon-server update` installs it\n"
+            "Running\nHorizon v2026.10.19 is out (this server runs v2026.10.18): `skyline-server update` installs it\n"
         );
         assert_eq!(
             describe(

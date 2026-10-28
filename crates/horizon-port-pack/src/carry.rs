@@ -600,7 +600,7 @@ fn contains(haystack: &[u8], needle: &[u8]) -> bool {
 
 /// Why the game would refuse a file of the mod's own content, if it would.
 /// Vanilla skips such files one by one (an invalid resource path, a data
-/// file that does not parse); Horizon's content loader refuses the whole
+/// file that does not parse); Skyline's content loader refuses the whole
 /// set, so they stay out of the carry.
 fn unreadable(name: &str, bytes: &mut Vec<u8>) -> Option<String> {
     if let Err(e) = horizon_mods::content::check_path(name) {
@@ -609,7 +609,7 @@ fn unreadable(name: &str, bytes: &mut Vec<u8>) -> Option<String> {
     if !(name.ends_with(".json") || name.ends_with(".mcmeta")) {
         return None;
     }
-    // A byte-order mark: Horizon's JSON readers take the file without it.
+    // A byte-order mark: Skyline's JSON readers take the file without it.
     if bytes.starts_with(b"\xEF\xBB\xBF") {
         bytes.drain(..3);
     }
@@ -1472,10 +1472,10 @@ mod tests {
         assert_eq!(template("gem_core", &properties(&odd)), None);
     }
 
-    /// A small NeoForge jar carried over is a content mod Horizon loads.
+    /// A small NeoForge jar carried over is a content mod Skyline loads.
     #[test]
     fn carried_jar_is_a_content_mod() {
-        let dir = std::env::temp_dir().join(format!("horizon-port-pack-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-port-pack-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         let jar = dir.join("gem-1.0.jar");
@@ -1634,7 +1634,7 @@ mod tests {
             1
         );
 
-        // Horizon's own reader accepts it: blocks and items declared, files fenced.
+        // Skyline's own reader accepts it: blocks and items declared, files fenced.
         let package = horizon_mods::Package::read(&carried).unwrap();
         let content = horizon_mods::Content::read(&carried, &package.manifest).unwrap();
         let blocks: Vec<&str> = content.blocks.iter().map(|b| b.id.as_str()).collect();
@@ -1649,7 +1649,7 @@ mod tests {
     /// and a pack mod's namespace stay outside.
     #[test]
     fn claims_the_namespaces_its_files_name() {
-        let dir = std::env::temp_dir().join(format!("horizon-port-pack-ns-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-port-pack-ns-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         let jar = dir.join("towers-1.0.jar");

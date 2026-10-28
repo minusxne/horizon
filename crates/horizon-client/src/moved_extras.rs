@@ -1,6 +1,6 @@
-//! Extras that became official mods (docs/mods.md, "Horizon's official
+//! Extras that became official mods (docs/mods.md, "Skyline's official
 //! mods"). For a player who had one on, the game installs the mod from
-//! Horizon's registry once, checked as the launcher checks it, turns it on
+//! Skyline's registry once, checked as the launcher checks it, turns it on
 //! and carries the extra's settings over into the mod's storage. A player
 //! who had it off gets nothing: the mod is in the mod browser.
 use crate::{extras::Extras, mod_list::ModList};
@@ -11,7 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Horizon's registry; `HORIZON_MOD_INDEX` points elsewhere (a local file
+/// Skyline's registry; `SKYLINE_MOD_INDEX` points elsewhere (a local file
 /// for trials, whose files may then be `file://`), as for the launcher.
 pub const INDEX_URL: &str = "https://horizon-rust.github.io/horizon-mods/index.json";
 const MAX_INDEX: u64 = 16 << 20;
@@ -82,7 +82,7 @@ impl Moved {
             ],
         }
     }
-    /// The extra's key as the mod's key (`horizon-mods.txt`), when the
+    /// The extra's key as the mod's key (`skyline-mods.txt`), when the
     /// player had changed it from the mod's default.
     pub fn keys(&self, e: &Extras) -> Vec<(&'static str, String)> {
         match self.id {
@@ -114,7 +114,7 @@ pub fn nothing_to_do(e: &Extras) -> Vec<&'static Moved> {
 }
 
 fn location() -> String {
-    std::env::var("HORIZON_MOD_INDEX")
+    std::env::var("SKYLINE_MOD_INDEX")
         .ok()
         .filter(|v| !v.is_empty())
         .unwrap_or_else(|| INDEX_URL.to_owned())
@@ -150,7 +150,7 @@ fn get(url: &str, local: bool, max: u64) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-/// The registry's index, from the network (or `HORIZON_MOD_INDEX`).
+/// The registry's index, from the network (or `SKYLINE_MOD_INDEX`).
 pub fn fetch_index() -> Result<Index, String> {
     let at = location();
     let local = !at.starts_with("https://");
@@ -164,21 +164,21 @@ pub fn fetch_index() -> Result<Index, String> {
 
 /// Installs `m` into the game folder `dir` (where `options.txt` is), for a
 /// player whose extras were `e`: its newest version for this game that
-/// wasn't taken down and that this Horizon's mod API level runs, checked
+/// wasn't taken down and that this Skyline's mod API level runs, checked
 /// against the index (size, SHA-256, signature, manifest), as
-/// `horizon-mods/<id>.hmod`, turned on, with the extra's settings in its
+/// `skyline-mods/<id>.hmod`, turned on, with the extra's settings in its
 /// storage unless the mod has its own already.
 pub fn install(index: &Index, m: &Moved, e: &Extras, dir: &Path) -> Result<(), String> {
     let project = index
         .project(m.id)
-        .ok_or_else(|| format!("{} isn't in Horizon's registry yet", m.id))?;
+        .ok_or_else(|| format!("{} isn't in Skyline's registry yet", m.id))?;
     let version = index
         .installable(
             project,
             horizon_core::version::VERSION_ID,
             horizon_mods::api_level::LEVEL,
         )
-        .ok_or_else(|| format!("{} has no version this Horizon can run", m.id))?;
+        .ok_or_else(|| format!("{} has no version this Skyline can run", m.id))?;
     let mods = dir.join(crate::mod_list::DIR);
     fs::create_dir_all(&mods).map_err(|e| format!("{}: {e}", mods.display()))?;
     let target = mods.join(format!("{}.hmod", m.id));

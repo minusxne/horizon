@@ -1,5 +1,5 @@
 //! Replays the render states of the vanilla entity-animation oracle through
-//! Horizon's `mobs::anim::setup` and writes every part's pose, then draws the
+//! Skyline's `mobs::anim::setup` and writes every part's pose, then draws the
 //! posed model with `mobs::render::draw` under the case's living-entity root
 //! transform and writes each drawn part's packed vertex normals.
 //!
@@ -103,7 +103,7 @@ fn root_transform(case: &Value) -> glam::Mat4 {
 }
 
 /// The entity-side values behind the render-state fields the case sets, for
-/// the species whose Horizon animation reads them from the `Mob`.
+/// the species whose Skyline animation reads them from the `Mob`.
 fn entity_state(mob: &mut Mob, species: Species, case: &Value) {
     let flag = |k: &str| case[k].as_bool().unwrap_or(false);
     let num = |k: &str| case[k].as_f64().unwrap_or(0.0) as f32;

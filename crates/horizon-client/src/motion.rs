@@ -1190,7 +1190,7 @@ impl MotionWorld<'_, '_, '_> {
         self.player.hurt(&self.resources.health, rules, id, 1.0)?;
         Ok(())
     }
-    /// `Entity.applyEffectsFromBlocks` for the blocks Horizon's player reacts
+    /// `Entity.applyEffectsFromBlocks` for the blocks Skyline's player reacts
     /// to inside its movement path: powder snow (`PowderSnowBlock.entityInside`
     /// and the FREEZE / EXTINGUISH effects), cobwebs, sweet berry bushes,
     /// cactus and lit campfires, and the magma and slime blocks it stands on
@@ -1419,7 +1419,7 @@ impl MotionWorld<'_, '_, '_> {
             };
             // getEntityInsideCollisionShape is the whole block but for powder
             // snow (its collision shape, the whole block when it is empty),
-            // filled cauldrons, end portals and tripwires; Horizon doesn't
+            // filled cauldrons, end portals and tripwires; Skyline doesn't
             // follow the player into those last two.
             if matches!(name, "minecraft:end_portal" | "minecraft:tripwire") {
                 continue;
@@ -2566,11 +2566,11 @@ mod tests {
 
     #[test]
     fn sword_sweep_requires_charge_ground_and_slow_horizontal_movement() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("movement-properties.nbt").exists() {
@@ -2602,11 +2602,11 @@ mod tests {
 
     #[test]
     fn player_stands_walks_sneaks_and_jumps_on_ghast() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("movement-properties.nbt").exists() {
@@ -2682,7 +2682,7 @@ mod tests {
     #[test]
     fn a_player_lands_on_a_block_a_piston_is_moving() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -2741,11 +2741,11 @@ mod tests {
 
     #[test]
     fn a_lava_cauldron_burns_the_player_inside_it() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("movement-properties.nbt").exists() {
@@ -2789,11 +2789,11 @@ mod tests {
 
     #[test]
     fn a_water_cauldron_puts_out_a_burning_player() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("movement-properties.nbt").exists() {
@@ -2846,11 +2846,11 @@ mod tests {
 
     #[test]
     fn standing_in_a_wither_rose_asks_for_its_effect() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("movement-properties.nbt").exists() {
@@ -2917,7 +2917,7 @@ mod tests {
     #[test]
     fn server_travel_moves_only_the_velocity() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -2975,7 +2975,7 @@ mod tests {
     #[test]
     fn spectator_scroll_speed_controls_horizontal_and_vertical_flight() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3018,7 +3018,7 @@ mod tests {
     #[test]
     fn resident_spectator_flight_ignores_solid_and_climbable_blocks() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3079,11 +3079,11 @@ mod tests {
 
     #[test]
     fn creative_and_spectator_preserve_hunger_when_switching_from_survival() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("movement-properties.nbt").exists() {
@@ -3148,11 +3148,11 @@ mod tests {
 
     #[test]
     fn player_fire_damage_queues_hurt_sound_only_for_fresh_hits() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("movement-properties.nbt").exists() {
@@ -3328,7 +3328,7 @@ mod tests {
     #[test]
     fn a_glide_that_is_not_diving_keeps_the_fall_distance_at_one() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3376,7 +3376,7 @@ mod tests {
     #[test]
     fn resident_water_landing_cancels_a_preset_fall() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3423,7 +3423,7 @@ mod tests {
     #[test]
     fn a_clients_own_fall_does_not_hurt_it() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3476,7 +3476,7 @@ mod tests {
     #[test]
     fn slow_falling_clears_the_fall_distance_so_landing_does_not_hurt() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3516,7 +3516,7 @@ mod tests {
     #[test]
     fn a_server_copy_of_a_riptide_spin_counts_down_and_stands_again() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3556,7 +3556,7 @@ mod tests {
     #[test]
     fn a_riptide_spin_lies_flat_and_ends_on_the_first_entity_it_touches() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3599,7 +3599,7 @@ mod tests {
     #[test]
     fn a_landing_glide_lasts_a_tick_so_a_jump_keeps_its_speed() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3640,11 +3640,11 @@ mod tests {
 
     #[test]
     fn resident_water_and_lava_are_not_treated_as_air() {
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES")
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION)
             });
         if !root.join("movement-properties.nbt").exists() {
@@ -3903,7 +3903,7 @@ mod tests {
     #[test]
     fn resident_swimming_uses_previous_eyes_and_requires_water_at_the_feet() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -3978,7 +3978,7 @@ mod tests {
     #[test]
     fn resident_fire_precedes_first_tick_lava_and_water_extinguishing() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -4032,7 +4032,7 @@ mod tests {
     #[test]
     fn resident_bubble_columns_and_nautilus_preserve_their_air_rules() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -4104,7 +4104,7 @@ mod tests {
     #[test]
     fn resident_mixed_fluids_use_lava_height_for_ground_jumps() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -4155,7 +4155,7 @@ mod tests {
     #[test]
     fn footsteps_follow_the_walked_distance_not_the_tick() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -4209,7 +4209,7 @@ mod tests {
     #[test]
     fn a_sprint_survives_the_sprint_key_coming_up_while_swimming() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -4279,7 +4279,7 @@ mod tests {
     #[test]
     fn a_sprint_jump_keeps_its_impulse_when_the_sprint_key_comes_up() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -4335,7 +4335,7 @@ mod tests {
     #[test]
     fn the_flight_speed_follows_the_sprint_state_not_the_sprint_key() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;

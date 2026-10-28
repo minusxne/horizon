@@ -673,7 +673,7 @@ impl Mob {
         if self.fluids.in_water {
             self.fall_distance = 0.0;
             if !was_touching_water && !self.first_tick {
-                // The splash is the mob's own: Horizon's mobs carry no
+                // The splash is the mob's own: Skyline's mobs carry no
                 // controlling passenger here.
                 let _ = horizon_world::water_splash::water_splash(
                     &mut Splash { mob: self, events },

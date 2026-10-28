@@ -64,12 +64,12 @@ scripting runtime in the game.
 | --- | --- | --- | --- |
 | Rust | most mods; the fastest | first-class: the SDK, `cargo horizon-mod` | `cargo horizon-mod new`, `coords-hud` |
 | Data only | blocks and items with no code | first-class: content mods (API 0.2) | `cargo horizon-mod new --template content`, `ruby-content` |
-| Lua scripts | people who don't want a compiler | planned: a script mod whose code is a `.lua` file, run by Horizon's own interpreter mod | planned, with the same example as Rust |
+| Lua scripts | people who don't want a compiler | planned: a script mod whose code is a `.lua` file, run by Skyline's own interpreter mod | planned, with the same example as Rust |
 | C, C++, Zig | authors of those languages | to evaluate: bindings generated from the WIT, built without WASI | one each if it passes |
 | Go (TinyGo), AssemblyScript, JavaScript / TypeScript | authors of those languages | to evaluate: each needs its toolchain to emit a component without WASI imports, or an interpreter mod as for Lua | one each if it passes |
 
 - **Scripts run inside the sandbox.** The Lua interpreter is itself a WebAssembly mod, built in Rust with the SDK and
-  shipped by Horizon. A script mod's manifest names the interpreter and its own capabilities; the game links the
+  shipped by Skyline. A script mod's manifest names the interpreter and its own capabilities; the game links the
   interpreter with only those, so a script can do exactly what a compiled mod with the same manifest can.
 - **Hot reload.** The game keeps the interpreter compiled and loads the script into a fresh instance when the file
   changes, without restarting the game; what it saved with `storage` survives, as for dev mods.

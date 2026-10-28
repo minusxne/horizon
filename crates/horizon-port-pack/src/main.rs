@@ -1,4 +1,4 @@
-//! `horizon-port-pack`: port a Java modpack to Horizon (`docs/modpacks.md`).
+//! `horizon-port-pack`: port a Java modpack to Skyline (`docs/modpacks.md`).
 //!
 //! - `import <pack> <work>`: a `.mrpack`, CurseForge zip or instance folder
 //!   to `<work>/pack.json`.
@@ -15,7 +15,7 @@
 //!   mods' data and assets into `<work>/mods/<id>/carry/`, a folder mod for
 //!   local use. With the NeoForge oracle's `<work>/oracle/facts.json`
 //!   (`tools/neoforge_oracle.py`), blocks and items come from its facts;
-//!   `--resources` limits templates to the blocks Horizon's tables have.
+//!   `--resources` limits templates to the blocks Skyline's tables have.
 //! - `report <work>`: the coverage report, per mod ported, partial, not yet
 //!   or not needed with the reason, in `<work>/coverage.json` and
 //!   `coverage.md`.

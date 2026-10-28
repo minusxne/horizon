@@ -1,10 +1,10 @@
 //! Native mods (docs/native-mods.md), experimental and off by default: mixin bundles that
 //! levzzz5154's horizon-mixins (MIT, <https://github.com/horizon-rust/horizon-mixins>) applies to
-//! Horizon's source, which the launcher then compiles into a game of its own with its portable Rust
+//! Skyline's source, which the launcher then compiles into a game of its own with its portable Rust
 //! ([`rust_toolchain`]). Unlike `.hmod` mods they are not sandboxed: their code runs with the
 //! player's rights.
 //!
-//! A native mod pins the Horizon revision it was made for (a Nightly's or a release's commit), and
+//! A native mod pins the Skyline revision it was made for (a Nightly's or a release's commit), and
 //! every mod of one build must pin the same one. The build compiles that revision's source, from
 //! GitHub, never a checkout on this computer, and installs as its own version,
 //! `native-<revision>-<key>` (the key hashes the revision, the mods' files, the tool's commit and
@@ -48,7 +48,7 @@ const MANIFEST: &str = "horizon-mixin.toml";
 /// A registry download's manifest (`.hnmod`, `horizon_mods::index::native`), beside `mixins/<id>/`.
 const NATIVE_MANIFEST: &str = horizon_mods::index::native::MANIFEST;
 /// Where an instance keeps the native mods installed from the registry, `<id>.hnmod`, each on or
-/// off in `horizon-mods.txt` like any mod.
+/// off in `skyline-mods.txt` like any mod.
 pub const INSTALLED: &str = "horizon-native-mods";
 
 /// The native mods turned on in the game folder `home`, unpacked into a folder [`build`] takes.
@@ -92,7 +92,7 @@ pub struct Bundle {
     pub id: String,
     pub version: String,
     pub dir: PathBuf,
-    /// The Horizon commit it builds on (`[compatibility] horizon_revision`, or its `.hnmod`'s).
+    /// The Skyline commit it builds on (`[compatibility] horizon_revision`, or its `.hnmod`'s).
     pub horizon: Option<String>,
     /// The horizon-mixins commit it was tested with (its `.hnmod`'s).
     pub mixins: Option<String>,
@@ -140,7 +140,7 @@ fn bundle_in(dir: &Path) -> Result<Option<Bundle>, String> {
     let found = bundle(&dir.join("mixins").join(&id), field("mixins"))?;
     match (&found.horizon, field("horizon")) {
         (Some(pinned), Some(native)) if *pinned != native => Err(format!(
-            "{id}: {NATIVE_MANIFEST} pins Horizon {native}, its {MANIFEST} {pinned}."
+            "{id}: {NATIVE_MANIFEST} pins Skyline {native}, its {MANIFEST} {pinned}."
         )),
         (_, native) => Ok(Some(Bundle {
             horizon: found.horizon.clone().or(native),
@@ -213,7 +213,7 @@ fn agreed(
     Ok(revision)
 }
 
-/// The Horizon commit `version` (an installed release or Nightly) was built from, from GitHub.
+/// The Skyline commit `version` (an installed release or Nightly) was built from, from GitHub.
 pub fn revision_of(version: &str) -> Result<String, String> {
     let reference = match version.strip_prefix("nightly-") {
         // nightly-2026-10-28-0c02067: the commit is its last word.
@@ -258,7 +258,7 @@ fn files(dir: &Path) -> Result<Vec<(String, PathBuf)>, String> {
     Ok(out)
 }
 
-/// The installed version `bundles` built on Horizon `revision` with horizon-mixins `mixins`
+/// The installed version `bundles` built on Skyline `revision` with horizon-mixins `mixins`
 /// become: `native-<7 digits of the revision>-<12 hex digits>`.
 pub fn version_for(revision: &str, mixins: &str, bundles: &[Bundle]) -> Result<String, String> {
     let mut hash = Sha256::new();
@@ -307,7 +307,7 @@ impl Step {
             ),
             Self::Tool => "Building horizon-mixins (once)".into(),
             Self::Source(revision) => {
-                format!("Downloading Horizon's source at {}", &revision[..7])
+                format!("Downloading Skyline's source at {}", &revision[..7])
             }
             Self::Mixins => "Applying the mixins".into(),
             Self::Compile(n, name) => format!("Compiling the game: {n} crates, now {name}"),
@@ -388,7 +388,7 @@ fn tool(rust: &Toolchain, rev: &str) -> Result<PathBuf, String> {
     Ok(bin)
 }
 
-/// Horizon's source at commit `revision`: GitHub's archive of it, unpacked once, with the commit in
+/// Skyline's source at commit `revision`: GitHub's archive of it, unpacked once, with the commit in
 /// `.horizon-revision` (bundles pin it). A Nightly's commit stays downloadable after the Nightly
 /// is gone: its `nightly-source/…` tag keeps it (docs/release-flow.md). Links are left out:
 /// horizon-mixins refuses them, and none is needed to build.
@@ -450,7 +450,7 @@ fn sync(from: &Path, to: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// Builds `folder`'s mods on the Horizon revision they pin (else `base`'s, the installed version
+/// Builds `folder`'s mods on the Skyline revision they pin (else `base`'s, the installed version
 /// whose game files the build reuses) and points `instance` at the build: the instance the mods
 /// were installed in, else (None, or the game's own home) the Native mods instance. Returns the
 /// build's version; a build already made is used again.
@@ -480,7 +480,7 @@ pub fn build(
         .collect();
     let revision = agreed(
         &mods,
-        "Horizon",
+        "Skyline",
         |b| b.horizon.as_ref(),
         || revision_of(base),
     )?;
@@ -521,7 +521,7 @@ pub fn build(
             "--features",
             FEATURES,
         ]);
-        compile.args(["-p", "horizon-client", "--bin", "horizon-client"]);
+        compile.args(["-p", "skyline", "--bin", "skyline"]);
         let mut crates = 0;
         run(compile, "Compiling the game", |line| {
             if let Some(name) = line.trim_start().strip_prefix("Compiling ") {
@@ -567,7 +567,7 @@ fn install(
         if [
             backend::CLIENT,
             ".installed",
-            "Horizon.app",
+            "Skyline.app",
             "native-mods.json",
         ]
         .iter()
@@ -619,7 +619,7 @@ mod tests {
     use super::*;
 
     fn dir(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("horizon-native-{name}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("skyline-native-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&d);
         fs::create_dir_all(&d).unwrap();
         d
@@ -731,17 +731,17 @@ mod tests {
             pinned("b", None),
             pinned("c", Some(A)),
         ];
-        assert_eq!(agreed(&same, "Horizon", get, never).unwrap(), A);
+        assert_eq!(agreed(&same, "Skyline", get, never).unwrap(), A);
         let none = [pinned("a", None)];
-        assert_eq!(agreed(&none, "Horizon", get, || Ok(B.into())).unwrap(), B);
+        assert_eq!(agreed(&none, "Skyline", get, || Ok(B.into())).unwrap(), B);
         let split = [pinned("veinminer", Some(A)), pinned("minimap", Some(B))];
-        let err = agreed(&split, "Horizon", get, never).unwrap_err();
+        let err = agreed(&split, "Skyline", get, never).unwrap_err();
         assert!(
             err.contains("veinminer → aaaaaaa") && err.contains("minimap → bbbbbbb"),
             "{err}"
         );
         let bad = [pinned("a", Some("nightly"))];
-        assert!(agreed(&bad, "Horizon", get, never).is_err());
+        assert!(agreed(&bad, "Skyline", get, never).is_err());
     }
 
     #[test]
@@ -791,10 +791,10 @@ mod tests {
 
     #[test]
     fn tool_errors_read_in_one_line() {
-        let err = "{\n  \"code\": \"E_REVISION\",\n  \"message\": \"requires exact Horizon revision a\",\n  \"file\": \"m.toml\"\n}";
+        let err = "{\n  \"code\": \"E_REVISION\",\n  \"message\": \"requires exact Skyline revision a\",\n  \"file\": \"m.toml\"\n}";
         assert_eq!(
             diagnostic(err).as_deref(),
-            Some("E_REVISION: requires exact Horizon revision a (m.toml)")
+            Some("E_REVISION: requires exact Skyline revision a (m.toml)")
         );
     }
 }

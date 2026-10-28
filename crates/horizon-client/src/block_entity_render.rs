@@ -725,7 +725,7 @@ pub struct TextCall {
     pub color: u32,
     /// ARGB outline colour, 0 for none.
     pub outline: u32,
-    /// Horizon packed light (sky*16 | block*16 << 8).
+    /// Skyline packed light (sky*16 | block*16 << 8).
     pub light: u32,
 }
 
@@ -1847,12 +1847,12 @@ fn portal_cube(m: Mat4, faces: &[Direction], layer: u32, out: &mut Vec<Vertex>) 
 mod tests {
     use super::*;
     #[test]
-    #[ignore = "requires prepared models/textures in HORIZON_TEST_RESOURCES"]
+    #[ignore = "requires prepared models/textures in SKYLINE_TEST_RESOURCES"]
     fn entity_block_particles_and_breaking_use_exported_models() -> crate::Result<()> {
         use crate::{models::catalog::StateModels, sprites::Sprites};
         use horizon_world::{DATA_VERSION, chunk::BlockState, nbt::Tag};
         let root = std::path::PathBuf::from(
-            std::env::var_os("HORIZON_TEST_RESOURCES").expect("HORIZON_TEST_RESOURCES"),
+            std::env::var_os("SKYLINE_TEST_RESOURCES").expect("SKYLINE_TEST_RESOURCES"),
         );
         let names = [
             "white_banner",
@@ -2169,7 +2169,7 @@ mod tests {
     #[test]
     fn the_decorated_pot_culls_its_back_faces() {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("entity-models.json").exists() {
             return;

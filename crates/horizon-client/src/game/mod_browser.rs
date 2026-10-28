@@ -403,7 +403,7 @@ impl Game<'_> {
         search.reset_blink();
         self.browser_searched();
     }
-    /// Text typed (or one backspace) into the search box (`horizon-ctl type`).
+    /// Text typed (or one backspace) into the search box (`skyline-ctl type`).
     pub(super) fn mod_browser_text(&mut self, text: Option<&str>, backspace: bool) {
         let Some(search) = self.mods.browser.search.as_mut() else {
             return;

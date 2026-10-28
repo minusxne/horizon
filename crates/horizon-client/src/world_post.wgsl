@@ -1,4 +1,4 @@
-// Horizon's world post pass: the world, rendered at the resolution scale,
+// Skyline's world post pass: the world, rendered at the resolution scale,
 // copied (bilinear) or anti-aliased with FXAA onto the screen before the
 // hand and HUD. Only used when a non-vanilla setting asks for it.
 @group(0) @binding(0) var world: texture_2d<f32>;

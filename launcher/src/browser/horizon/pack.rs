@@ -1,5 +1,5 @@
-//! Horizon modpacks from the registry (`.hpack`, docs/api/mod-index.md), each played as its own
-//! profile: `horizon-packs/<id>/` in the game's home holds the pack's file, `pack.json` (what
+//! Skyline modpacks from the registry (`.hpack`, docs/api/mod-index.md), each played as its own
+//! profile: `skyline-packs/<id>/` in the game's home holds the pack's file, `pack.json` (what
 //! was installed) and `home/`, the profile's game folder: its saves, its options, and the pack's
 //! mods in `home/horizon-mods/`, each downloaded and checked against the index like any
 //! registry mod, turned on or off as the pack says. The pack's overrides (settings, resource
@@ -16,7 +16,7 @@ const RECORD: &str = "pack.json";
 
 /// Where registry modpacks live.
 pub fn packs_dir() -> PathBuf {
-    crate::backend::game_home().join("horizon-packs")
+    crate::backend::game_home().join("skyline-packs")
 }
 
 /// What `pack.json` keeps of an installed pack.
@@ -80,7 +80,7 @@ fn install_in(
 ) -> Result<Installed, String> {
     let p = index
         .project(id)
-        .ok_or_else(|| format!("{id} isn't in Horizon's registry."))?;
+        .ok_or_else(|| format!("{id} isn't in Skyline's registry."))?;
     if p.kind != idx::Kind::Modpack {
         return Err(format!("{} is a {}, not a modpack.", p.name, p.kind.name()));
     }
@@ -170,7 +170,7 @@ pub fn apply(cmd: &mut Command, work: &Path) -> Result<(), String> {
         let _ = fs::copy(own, &options);
     }
     super::before_play(&home);
-    cmd.current_dir(&home).env("HORIZON_HOME", &home);
+    cmd.current_dir(&home).env("SKYLINE_HOME", &home);
     Ok(())
 }
 
@@ -240,7 +240,7 @@ mod tests {
 
     fn scratch(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!(
-            "horizon-launcher-hpack-{name}-{}",
+            "skyline-launcher-hpack-{name}-{}",
             std::process::id()
         ));
         let _ = fs::remove_dir_all(&dir);
@@ -252,11 +252,11 @@ mod tests {
     fn a_pack_installs_as_a_profile_with_its_mods() {
         let dir = scratch("install");
         let index = registry(&dir, false, "");
-        let packs = dir.join("horizon-packs");
+        let packs = dir.join("skyline-packs");
         let pack = install_in(&index, true, "cozy", &packs, &|_, _| {}).unwrap();
         assert_eq!(pack.mods, ["coords_hud 0.1.0"]);
         let home = home(&packs.join("cozy"));
-        assert!(home.join("horizon-mods/coords_hud.hmod").is_file());
+        assert!(home.join("skyline-mods/coords_hud.hmod").is_file());
         assert!(
             !java::is_enabled(&home, "coords_hud"),
             "the pack turns it off"
@@ -295,7 +295,7 @@ mod tests {
             true,
             r#", "revoked": [{"id": "coords_hud", "reason": "Test."}]"#,
         );
-        let packs = dir.join("horizon-packs");
+        let packs = dir.join("skyline-packs");
         let e = install_in(&index, true, "cozy", &packs, &|_, _| {}).unwrap_err();
         assert!(e.contains("taken down: Test."), "{e}");
         assert!(!packs.join("cozy").exists(), "nothing left behind");

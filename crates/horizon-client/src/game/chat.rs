@@ -1053,7 +1053,7 @@ impl Game<'_> {
         }
         use horizon_world::nbt::Tag;
         let c = self.ui.clock;
-        // The other clocks stay as saved; the overworld one keeps the fields Horizon
+        // The other clocks stay as saved; the overworld one keeps the fields Skyline
         // does not model, and (like vanilla's codec) omits rate, partial tick and
         // pause while they have their defaults.
         let path = self.world_root.join("data/minecraft/world_clocks.dat");

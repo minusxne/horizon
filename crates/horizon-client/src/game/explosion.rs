@@ -81,7 +81,7 @@ impl JavaKey for Key {
     }
 }
 
-/// `Explosion.BlockInteraction` for the explosions Horizon produces.
+/// `Explosion.BlockInteraction` for the explosions Skyline produces.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum BlockInteraction {
     Keep,
@@ -621,7 +621,7 @@ impl Game<'_> {
         let name = self.res.facts().get(state).name.clone();
         let is_tnt = &*name == "minecraft:tnt";
         // CreakingHeartBlock.onExplosionHit: its creaking dies (no
-        // experience, as Horizon does not track a TNT's owner).
+        // experience, as Skyline does not track a TNT's owner).
         if &*name == "minecraft:creaking_heart" {
             self.creaking_heart_broken(pos, false);
         }

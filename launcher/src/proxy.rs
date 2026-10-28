@@ -3,8 +3,8 @@
 //! `proxy` in `settings.json`) wins; without it the usual `HTTPS_PROXY`, `HTTP_PROXY`, `ALL_PROXY`
 //! and `NO_PROXY` variables apply, so a launcher started from a shell that has them needs nothing.
 //!
-//! What goes through it: Horizon's releases and the launcher's own update, Minecraft's files and
-//! Java from Mojang, Modrinth, CurseForge, Horizon's mod registry, pictures, Microsoft sign-in,
+//! What goes through it: Skyline's releases and the launcher's own update, Minecraft's files and
+//! Java from Mojang, Modrinth, CurseForge, Skyline's mod registry, pictures, Microsoft sign-in,
 //! Tailscale's API, and the jars a modpack import downloads. A local address never does, and the
 //! Servers page's calls to a game server's API (`servers.rs`) build their agent without it: they
 //! are on loopback and asked every second.
@@ -53,7 +53,7 @@ pub fn refuse(spec: &str) -> Option<String> {
     }
     if horizon_port_pack::net::socks(spec) {
         return Some(format!(
-            "{} is a SOCKS proxy; Horizon downloads through an HTTP proxy, such as the \
+            "{} is a SOCKS proxy; Skyline downloads through an HTTP proxy, such as the \
              http:// address your proxy app also listens on.",
             horizon_port_pack::net::redacted(spec)
         ));
@@ -140,7 +140,7 @@ mod tests {
         assert!(refuse("socks5://127.0.0.1:7891").is_some());
     }
 
-    /// The reason is shown under the field and printed by `horizon-launcher settings set`.
+    /// The reason is shown under the field and printed by `skyline-launcher settings set`.
     #[test]
     fn a_refused_address_keeps_its_credentials_to_itself() {
         let why = refuse("socks5://user:secret@127.0.0.1:7891").unwrap();

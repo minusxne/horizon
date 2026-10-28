@@ -1,4 +1,4 @@
-//! The post stage of Horizon's own shader packs (docs/shaders.md): each `[[post]]` pass is a
+//! The post stage of Skyline's own shader packs (docs/shaders.md): each `[[post]]` pass is a
 //! full-screen pipeline built from its checked naga module (`horizon_shader_api::check`), with
 //! the pack's options as pipeline constants. A pass reads bind group 3: the frame, the world's
 //! colour and depth, the previous pass's output and two samplers. Passes before the last write

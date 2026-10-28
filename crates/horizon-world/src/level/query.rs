@@ -142,7 +142,7 @@ impl Behaviours {
     }
 }
 
-/// Block-entity lookups for dynamic shapes: Horizon's level keeps no shulker
+/// Block-entity lookups for dynamic shapes: Skyline's level keeps no shulker
 /// box animation state, so boxes read as closed (a full cube).
 struct NoBlockEntities;
 impl crate::dynamic_support::DynamicSupportWorld for NoBlockEntities {

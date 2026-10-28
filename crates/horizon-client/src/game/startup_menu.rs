@@ -656,7 +656,7 @@ impl Loading {
             if let Some(loader) = loaded.rest_loader.take()
                 && let Err(error) = loader.finish()
             {
-                log::warn!("Horizon: replaced resource generation failed: {error}");
+                log::warn!("Skyline: replaced resource generation failed: {error}");
             }
         }
         self.loaded = None;
@@ -717,7 +717,7 @@ mod tests {
 
     #[test]
     fn menu_is_usable_while_the_core_worker_is_blocked() {
-        let root = std::env::temp_dir().join("horizon-startup-menu-no-world-resources");
+        let root = std::env::temp_dir().join("skyline-startup-menu-no-world-resources");
         let (sender, receiver) = std::sync::mpsc::channel();
         let (release, wait) = std::sync::mpsc::channel();
         let (published, published_rx) = std::sync::mpsc::channel();

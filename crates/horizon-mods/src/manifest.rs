@@ -23,7 +23,7 @@ pub const SERVER_API: &str = "0.3";
 /// Namespaces no mod may claim: vanilla's, the convention tags' (mods add
 /// to those, docs/mods.md) and the game's own.
 const RESERVED_NAMESPACES: [&str; 3] = ["minecraft", "c", "horizon"];
-/// A mod's data (capability `storage`), in `horizon-mods/` beside the mods
+/// A mod's data (capability `storage`), in `skyline-mods/` beside the mods
 /// (`find` never mistakes it for a mod: it has no manifest).
 pub const STORAGE_DIR: &str = ".horizon-mod-data";
 /// The biggest `mod.wasm` a mod may ship.
@@ -173,13 +173,13 @@ impl Capability {
         }
     }
     /// The capability a component import needs, `Ok(None)` for one every
-    /// mod has; `Err` for an import Horizon does not offer.
+    /// mod has; `Err` for an import Skyline does not offer.
     pub fn of_import(name: &str) -> Result<Option<Capability>, String> {
-        let unknown = || format!("imports {name}, which Horizon does not offer");
+        let unknown = || format!("imports {name}, which Skyline does not offer");
         let rest = name.strip_prefix("horizon:mods/").ok_or_else(unknown)?;
         let (interface, version) = rest.split_once('@').ok_or_else(unknown)?;
         if !version.starts_with("0.1.") {
-            return Err(format!("needs API {version}; this Horizon runs {API}"));
+            return Err(format!("needs API {version}; this Skyline runs {API}"));
         }
         if interface == "log" {
             return Ok(None);
@@ -231,7 +231,7 @@ impl Manifest {
         }
         if !APIS.contains(&m.api.as_str()) {
             return Err(format!(
-                "built for API {}; this Horizon runs {}",
+                "built for API {}; this Skyline runs {}",
                 m.api,
                 APIS.join(" and ")
             ));
@@ -532,7 +532,7 @@ capabilities = ["game-read", "hud"]
 
     #[test]
     fn hmod_round_trips() {
-        let dir = std::env::temp_dir().join(format!("horizon-mods-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-mods-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("coords_hud.hmod");
         std::fs::write(&path, Package::write(EXAMPLE, b"\0asm").unwrap()).unwrap();

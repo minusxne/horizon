@@ -190,7 +190,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     }
     out.flush()?;
     println!(
-        "HORIZON_COLLISION_RESULT {{\"registry_states\":{},\"cached_states\":{},\"uncached_states\":{},\"unique_shapes\":{},\"unique_grids\":{},\"queries\":{}}}",
+        "SKYLINE_COLLISION_RESULT {{\"registry_states\":{},\"cached_states\":{},\"uncached_states\":{},\"unique_shapes\":{},\"unique_grids\":{},\"queries\":{}}}",
         registry.len(),
         collisions.cached_state_count(),
         registry.len() - collisions.cached_state_count(),

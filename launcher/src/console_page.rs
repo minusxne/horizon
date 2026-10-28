@@ -20,7 +20,7 @@ pub(super) struct Console {
 impl Default for Console {
     fn default() -> Self {
         Console {
-            open: std::env::var("HORIZON_LAUNCHER_CONSOLE").is_ok(),
+            open: std::env::var("SKYLINE_LAUNCHER_CONSOLE").is_ok(),
             follow: true,
             scroll: ScrollHandle::new(),
             seen: (0, String::new()),

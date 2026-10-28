@@ -37,9 +37,9 @@ pub struct DualSense {
 /// report, switches it to its full input report (0x31) until it is turned off (SDL_hints.h,
 /// `SDL_HINT_JOYSTICK_ENHANCED_REPORTS`; SDL_hidapi_ps5.c). Linux's `hid-playstation` has
 /// already switched it and reads that report, but gilrs on macOS and Windows parses the simple
-/// report 0x01 and would stop seeing the pad: there it waits for `HORIZON_DUALSENSE_BT=1`.
+/// report 0x01 and would stop seeing the pad: there it waits for `SKYLINE_DUALSENSE_BT=1`.
 pub fn bluetooth_allowed() -> bool {
-    cfg!(target_os = "linux") || std::env::var_os("HORIZON_DUALSENSE_BT").is_some_and(|v| v == "1")
+    cfg!(target_os = "linux") || std::env::var_os("SKYLINE_DUALSENSE_BT").is_some_and(|v| v == "1")
 }
 
 #[cfg(not(target_os = "ios"))]
@@ -58,7 +58,7 @@ impl DualSense {
             None if bluetooth_allowed() => wireless.first()?,
             None => {
                 if !wireless.is_empty() && !SKIPPED.swap(true, Ordering::Relaxed) {
-                    log::info!("Horizon: no DualSense output over Bluetooth on this system");
+                    log::info!("Skyline: no DualSense output over Bluetooth on this system");
                 }
                 return None;
             }
@@ -156,7 +156,7 @@ impl Link {
         let thread = std::thread::Builder::new()
             .name("dualsense".into())
             .spawn(move || Writer::new(shown).run(rx))
-            .map_err(|e| log::warn!("Horizon: DualSense output: {e}"))
+            .map_err(|e| log::warn!("Skyline: DualSense output: {e}"))
             .ok();
         Link {
             tx: Some(tx),
@@ -355,7 +355,7 @@ impl Writer {
         let found = match api {
             Ok(api) => DualSense::open(api),
             Err(e) => {
-                log::warn!("Horizon: DualSense output: {e}");
+                log::warn!("Skyline: DualSense output: {e}");
                 None
             }
         };
@@ -377,7 +377,7 @@ impl Writer {
             }
             Some(Err(e)) => {
                 // No access (Linux without a udev rule): vibration stays with gilrs.
-                log::info!("Horizon: the DualSense can't be opened for output: {e}");
+                log::info!("Skyline: the DualSense can't be opened for output: {e}");
                 self.scans_left = 0;
             }
             None => {}

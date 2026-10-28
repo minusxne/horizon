@@ -3,8 +3,8 @@ use horizon_prepare::java;
 use std::{env, fs, path::Path, process::Command};
 
 const TEST: &str = "selects_a_compatible_compiler_and_runtime";
-const CHILD: &str = "HORIZON_JAVA_SELECTION_CHILD";
-const ROOT: &str = "HORIZON_JAVA_SELECTION_ROOT";
+const CHILD: &str = "SKYLINE_JAVA_SELECTION_CHILD";
+const ROOT: &str = "SKYLINE_JAVA_SELECTION_ROOT";
 
 fn tool(bin: &Path, name: &str) -> std::path::PathBuf {
     bin.join(format!("{name}{}", env::consts::EXE_SUFFIX))
@@ -58,7 +58,7 @@ fn selects_a_compatible_compiler_and_runtime() {
         return;
     }
 
-    let root = env::temp_dir().join(format!("horizon-java-selection-{}", std::process::id()));
+    let root = env::temp_dir().join(format!("skyline-java-selection-{}", std::process::id()));
     fs::create_dir_all(&root).unwrap();
     let probe = tool(&root, "probe");
     let output = Command::new("rustc")

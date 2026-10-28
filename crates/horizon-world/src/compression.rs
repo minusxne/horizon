@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn checksums_reject_corruption() {
         for codec in [Compression::Gzip, Compression::Zlib, Compression::Lz4] {
-            let mut encoded = codec.encode(b"Horizon world data").unwrap();
+            let mut encoded = codec.encode(b"Skyline world data").unwrap();
             let i = if codec == Compression::Lz4 {
                 17
             } else {

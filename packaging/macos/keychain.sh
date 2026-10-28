@@ -21,7 +21,7 @@ identity=${MACOS_SIGN_IDENTITY:-Developer ID Application: Ludovic Marie (YYJU63H
 # The 1Password CLI, signed in as the fleet's agents (`op` elsewhere), and the items it reads.
 op=${OP:-$HOME/fleet/op}
 [[ -x "$op" ]] || op=op
-password_ref=${MACOS_KEYCHAIN_PASSWORD_REF:-op://Agents/Horizon signing keychain/password}
+password_ref=${MACOS_KEYCHAIN_PASSWORD_REF:-op://Agents/Skyline signing keychain/password}
 # "App Store Connect API - GitHub CI (DISPO)": a team key; by id, as the name's parentheses
 # can't be in a secret reference.
 notary_item=${MACOS_NOTARY_ITEM:-wwweyy32dwt6oylm6ypcfivsxe}

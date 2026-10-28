@@ -157,7 +157,7 @@ pub struct Chunk {
     /// Generation postprocessing marks (ProtoChunk.postProcessing) as world
     /// positions, applied once by LevelChunk.postProcessGeneration.
     pub postprocess: Vec<[i32; 3]>,
-    /// Saved data Horizon keeps but does not simulate (save.rs).
+    /// Saved data Skyline keeps but does not simulate (save.rs).
     pub saved: Option<Arc<ChunkExtras>>,
     /// Entities read from a save (vanilla entity NBT), spawned on arrival.
     pub entities: Vec<horizon_world::nbt::Tag>,
@@ -328,9 +328,9 @@ pub struct SavedProto {
     pub entities: Vec<Tag>,
 }
 
-/// A container's loot table and what Horizon rolled from it. Vanilla keeps
+/// A container's loot table and what Skyline rolled from it. Vanilla keeps
 /// `LootTable` and `LootTableSeed` until the container is first opened;
-/// Horizon rolls when it generates or loads the chunk, and saves the table
+/// Skyline rolls when it generates or loads the chunk, and saves the table
 /// again while the container still holds exactly the rolled items.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RolledLoot {
@@ -357,16 +357,16 @@ impl RolledLoot {
     }
 }
 
-/// Save data loaded with a chunk that Horizon keeps but does not simulate.
+/// Save data loaded with a chunk that Skyline keeps but does not simulate.
 #[derive(Clone, Debug, Default)]
 pub struct ChunkExtras {
     /// Chunk root keys written back as loaded (structures, PostProcessing,
     /// InhabitedTime, blending data, ...).
     pub root: Compound,
-    /// Block entities Horizon does not model.
+    /// Block entities Skyline does not model.
     pub block_entities: Vec<Tag>,
     /// The NBT of the modelled block entities as loaded, to restore the fields and
-    /// detail Horizon does not model when it saves them (`block_entity_nbt::overlay`).
+    /// detail Skyline does not model when it saves them (`block_entity_nbt::overlay`).
     pub block_entity_sources: Vec<((i32, i32, i32), Tag)>,
     /// Every saved block entity's position in the order of the save's list,
     /// the order `SerializableChunkData` puts them in the chunk's maps.

@@ -3,7 +3,7 @@
 //!
 //! resource_memory RESOURCES
 //!
-//! RESOURCES is a prepared root or a content-mod root (`.horizon-cache/mod-content`).
+//! RESOURCES is a prepared root or a content-mod root (`.skyline-cache/mod-content`).
 //! Prints, after each step, the live heap (a counting allocator: what the
 //! step keeps), the heap's peak during the step (what it parsed on the way)
 //! and the process RSS (what the allocator holds on to). On macOS it ends

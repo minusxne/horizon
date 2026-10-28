@@ -1,4 +1,4 @@
-//! HORIZON_PREPARE_SOURCES_SHA256: a digest of this crate's sources, which the launcher compares
+//! SKYLINE_PREPARE_SOURCES_SHA256: a digest of this crate's sources, which the launcher compares
 //! with a version folder's copy to know whether it may prepare that version in-process. Keep the
 //! algorithm the same as `horizon_prepare::sources_sha256`.
 
@@ -34,5 +34,5 @@ fn main() {
         hash.update(&data);
     }
     let hex: String = hash.finalize().iter().map(|b| format!("{b:02x}")).collect();
-    println!("cargo:rustc-env=HORIZON_PREPARE_SOURCES_SHA256={hex}");
+    println!("cargo:rustc-env=SKYLINE_PREPARE_SOURCES_SHA256={hex}");
 }

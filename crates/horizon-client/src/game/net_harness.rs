@@ -1,9 +1,9 @@
 //! Headless multiplayer client for `tools/test_dedicated_server_parity.py`:
-//! with `--server` and `HORIZON_NET_REPORT` set, the client joins without a
+//! with `--server` and `SKYLINE_NET_REPORT` set, the client joins without a
 //! window, waits until it stands in the world with the chunks around it,
 //! sends a chat message and `/list`, collects the chat it is shown, leaves
 //! and writes a JSON report (position, chunks, chat lines, whether the
-//! server kept it connected throughout). With `HORIZON_NET_QUIET` (lines
+//! server kept it connected throughout). With `SKYLINE_NET_QUIET` (lines
 //! split by `;`) it then sends them as one batch of a mod's quiet commands
 //! (`horizon_protocol::quiet`, `tools/quiet_commands_e2e.py`) and waits two
 //! seconds for any chat they bring.
@@ -26,7 +26,7 @@ impl Game<'_> {
         let mut step_at = Instant::now();
         let mut chat_at = 0;
         let mut position = None;
-        let quiet: Vec<String> = std::env::var("HORIZON_NET_QUIET")
+        let quiet: Vec<String> = std::env::var("SKYLINE_NET_QUIET")
             .map(|v| v.split(';').map(str::to_owned).collect())
             .unwrap_or_default();
         let mut chunks = 0;

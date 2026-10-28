@@ -1,4 +1,4 @@
-//! Horizon's extras in the game (`docs/extras.md`); a mod's minimap
+//! Skyline's extras in the game (`docs/extras.md`); a mod's minimap
 //! (`render.set-minimap`: its tiles, image and HUD) and zoom (`render.set-zoom`) on the camera; clicks
 //! and frame times for mods (`input.clicks-per-second`, `render.frame-stats`).
 //! Each hook does nothing while its extra is off and no mod runs.
@@ -111,7 +111,7 @@ impl Game<'_> {
                 &mut title.mode
         {
             log::info!(
-                "Horizon: reconnecting to {} in {} s",
+                "Skyline: reconnecting to {} in {} s",
                 horizon_client::net::shown_address(&retry.address),
                 retry.seconds_left(std::time::Instant::now())
             );

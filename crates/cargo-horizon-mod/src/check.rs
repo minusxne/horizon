@@ -98,7 +98,7 @@ impl Report {
             out += &format!("  needs {} {} ({})\n", r.id, r.version, &r.sha256[..12]);
         }
         if self.kind == Kind::NativeMod {
-            out += "  native source: unsandboxed; not executed by the registry check. Compile and test against the exact pinned Horizon and Mixins revisions before review.\n";
+            out += "  native source: unsandboxed; not executed by the registry check. Compile and test against the exact pinned Skyline and Mixins revisions before review.\n";
         }
         if self.kind == Kind::Mod && !self.code {
             out += "  no code: content only, nothing to run\n";
@@ -183,7 +183,7 @@ fn trial_run(path: &Path, report: &mut Report) -> Result<(), String> {
     package
         .manifest
         .check_imports(report.imports.iter().map(String::as_str))?;
-    let dir = std::env::temp_dir().join(format!("horizon-mod-check-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("skyline-mod-check-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let copy = dir.join("mod.hmod");

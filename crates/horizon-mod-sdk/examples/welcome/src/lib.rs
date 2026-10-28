@@ -1,4 +1,4 @@
-//! Example Horizon server mod (`docs/mods.md`, "Server mods"): greets each
+//! Example Skyline server mod (`docs/mods.md`, "Server mods"): greets each
 //! player who joins, announces a newcomer to everyone (the players it has
 //! seen are kept in `storage`), `/online` lists who is on and where, and
 //! `/mined [player]` counts the blocks a player broke since the server

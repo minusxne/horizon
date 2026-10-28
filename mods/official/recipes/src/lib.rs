@@ -1,4 +1,4 @@
-//! Horizon's official recipe viewer. Every item sits in the item panel the
+//! Skyline's official recipe viewer. Every item sits in the item panel the
 //! game draws beside the inventory and container screens (`browser`), with
 //! a search box. R over an item, the panel's or any slot's, shows its
 //! recipes, U its uses (`input.register-key`, so both can be rebound in
@@ -8,7 +8,7 @@
 //! In creative mode, with "Click gives items" on, a click on a panel item
 //! gives one, a right click a stack (`recipes.give`).
 //!
-//! On a server that is not Horizon the recipes are the game's own 26.3
+//! On a server that is not Skyline the recipes are the game's own 26.3
 //! ones; `known` and `place` follow the server's recipe book.
 use horizon_mod_sdk::{
     Mod, Registration, browser, chat, game, input, recipes,

@@ -1,6 +1,6 @@
 //! docs/api/mods-reference.md, generated from the WIT contract and the manifest's capabilities, and a test that
 //! fails when it is out of date. Update it with:
-//! `HORIZON_WRITE_DOCS=1 cargo test -p horizon-mods --features pack --test api_reference`.
+//! `SKYLINE_WRITE_DOCS=1 cargo test -p horizon-mods --features pack --test api_reference`.
 use horizon_mods::manifest::{APIS, Capability};
 use std::{fmt::Write, path::Path};
 use wit_parser::{Docs, Function, Handle, Resolve, Type, TypeDefKind, WorldItem};
@@ -114,11 +114,11 @@ fn markdown() -> String {
     let name = &package.name;
     let mut out = String::new();
     let w = &mut out;
-    writeln!(w, "<!-- Generated from {WIT} and the manifest's capabilities by crates/horizon-mods/tests/api_reference.rs; a test fails when this file is out of date. Update it with: HORIZON_WRITE_DOCS=1 cargo test -p horizon-mods --features pack --test api_reference -->").unwrap();
+    writeln!(w, "<!-- Generated from {WIT} and the manifest's capabilities by crates/horizon-mods/tests/api_reference.rs; a test fails when this file is out of date. Update it with: SKYLINE_WRITE_DOCS=1 cargo test -p horizon-mods --features pack --test api_reference -->").unwrap();
     writeln!(w, "# Mod API reference\n").unwrap();
     writeln!(
         w,
-        "The contract between Horizon and its mods: the WIT package `{name}`, every interface, type, function and hook in it, \
+        "The contract between Skyline and its mods: the WIT package `{name}`, every interface, type, function and hook in it, \
          and the capabilities a manifest may list. The guide is [mods.md](../mods.md); stability and versions: \
          [stability.md](stability.md). Manifest `api` lines this game serves: {}.\n",
         APIS.map(|a| format!("`{a}`")).join(", ")
@@ -261,7 +261,7 @@ fn markdown() -> String {
 fn the_mod_api_reference_is_up_to_date() {
     let path = root().join(DOC);
     let want = markdown();
-    if std::env::var_os("HORIZON_WRITE_DOCS").is_some() {
+    if std::env::var_os("SKYLINE_WRITE_DOCS").is_some() {
         std::fs::write(&path, &want).unwrap();
     }
     let have = std::fs::read_to_string(&path)
@@ -269,7 +269,7 @@ fn the_mod_api_reference_is_up_to_date() {
         .replace("\r\n", "\n");
     assert!(
         have == want,
-        "{DOC} is out of date: HORIZON_WRITE_DOCS=1 cargo test -p horizon-mods --features pack --test api_reference"
+        "{DOC} is out of date: SKYLINE_WRITE_DOCS=1 cargo test -p horizon-mods --features pack --test api_reference"
     );
 }
 

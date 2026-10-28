@@ -1,4 +1,4 @@
-//! Quiet commands: a client mod's batch of commands that a Horizon server runs
+//! Quiet commands: a client mod's batch of commands that a Skyline server runs
 //! as the player who sent them, at that player's own permission level, with
 //! no feedback in the chat (docs/mods.md, `command.run-quiet`).
 //!

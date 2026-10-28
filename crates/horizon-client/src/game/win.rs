@@ -24,7 +24,7 @@ pub(super) enum Finish {
     RemoteRespawn,
     /// Back to Credits & Attribution.
     Options,
-    /// Back to the game (`horizon-ctl credits`).
+    /// Back to the game (`skyline-ctl credits`).
     Closed,
 }
 pub(super) struct Win {
@@ -60,7 +60,7 @@ impl Game<'_> {
         self.end_portal_travel = false;
         result
     }
-    /// Stop the scroll `scroll` pixels in (`horizon-ctl credits ... SCROLL`).
+    /// Stop the scroll `scroll` pixels in (`skyline-ctl credits ... SCROLL`).
     pub(super) fn hold_win_screen(&mut self, scroll: f32) {
         if let Some(win) = self.win.as_mut() {
             win.screen.hold(scroll);

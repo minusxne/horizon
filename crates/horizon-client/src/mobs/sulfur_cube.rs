@@ -21,7 +21,7 @@ use std::sync::OnceLock;
 // `point` the item it is after.
 pub const PICKUP_TIMER: i32 = 100;
 
-/// One `SulfurCubeArchetype` (the parts Horizon's physics can use).
+/// One `SulfurCubeArchetype` (the parts Skyline's physics can use).
 #[derive(Clone, Copy, Debug)]
 pub struct Archetype {
     pub name: &'static str,

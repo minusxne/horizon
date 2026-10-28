@@ -22,7 +22,7 @@ pub const SWITCHES: [(Kind, &str, &str); 4] = [
     (
         Kind::Crash,
         "Crash reports",
-        "When the game crashes: the error, where in Horizon's code it happened, your graphics adapter and settings. No log, no world or server, no user name in paths.",
+        "When the game crashes: the error, where in Skyline's code it happened, your graphics adapter and settings. No log, no world or server, no user name in paths.",
     ),
     (
         Kind::Bug,
@@ -43,9 +43,9 @@ pub const NEVER: &str = "Never sent: your account name or UUID, world names, ser
 /// decision, 2026-10-22: count everyone, and tell them). Shown on the first-run question, in
 /// Settings, and once on the Play page to players who answered before it existed.
 pub const PING_NAME: &str = "\"I'm playing\" ping";
-pub const PING: &str = "While you play, the game sends an anonymous \"I'm playing\" ping once a minute, so the launcher can show how many people play Horizon right now. It holds: a random number made when the game starts and forgotten when it closes, the Horizon version, your OS (Linux, macOS or Windows), and whether you have a world open to LAN or friends. It doesn't hold: your account, your install ID, world or server names, or anything you do in the game, and the server doesn't keep your IP address. It is sent whatever the switches say.";
+pub const PING: &str = "While you play, the game sends an anonymous \"I'm playing\" ping once a minute, so the launcher can show how many people play Skyline right now. It holds: a random number made when the game starts and forgotten when it closes, the Skyline version, your OS (Linux, macOS or Windows), and whether you have a world open to LAN or friends. It doesn't hold: your account, your install ID, world or server names, or anything you do in the game, and the server doesn't keep your IP address. It is sent whatever the switches say.";
 
-/// How many play Horizon now (rounded), if the server says.
+/// How many play Skyline now (rounded), if the server says.
 pub fn playing_now() -> Option<u64> {
     let endpoint = horizon_telemetry::endpoint()?;
     horizon_telemetry::live::fetch(&endpoint)
@@ -170,7 +170,7 @@ pub fn delete_my_data() -> Result<String, String> {
     let remote = match horizon_telemetry::endpoint() {
         _ if consent.install_id.is_empty() => "Nothing was ever sent from here.",
         None => {
-            "Sending is turned off here (HORIZON_TELEMETRY_URL=off), so the server was not asked."
+            "Sending is turned off here (SKYLINE_TELEMETRY_URL=off), so the server was not asked."
         }
         Some(url) => {
             upload::delete_remote(&url, &consent.install_id)
@@ -250,7 +250,7 @@ pub fn submit(item: &Item) -> Result<String, String> {
     Ok(match send() {
         Flush::Sent { .. } => "Sent. Thank you.".into(),
         Flush::Nothing if horizon_telemetry::endpoint().is_none() => {
-            "Kept; sending is turned off here (HORIZON_TELEMETRY_URL=off).".into()
+            "Kept; sending is turned off here (SKYLINE_TELEMETRY_URL=off).".into()
         }
         _ => "Kept; it will be sent the next time the launcher starts.".into(),
     })

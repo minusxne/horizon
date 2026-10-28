@@ -1,7 +1,7 @@
-//! The Mods page: search Horizon's own registry for mods made for Horizon, or Modrinth
+//! The Mods page: search Skyline's own registry for mods made for Skyline, or Modrinth
 //! (CurseForge: coming soon) for Java mods, modpacks and resource packs, see where each comes
-//! from and how well it runs (a Java mod's jar is checked first; a Horizon mod says whether it is
-//! signed and what it may do), install it with its checksum checked, turn Horizon mods on and
+//! from and how well it runs (a Java mod's jar is checked first; a Skyline mod says whether it is
+//! signed and what it may do), install it with its checksum checked, turn Skyline mods on and
 //! off, and update or remove what was installed (`horizon_launcher::browser`). Imported modpacks
 //! are listed on its Modpacks tab.
 use super::servers_page::{type_key, Key};
@@ -27,7 +27,7 @@ const CHECKING: usize = 2;
 /// The sources to pick from; CurseForge is shown beside them as coming soon.
 const SOURCES: [(SourceId, &str); 2] = [
     (SourceId::Modrinth, "Modrinth"),
-    (SourceId::Horizon, "Horizon"),
+    (SourceId::Horizon, "Skyline"),
 ];
 const PAGE: usize = 20;
 
@@ -39,7 +39,7 @@ pub(super) enum Event {
     Updates(HashMap<(SourceId, String), String>),
     /// A Java mod's check: its jar read, or why it couldn't be.
     Checked((SourceId, String), Result<Box<Check>, String>),
-    /// What a Horizon registry project says before install: signed or not, what it may do.
+    /// What a Skyline registry project says before install: signed or not, what it may do.
     About(HashMap<String, Vec<String>>),
     /// Registry files taken down that the launcher turned off.
     TakenDown(Vec<String>),
@@ -85,7 +85,7 @@ pub(super) struct Mods {
     confirm_remove: Option<String>,
     /// Java mods' checks, by source and project.
     pub(super) checks: HashMap<(SourceId, String), Checking>,
-    /// Horizon registry projects' trust and capabilities, by id ([`horizon::trust_and_capabilities`]).
+    /// Skyline registry projects' trust and capabilities, by id ([`horizon::trust_and_capabilities`]).
     pub(super) about: HashMap<String, Vec<String>>,
     /// The project page, filters and images.
     pub(super) browse: super::mods_project::Browse,
@@ -128,7 +128,7 @@ impl Mods {
 
     pub(super) fn new(cx: &mut App) -> Self {
         let (tx, rx) = channel();
-        let page = std::env::var("HORIZON_LAUNCHER_PAGE");
+        let page = std::env::var("SKYLINE_LAUNCHER_PAGE");
         let kind = match page.as_deref() {
             Ok("modpacks") => PackKind::Modpack,
             Ok("shaders") => PackKind::Shader,
@@ -137,9 +137,9 @@ impl Mods {
         };
         Self {
             kind,
-            // `HORIZON_LAUNCHER_SOURCE=horizon` opens on Horizon's registry, for screenshots;
+            // `SKYLINE_LAUNCHER_SOURCE=horizon` opens on Skyline's registry, for screenshots;
             // shader packs are only there.
-            source: match std::env::var("HORIZON_LAUNCHER_SOURCE").as_deref() {
+            source: match std::env::var("SKYLINE_LAUNCHER_SOURCE").as_deref() {
                 _ if kind == PackKind::Shader => SourceId::Horizon,
                 Ok("horizon") => SourceId::Horizon,
                 _ => SourceId::Modrinth,
@@ -326,10 +326,10 @@ impl Launcher {
                 }
             }
         }
-        // `HORIZON_LAUNCHER_PROJECT=<slug>` (with `HORIZON_LAUNCHER_PAGE=mods`): opens that
+        // `SKYLINE_LAUNCHER_PROJECT=<slug>` (with `SKYLINE_LAUNCHER_PAGE=mods`): opens that
         // project's page once a search finds it, for screenshots.
         if self.mods.browse.open.is_none() {
-            if let Ok(want) = std::env::var("HORIZON_LAUNCHER_PROJECT") {
+            if let Ok(want) = std::env::var("SKYLINE_LAUNCHER_PROJECT") {
                 if let Some(p) = self
                     .mods
                     .results
@@ -337,7 +337,7 @@ impl Launcher {
                     .find(|p| p.id == want || p.slug == want)
                     .cloned()
                 {
-                    std::env::remove_var("HORIZON_LAUNCHER_PROJECT");
+                    std::env::remove_var("SKYLINE_LAUNCHER_PROJECT");
                     self.mods_open(p);
                 }
             }
@@ -413,7 +413,7 @@ impl Launcher {
         });
     }
 
-    /// Turns a Horizon mod the browser installed on or off, as the game's Options > Mods does.
+    /// Turns a Skyline mod the browser installed on or off, as the game's Options > Mods does.
     fn mods_switch(&mut self, e: &installed::Entry) {
         let home = self.mods.home();
         let Some(id) = horizon::mod_id(e) else {
@@ -767,8 +767,8 @@ impl Launcher {
         }
         let header = page_header(
             "Mods",
-            "Mods and shader packs made for Horizon from its own reviewed registry, and Java \
-             mods, modpacks and resource packs from Modrinth: Horizon ports what a Java mod \
+            "Mods and shader packs made for Skyline from its own reviewed registry, and Java \
+             mods, modpacks and resource packs from Modrinth: Skyline ports what a Java mod \
              carries (blocks, items, recipes, worldgen) and says before you install what runs. Each file is checked \
              against its source's checksum before it reaches your game folder.",
             &t,
@@ -780,7 +780,7 @@ impl Launcher {
                 let _ = this.update(cx, |this, cx| {
                     if this.mods.kind != kind {
                         this.mods.kind = kind;
-                        // Horizon's own shader packs are on its registry only.
+                        // Skyline's own shader packs are on its registry only.
                         if kind == PackKind::Shader {
                             this.mods.source = SourceId::Horizon;
                         }
@@ -820,7 +820,7 @@ impl Launcher {
         // account's "Coming soon").
         let source_note = (self.mods.kind != PackKind::DataPack)
             .then(|| div().flex().child(self.mods_source_switch(cx)));
-        // The registry lists only what was made for Horizon: no "everything", no Modrinth filters.
+        // The registry lists only what was made for Skyline: no "everything", no Modrinth filters.
         let registry = self.mods.source == SourceId::Horizon;
         let filters = (!registry).then(|| self.mods_filters(cx));
         let controls = div()
@@ -1143,11 +1143,11 @@ impl Launcher {
             let line = if m.searching || !m.searched {
                 "Searching…"
             } else if m.source == SourceId::Horizon {
-                "Nothing in Horizon's registry matches yet."
+                "Nothing in Skyline's registry matches yet."
             } else if m.everything {
                 "Nothing found."
             } else {
-                "Nothing found that runs in Horizon. Show everything lists the rest."
+                "Nothing found that runs in Skyline. Show everything lists the rest."
             };
             return centered(line, &t);
         }
@@ -1291,7 +1291,7 @@ impl Launcher {
 }
 
 impl Launcher {
-    /// The source switch: Modrinth or Horizon's registry, CurseForge shown as coming soon and not
+    /// The source switch: Modrinth or Skyline's registry, CurseForge shown as coming soon and not
     /// clickable, like the Microsoft account's "Coming soon".
     fn mods_source_switch(&self, cx: &mut Context<Self>) -> Stateful<Div> {
         let this = cx.entity().downgrade();

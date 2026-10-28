@@ -1,13 +1,13 @@
-//! Controllers: Horizon's own feature (vanilla 26.3 has no gamepad input).
+//! Controllers: Skyline's own feature (vanilla 26.3 has no gamepad input).
 //! The default layout is Bedrock Edition's; see docs/controllers.md.
 //!
 //! This module is the backend-free part: positional buttons, the action
 //! bindings, deadzones and the look curve, button edges from successive pad
-//! states, and `horizon-controller.txt`, kept next to `options.txt` so that
+//! states, and `skyline-controller.txt`, kept next to `options.txt` so that
 //! file stays exactly vanilla's. The game reads the pads with gilrs.
 use std::{collections::BTreeMap, fs, path::Path};
 
-pub const FILE: &str = "horizon-controller.txt";
+pub const FILE: &str = "skyline-controller.txt";
 
 /// A button by its position on the pad (gilrs' and SDL's layout): `South`
 /// is Xbox A, PlayStation ✕, Nintendo B.
@@ -49,7 +49,7 @@ impl Button {
         Button::DPadLeft,
         Button::DPadRight,
     ];
-    /// The name in `horizon-controller.txt` and `horizon-ctl pad`.
+    /// The name in `skyline-controller.txt` and `skyline-ctl pad`.
     pub fn name(self) -> &'static str {
         match self {
             Button::South => "south",
@@ -142,7 +142,7 @@ impl PadState {
     pub fn held(&self, button: Button) -> bool {
         self.buttons & button.bit() != 0
     }
-    /// Two sources at once (a real pad and `horizon-ctl pad`): buttons held on
+    /// Two sources at once (a real pad and `skyline-ctl pad`): buttons held on
     /// either, sticks and triggers added.
     pub fn merge(&self, other: &PadState) -> PadState {
         let add = |a: [f32; 2], b: [f32; 2]| {
@@ -219,12 +219,12 @@ impl Edges {
     }
 }
 
-/// Horizon's pad-only actions (no vanilla key mapping).
+/// Skyline's pad-only actions (no vanilla key mapping).
 pub const HOTBAR_PREVIOUS: &str = "pad.hotbarPrevious";
 pub const HOTBAR_NEXT: &str = "pad.hotbarNext";
 
 /// Bindable actions and their default buttons: vanilla key mappings (the
-/// game acts as their default key) and Horizon's pad-only actions. Start is
+/// game acts as their default key) and Skyline's pad-only actions. Start is
 /// always pause / back and isn't listed.
 pub const ACTIONS: &[(&str, Option<Button>)] = &[
     ("key.jump", Some(Button::South)),
@@ -249,7 +249,7 @@ pub const ACTIONS: &[(&str, Option<Button>)] = &[
 ];
 
 /// An action's name in the binds list: vanilla's translation key, or
-/// Horizon's own English for the pad-only actions.
+/// Skyline's own English for the pad-only actions.
 pub fn action_caption(action: &str) -> &str {
     match action {
         HOTBAR_PREVIOUS => "Hotbar: Previous Slot",
@@ -341,7 +341,7 @@ impl MenuNav {
 /// The on-screen keyboard A opens on a text field in focus mode.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum TextKeyboard {
-    /// Steam's on a Steam Deck under Steam, else Horizon's.
+    /// Steam's on a Steam Deck under Steam, else Skyline's.
     #[default]
     Auto,
     Horizon,
@@ -370,7 +370,7 @@ impl TextKeyboard {
 }
 
 /// Whether A on a text field asks Steam for its keyboard
-/// (`steam://open/keyboard`) instead of opening Horizon's: chosen, or `Auto`
+/// (`steam://open/keyboard`) instead of opening Skyline's: chosen, or `Auto`
 /// on a Steam Deck (Steam sets `SteamDeck=1` for the games it starts).
 pub fn steam_keyboard(choice: TextKeyboard) -> bool {
     match choice {
@@ -380,12 +380,12 @@ pub fn steam_keyboard(choice: TextKeyboard) -> bool {
     }
 }
 
-/// The controller settings (`horizon-controller.txt`).
+/// The controller settings (`skyline-controller.txt`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct PadSettings {
     pub enabled: bool,
     pub vibration: bool,
-    /// A DualSense's triggers push back (Horizon's; docs/controllers.md).
+    /// A DualSense's triggers push back (Skyline's; docs/controllers.md).
     pub adaptive_triggers: bool,
     pub lightbar: Lightbar,
     /// 0..1; 0.5 is the default speed, 1 twice that.

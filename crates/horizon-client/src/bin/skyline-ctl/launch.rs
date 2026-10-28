@@ -1,7 +1,7 @@
-//! `horizon-ctl launch`: find a Horizon to start and start it with a control
+//! `skyline-ctl launch`: find a Skyline to start and start it with a control
 //! socket. Mirrors where the launcher puts things (launcher/src/backend.rs):
 //! versions under `<launcher home>/versions/<tag>`, each with its prepared
-//! resources in `.local/horizon-client/<minecraft version>` and run from the
+//! resources in `.local/skyline/<minecraft version>` and run from the
 //! game home, where saves and options.txt live.
 use std::{
     path::{Path, PathBuf},
@@ -14,14 +14,14 @@ use horizon_client::logging::{data_dir, game_home};
 use serde_json::{Value, json};
 
 #[cfg(windows)]
-const CLIENT: &str = "horizon-client.exe";
+const CLIENT: &str = "skyline.exe";
 #[cfg(not(windows))]
-const CLIENT: &str = "horizon-client";
+const CLIENT: &str = "skyline";
 
 pub fn launcher_home() -> PathBuf {
-    match std::env::var_os("HORIZON_LAUNCHER_HOME").filter(|h| !h.is_empty()) {
+    match std::env::var_os("SKYLINE_LAUNCHER_HOME").filter(|h| !h.is_empty()) {
         Some(h) => PathBuf::from(h),
-        None => data_dir().join("horizon-launcher"),
+        None => data_dir().join("skyline-launcher"),
     }
 }
 /// `v2026.10.13.1` gives [2026, 10, 13, 1]; a pre-release suffix is ignored.
@@ -55,9 +55,9 @@ pub fn prepared_resources(dir: &Path) -> Option<PathBuf> {
         .and_then(|t| serde_json::from_str::<Value>(&t).ok())
         .and_then(|v| v["minecraft"]["version"].as_str().map(str::to_owned))
         .unwrap_or_else(|| horizon_core::VANILLA_VERSION.into());
-    let resources = dir.join(".local/horizon-client").join(version);
+    let resources = dir.join(".local/skyline").join(version);
     resources
-        .join("horizon-resources.json")
+        .join("skyline-resources.json")
         .exists()
         .then_some(resources)
 }
@@ -73,7 +73,7 @@ pub struct Install {
     pub version: Option<String>,
 }
 
-/// Which game to start: an explicit binary, the one beside horizon-ctl, or a
+/// Which game to start: an explicit binary, the one beside skyline-ctl, or a
 /// launcher install.
 pub fn find(
     game: Option<&Path>,
@@ -105,7 +105,7 @@ pub fn find(
         && let Some(dir) = beside
         && dir.join(CLIENT).is_file()
     {
-        return Ok(prepared(dir, "beside horizon-ctl", None));
+        return Ok(prepared(dir, "beside skyline-ctl", None));
     }
     let tags = installed(&versions);
     let tag = match version {
@@ -118,7 +118,7 @@ pub fn find(
         }
         None => tags.first().cloned().ok_or_else(|| {
             format!(
-                "no Horizon found: no horizon-client beside horizon-ctl and no version installed by the launcher in {}. Install one with the launcher (horizon-launcher install latest) or pass --game PATH.",
+                "no Skyline found: no horizon-client beside skyline-ctl and no version installed by the launcher in {}. Install one with the launcher (skyline-launcher install latest) or pass --game PATH.",
                 versions.display()
             )
         })?,
@@ -127,7 +127,7 @@ pub fn find(
     let install = prepared(&dir, "launcher", Some(tag.clone()));
     if install.resources.is_none() {
         return Err(format!(
-            "{tag} is installed but not prepared; prepare it in the launcher first (horizon-launcher prepare {tag})"
+            "{tag} is installed but not prepared; prepare it in the launcher first (skyline-launcher prepare {tag})"
         ));
     }
     Ok(install)
@@ -257,7 +257,7 @@ mod tests {
     use super::*;
 
     fn temp(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("horizon-ctl-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-ctl-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
@@ -273,9 +273,9 @@ mod tests {
         )
         .unwrap();
         if prepared {
-            let res = dir.join(".local/horizon-client/26.3");
+            let res = dir.join(".local/skyline/26.3");
             std::fs::create_dir_all(&res).unwrap();
-            std::fs::write(res.join("horizon-resources.json"), "{}").unwrap();
+            std::fs::write(res.join("skyline-resources.json"), "{}").unwrap();
         }
         dir
     }
@@ -293,12 +293,7 @@ mod tests {
         );
         let install = find(None, None, None, &home).unwrap();
         assert_eq!(install.version.as_deref(), Some("v2026.10.13.1"));
-        assert!(
-            install
-                .resources
-                .unwrap()
-                .ends_with(".local/horizon-client/26.3")
-        );
+        assert!(install.resources.unwrap().ends_with(".local/skyline/26.3"));
         assert_eq!(install.cwd, Some(game_home()));
         let picked = find(None, Some("2026.10.2"), None, &home).unwrap();
         assert_eq!(picked.version.as_deref(), Some("v2026.10.2"));
@@ -313,7 +308,7 @@ mod tests {
         let build = temp("build");
         std::fs::write(build.join(CLIENT), "").unwrap();
         let install = find(None, None, Some(&build), &home).unwrap();
-        assert_eq!(install.source, "beside horizon-ctl");
+        assert_eq!(install.source, "beside skyline-ctl");
         assert_eq!((install.resources, install.cwd), (None, None));
         // --version always means a launcher install.
         assert_eq!(
@@ -332,7 +327,7 @@ mod tests {
         assert!(
             find(None, None, None, &home)
                 .unwrap_err()
-                .contains("no Horizon found")
+                .contains("no Skyline found")
         );
         fake_version(&home.join("versions"), "v2026.10.13", false);
         assert!(

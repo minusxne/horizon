@@ -62,7 +62,7 @@ impl MultiNoiseBiomeSource {
             parameters: ClimateIndex::new(entries)?,
         })
     }
-    /// Horizon's quantized import format, not the vanilla biome definition
+    /// Skyline's quantized import format, not the vanilla biome definition
     /// codec: [{"coordinates":[[min,max]; six],"offset":long,"biome":id}].
     /// Built-in numeric tables stay private and are authenticated by the runner.
     pub fn from_quantized_json(json: &str) -> Result<Self, BiomeError> {

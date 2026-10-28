@@ -9,7 +9,7 @@ use horizon_client::{
 };
 use horizon_world::nbt::Tag;
 
-/// `CommandSourceStack` fields Horizon models: the executing entity (None for
+/// `CommandSourceStack` fields Skyline models: the executing entity (None for
 /// the server), position, rotation, anchor, whether feedback is suppressed
 /// and the chain of `store` callbacks.
 #[derive(Clone, Copy, Debug)]
@@ -23,7 +23,7 @@ pub(in crate::game) struct Source {
     pub silent: bool,
     /// Index of the newest `store` in `ExecState::stores`.
     pub store: Option<u32>,
-    /// The level this command source uses. Horizon has only this dimension's
+    /// The level this command source uses. Skyline has only this dimension's
     /// chunks loaded in the single-player client.
     pub dimension: Dim,
     /// The dimension `execute in` named, if any: a server teleports its

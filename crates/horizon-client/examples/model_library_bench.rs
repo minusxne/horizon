@@ -1,4 +1,4 @@
-//! Full block/assets + item startup. Compile with HORIZON_BENCH_COUNT_ALLOCATIONS=1
+//! Full block/assets + item startup. Compile with SKYLINE_BENCH_COUNT_ALLOCATIONS=1
 //! for live requested heap bytes; leave it unset for latency measurements.
 //! cargo run --profile fast -p horizon-client --example model_library_bench -- ROOT [--parity]
 //! Run fresh processes, warm up twice, then compare multiple alternating baseline/candidate runs.
@@ -12,7 +12,7 @@ use std::{
 };
 
 struct CountingAllocator;
-const TRACK: bool = option_env!("HORIZON_BENCH_COUNT_ALLOCATIONS").is_some();
+const TRACK: bool = option_env!("SKYLINE_BENCH_COUNT_ALLOCATIONS").is_some();
 static LIVE: AtomicUsize = AtomicUsize::new(0);
 // The allocator delegates every operation and layout unchanged to System.
 unsafe impl GlobalAlloc for CountingAllocator {

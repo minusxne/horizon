@@ -312,7 +312,7 @@ impl Game<'_> {
         }
         self.join_world_rest()?;
         if let Err(error) = self.join_server(address, name, None, cookies) {
-            log::warn!("Horizon: could not join server: {error}");
+            log::warn!("Skyline: could not join server: {error}");
             if self.title.is_none() {
                 self.title = Some(horizon_client::title::Title::new(
                     std::env::current_dir()?.join("saves"),
@@ -345,7 +345,7 @@ impl Game<'_> {
         let root = self.options.resources.clone();
         let builtin = Builtin::find(&root)
             .and_then(|p| Builtin::load(&p).ok())
-            .ok_or("Resources are incomplete: registries.json is missing or invalid. Click \"Prepare again\" in the launcher (or run horizon-prepare), then try again.")?;
+            .ok_or("Resources are incomplete: registries.json is missing or invalid. Click \"Prepare again\" in the launcher (or run skyline-prepare), then try again.")?;
         let lang = Arc::new(horizon_client::net::load_language(&root));
         let view = client_view_distance(self.settings.render_distance);
         if local.is_none() {
@@ -395,7 +395,7 @@ impl Game<'_> {
         self.streaming = streaming;
         self.world = World::new(self.res.facts().air, 0);
         self.save = Arc::new(SaveDir::new(
-            std::env::temp_dir().join("horizon-remote-unused"),
+            std::env::temp_dir().join("skyline-remote-unused"),
         ));
         self.inventory = vec![None; 36];
         self.armor = [None, None, None, None];
@@ -672,7 +672,7 @@ impl Game<'_> {
         ))
     }
     /// A stack to the server (`SetCreativeModeSlot`): the same component
-    /// patch a Horizon server sends its clients, with the registries' ids, so
+    /// patch a Skyline server sends its clients, with the registries' ids, so
     /// the server's echo doesn't hand back a bare item.
     fn to_network(&self, s: &Option<ItemStack>) -> Option<Stack> {
         let r = self.remote.as_ref()?;
@@ -839,7 +839,7 @@ impl Game<'_> {
                             break;
                         }
                         Next::Lost => {
-                            log::warn!("Horizon: the chunk decoder stopped; a column is missing");
+                            log::warn!("Skyline: the chunk decoder stopped; a column is missing");
                             continue;
                         }
                     };
@@ -912,7 +912,7 @@ impl Game<'_> {
                     if let Some(r) = self.remote.as_mut() {
                         r.decode_errors += 1;
                         if r.decode_errors <= 20 {
-                            log::warn!("Horizon: skipped undecodable packet {e}");
+                            log::warn!("Skyline: skipped undecodable packet {e}");
                         }
                     }
                 }
@@ -920,7 +920,7 @@ impl Game<'_> {
                     reason,
                     from_server,
                 } => {
-                    log::info!("Horizon: disconnected: {reason}");
+                    log::info!("Skyline: disconnected: {reason}");
                     // ClientboundTransferPacket left a target: connect there
                     // instead of showing the disconnect, the stored cookies
                     // carried over (ClientCommonPacketListenerImpl.
@@ -1545,7 +1545,7 @@ impl Game<'_> {
             r.pending_items.remove(&id);
         }
     }
-    /// Map a menu slot to Horizon's inventory screen slot ids.
+    /// Map a menu slot to Skyline's inventory screen slot ids.
     fn menu_slot(menu: &str, slot: i32) -> Option<usize> {
         let s = usize::try_from(slot).ok()?;
         // A container of `n` slots, then the inventory and the hotbar.
@@ -2212,7 +2212,7 @@ impl Game<'_> {
                         m.extra.charged = charged;
                     }
                     // The body slot (6: horse armour, llama carpet, harness)
-                    // is kept in `head`, as Horizon's own mobs do.
+                    // is kept in `head`, as Skyline's own mobs do.
                     let body = horizon_client::mobs::drops::head_is_body(m.species());
                     for (slot, item, stack) in items {
                         let e = &mut m.extra;
@@ -2282,7 +2282,7 @@ impl Game<'_> {
             C::SetEntityMotion(p) => self.remote_motion(p.id, p.velocity),
             // ClientPacketListener.handleDamageEvent: LivingEntity.handleDamageEvent
             // jolts the walk animation and restarts the hurt flash. Its hurt
-            // sound comes as a sound from Horizon's host, which plays it itself.
+            // sound comes as a sound from Skyline's host, which plays it itself.
             // This player's own hurt tilt and flash come from the server too
             // (sent to the player itself): its own moves never hurt it.
             C::DamageEvent(p) => {
@@ -5723,7 +5723,7 @@ impl Game<'_> {
             m.session.villager = p.show_progress;
         }
     }
-    /// ClientboundOpenScreenPacket for the menus Horizon draws.
+    /// ClientboundOpenScreenPacket for the menus Skyline draws.
     fn remote_open_screen(&mut self, p: play::OpenScreen) {
         // A new RecipeBookComponent owns fresh ghost slots and an overlay,
         // even when the server replaces a menu without a close packet.
@@ -5813,7 +5813,7 @@ impl Game<'_> {
                 }));
                 self.chat_line(
                     horizon_client::text::Text::literal(format!(
-                        "(Horizon cannot show {menu} screens yet)"
+                        "(Skyline cannot show {menu} screens yet)"
                     )),
                     horizon_client::chat::ChatSource::Client,
                 );
@@ -5959,7 +5959,7 @@ impl Game<'_> {
         let r = self.remote.as_ref()?;
         Some(r.glowing.contains(&(id as i32)))
     }
-    /// Status for `horizon-ctl status`.
+    /// Status for `skyline-ctl status`.
     /// The other players' entities in the level and their names (from the
     /// player list).
     pub(super) fn remote_player_names(&self) -> Vec<(u32, String)> {
@@ -6284,7 +6284,7 @@ fn item_has_use(info: &horizon_client::items::ItemInfo) -> bool {
         )
 }
 
-/// The view distance a client asks for: its render distance, which Horizon
+/// The view distance a client asks for: its render distance, which Skyline
 /// lets go past vanilla's 32 (a vanilla server still caps it at its own).
 fn client_view_distance(render_distance: i32) -> i8 {
     render_distance.clamp(2, i32::from(i8::MAX)) as i8
@@ -6432,7 +6432,7 @@ mod tests {
 
         // As with the LAN tests, prepared game resources are optional locally.
         let resources = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !resources.join("block-behaviours.json").exists() {
             return;

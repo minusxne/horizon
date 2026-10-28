@@ -3,7 +3,7 @@
 //! structure_start_nbt <client resource dir> <seed> <dimension> <cx,cz>...
 //! prints `nbt CX CZ TAG` for every start whose chunk is a target, the tag
 //! with sorted keys and typed numbers (VanillaStructureStartOracle's
-//! `canonical`), or `unsaved CX CZ ID` when Horizon cannot save it yet.
+//! `canonical`), or `unsaved CX CZ ID` when Skyline cannot save it yet.
 use horizon_core::position::ChunkPos;
 use horizon_world::{
     nbt::Tag,

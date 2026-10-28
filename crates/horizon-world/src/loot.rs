@@ -1513,7 +1513,7 @@ mod namespace_tests {
     /// vanilla's, under their own namespaces.
     #[test]
     fn loads_every_namespace() {
-        let root = std::env::temp_dir().join(format!("horizon-loot-ns-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("skyline-loot-ns-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let files = [
             ("items.json", r#"{"minecraft:bread": {}}"#),

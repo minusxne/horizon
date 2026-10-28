@@ -352,7 +352,7 @@ impl Game<'_> {
                 e[2].floor() as i32,
             ];
             animate_tick(self.res.animate(), &mut self.particles, &ctx, block);
-            // The Horizon Weather option off means no rain visuals or sounds at all.
+            // The Skyline Weather option off means no rain visuals or sounds at all.
             if rain > 0.0 && self.settings.horizon.weather {
                 // ClientLevel.tickWeatherEffects: rain splashes within the weather
                 // radius, and the rain sound.

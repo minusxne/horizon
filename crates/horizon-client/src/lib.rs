@@ -1,4 +1,4 @@
-//! Horizon native client: resources, world streaming, rendering and the
+//! Skyline native client: resources, world streaming, rendering and the
 //! bindings between the validated simulation pieces and the game loop.
 #![forbid(unsafe_code)]
 pub mod advancements;

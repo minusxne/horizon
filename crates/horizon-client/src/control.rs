@@ -1,4 +1,4 @@
-//! Local control socket: lets a script or `horizon-ctl` drive a running game.
+//! Local control socket: lets a script or `skyline-ctl` drive a running game.
 //!
 //! Each connection sends commands as text lines and receives one JSON line per
 //! command. Commands are executed on the game thread between frames; replies
@@ -155,7 +155,7 @@ pub struct Server {
     path: PathBuf,
     requests: mpsc::Receiver<Request>,
     sender: mpsc::Sender<Request>,
-    /// Clients connected now (an MCP server keeps one open; horizon-ctl one per command).
+    /// Clients connected now (an MCP server keeps one open; skyline-ctl one per command).
     clients: Arc<AtomicUsize>,
     /// Set when the server is dropped: the listener stops accepting and exits.
     closed: Arc<AtomicBool>,
@@ -163,17 +163,17 @@ pub struct Server {
     port: Option<u16>,
 }
 
-/// `$HORIZON_CONTROL`, else `horizon-control.sock` in the user's runtime
+/// `$SKYLINE_CONTROL`, else `skyline-control.sock` in the user's runtime
 /// directory (`horizon-control.json` in the temporary directory on Windows).
 pub fn default_path() -> PathBuf {
-    if let Some(path) = std::env::var_os("HORIZON_CONTROL") {
+    if let Some(path) = std::env::var_os("SKYLINE_CONTROL") {
         return path.into();
     }
     if !cfg!(unix) {
-        return std::env::temp_dir().join("horizon-control.json");
+        return std::env::temp_dir().join("skyline-control.json");
     }
     let dir = std::env::var_os("XDG_RUNTIME_DIR").map_or_else(std::env::temp_dir, PathBuf::from);
-    dir.join("horizon-control.sock")
+    dir.join("skyline-control.sock")
 }
 
 impl Server {
@@ -371,7 +371,7 @@ mod tests {
     #[test]
     fn tcp_endpoint_round_trip() {
         let path =
-            std::env::temp_dir().join(format!("horizon-ctl-test-{}.json", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-ctl-test-{}.json", std::process::id()));
         let server = Server::start(&path).unwrap();
         let text = std::fs::read_to_string(&path).unwrap();
         assert!(text.contains("\"tcp\""));
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn tcp_refuses_a_wrong_token() {
         let path =
-            std::env::temp_dir().join(format!("horizon-ctl-bad-{}.json", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-ctl-bad-{}.json", std::process::id()));
         let _server = Server::start(&path).unwrap();
         let (port, _) = read_endpoint(&path).unwrap();
         let mut stream = TcpStream::connect((Ipv4Addr::LOCALHOST, port)).unwrap();

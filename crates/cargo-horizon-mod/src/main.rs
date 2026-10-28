@@ -1,4 +1,4 @@
-//! `cargo horizon-mod`: make Horizon mods in Rust (`docs/mods.md`).
+//! `cargo horizon-mod`: make Skyline mods in Rust (`docs/mods.md`).
 //!
 //! - `new <path> [--template code|content] [--name "Name"] [--sdk-path <dir>]`:
 //!   a mod from a template: a Rust crate, or a content mod (no code).
@@ -339,8 +339,8 @@ fn run(args: &[String]) -> Result<(), String> {
     let path = build(true)?;
     let game = flag(args, "--game")
         .map(str::to_string)
-        .or_else(|| std::env::var("HORIZON_CLIENT").ok())
-        .unwrap_or_else(|| "horizon-client".into());
+        .or_else(|| std::env::var("SKYLINE_CLIENT").ok())
+        .unwrap_or_else(|| "skyline".into());
     let extra = args.iter().skip_while(|a| *a != "--").skip(1);
     println!(
         "Starting {game} with {} (rebuild with `cargo horizon-mod build` to reload it)",
@@ -352,7 +352,7 @@ fn run(args: &[String]) -> Result<(), String> {
         .args(extra)
         .status()
         .map_err(|e| {
-            format!("{game}: {e} (pass --game <path to horizon-client> or set HORIZON_CLIENT)")
+            format!("{game}: {e} (pass --game <path to horizon-client> or set SKYLINE_CLIENT)")
         })?;
     status
         .success()
@@ -366,7 +366,7 @@ mod tests {
 
     #[test]
     fn the_template_is_a_valid_mod() {
-        let dir = std::env::temp_dir().join(format!("horizon-mod-new-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-mod-new-{}", std::process::id()));
         let path = dir.join("My-Mod");
         new(&[path.display().to_string(), "--name".into(), "My Mod".into()]).unwrap();
         let manifest =
@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn the_content_template_builds_and_checks_with_no_code() {
-        let dir = std::env::temp_dir().join(format!("horizon-mod-content-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-mod-content-{}", std::process::id()));
         let path = dir.join("gems");
         let new_args = [
             path.display().to_string(),

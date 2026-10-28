@@ -236,7 +236,7 @@ impl LiveFeatures {
                 {
                     Ok(f) => Some(Arc::new(f)),
                     Err(e) => {
-                        eprintln!("Horizon: feature {name} cannot be placed: {e}");
+                        eprintln!("Skyline: feature {name} cannot be placed: {e}");
                         None
                     }
                 }
@@ -254,7 +254,7 @@ impl LiveFeatures {
                 {
                     Ok(f) => Some(Arc::new(f)),
                     Err(e) => {
-                        eprintln!("Horizon: placed feature {name} cannot be placed: {e}");
+                        eprintln!("Skyline: placed feature {name} cannot be placed: {e}");
                         None
                     }
                 }
@@ -279,7 +279,7 @@ impl LiveFeatures {
         match feature.place(world, random, origin, self.blocks) {
             Ok(placed) => placed,
             Err(e) => {
-                eprintln!("Horizon: placing {name} failed: {e}");
+                eprintln!("Skyline: placing {name} failed: {e}");
                 false
             }
         }
@@ -301,7 +301,7 @@ impl LiveFeatures {
         match feature.place(world, random, origin, self.blocks) {
             Ok(placed) => placed,
             Err(e) => {
-                eprintln!("Horizon: placing {name} failed: {e}");
+                eprintln!("Skyline: placing {name} failed: {e}");
                 false
             }
         }

@@ -98,10 +98,10 @@ fn not_yet(tier: &str) -> &'static str {
 
 fn not_needed(class: &str) -> &'static str {
     match class {
-        "library" => "library: its API maps to Horizon's mod API and SDK",
-        "performance" => "performance mod: Horizon's engine is the replacement",
+        "library" => "library: its API maps to Skyline's mod API and SDK",
+        "performance" => "performance mod: Skyline's engine is the replacement",
         "other" => "pack tooling or an engine feature, folded into the pipeline or the engine",
-        "client-ui" => "built into Horizon",
+        "client-ui" => "built into Skyline",
         _ => "nothing to port",
     }
 }
@@ -328,7 +328,7 @@ mod tests {
 
     #[test]
     fn statuses_and_reasons() {
-        let work = std::env::temp_dir().join(format!("horizon-report-{}", std::process::id()));
+        let work = std::env::temp_dir().join(format!("skyline-report-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&work);
         let write = |key: &str, carry: Value, harness: Option<Value>| {
             let dir = work.join("mods").join(key);

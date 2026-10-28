@@ -235,7 +235,7 @@ public final class VanillaChunkGenerationOracle {
         };
         var randomState = RandomState.create(world.lookupOrThrow(Registries.NOISE), seed, settings.value());
         var generator = new NoiseBasedChunkGenerator(biomeSource, settings);
-        String phase = System.getenv().getOrDefault("HORIZON_PHASE", "full");
+        String phase = System.getenv().getOrDefault("SKYLINE_PHASE", "full");
         if (phase.equals("structures")) {
             // Structure pieces only: every biome keeps its carvers but loses its placed features.
             java.util.function.Function<Holder<Biome>, BiomeGenerationSettings> noFeatures = biome -> {
@@ -336,7 +336,7 @@ public final class VanillaChunkGenerationOracle {
                         if (!start.isValid()) continue;
                         var box = start.getBoundingBox();
                         var id = access.lookupOrThrow(Registries.STRUCTURE).getKey(start.getStructure());
-                        if (System.getenv("HORIZON_PIECES") != null) for (var piece : start.getPieces()) {
+                        if (System.getenv("SKYLINE_PIECES") != null) for (var piece : start.getPieces()) {
                             var pb = piece.getBoundingBox();
                             w.println("piece " + x + " " + z + " " + net.minecraft.core.registries.BuiltInRegistries.STRUCTURE_PIECE.getKey(piece.getType()) + " " + pb.minX() + " " + pb.minY() + " " + pb.minZ() + " " + pb.maxX() + " " + pb.maxY() + " " + pb.maxZ() + (piece instanceof net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece pool ? " " + pool.getElement() + " rot=" + pool.getRotation() : ""));
                         }
@@ -350,7 +350,7 @@ public final class VanillaChunkGenerationOracle {
             String[] corners = args[rect].split(",");
             int x0 = Integer.parseInt(corners[0]), z0 = Integer.parseInt(corners[1]), x1 = Integer.parseInt(corners[2]), z1 = Integer.parseInt(corners[3]);
             // Margins: FEATURES need TERRAIN at 1, which needs BIOMES at 1 more; STRUCTURE_STARTS reach 8 further.
-            int m = System.getenv("HORIZON_ISOLATED") != null ? 0 : 1; // diagnostics: decorate the targets only
+            int m = System.getenv("SKYLINE_ISOLATED") != null ? 0 : 1; // diagnostics: decorate the targets only
             int fx0 = x0 - m, fz0 = z0 - m, fx1 = x1 + m, fz1 = z1 + m;
             int tx0 = fx0 - 1, tz0 = fz0 - 1, tx1 = fx1 + 1, tz1 = fz1 + 1;
             int bx0 = tx0 - 1, bz0 = tz0 - 1, bx1 = tx1 + 1, bz1 = tz1 + 1;
@@ -382,10 +382,10 @@ public final class VanillaChunkGenerationOracle {
                 Heightmap.primeHeightmaps(chunk, EnumSet.of(Heightmap.Types.MOTION_BLOCKING, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Heightmap.Types.OCEAN_FLOOR, Heightmap.Types.WORLD_SURFACE));
                 chunk.setPersistedStatus(ChunkStatus.TERRAIN);
             }
-            // HORIZON_ORDER: a file of "x z" lines, the chunks to decorate in that order (default: row-major).
+            // SKYLINE_ORDER: a file of "x z" lines, the chunks to decorate in that order (default: row-major).
             List<int[]> order = new ArrayList<>();
-            if (System.getenv("HORIZON_ORDER") != null) {
-                for (String line : java.nio.file.Files.readAllLines(java.nio.file.Path.of(System.getenv("HORIZON_ORDER")))) {
+            if (System.getenv("SKYLINE_ORDER") != null) {
+                for (String line : java.nio.file.Files.readAllLines(java.nio.file.Path.of(System.getenv("SKYLINE_ORDER")))) {
                     String[] t = line.trim().split("\\s+");
                     if (t.length == 2) order.add(new int[]{Integer.parseInt(t[0]), Integer.parseInt(t[1])});
                 }

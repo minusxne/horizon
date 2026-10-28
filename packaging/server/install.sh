@@ -1,5 +1,5 @@
 #!/bin/sh
-# Installs horizon-server (docs/server.md) on Linux or macOS: the latest Horizon release for this computer,
+# Installs skyline-server (docs/server.md) on Linux or macOS: the latest Skyline release for this computer,
 # downloaded from GitHub Releases and checked against the SHA-256 GitHub publishes for it. On Linux that is
 # the server build (horizon-server-linux-x86_64.tar.gz), which needs neither ALSA nor udev.
 #
@@ -36,7 +36,7 @@ done
 case "$(uname -s)-$(uname -m)" in
   Linux-x86_64) ASSETS="horizon-server-linux-x86_64.tar.gz horizon-linux-x86_64.tar.gz" ;;
   Darwin-arm64) ASSETS=horizon-macos-arm64.zip ;;
-  *) die "no Horizon release for $(uname -s) $(uname -m) yet: build it from source (docs/server.md)" ;;
+  *) die "no Skyline release for $(uname -s) $(uname -m) yet: build it from source (docs/server.md)" ;;
 esac
 
 TMP=$(mktemp -d)
@@ -73,7 +73,7 @@ else
   [ -n "$URL" ] || die "release $TAG has none of $ASSETS"
   [ -n "$DIGEST" ] || die "release $TAG publishes no SHA-256 for $ASSET"
 
-  echo "Downloading Horizon $TAG ($ASSET)..."
+  echo "Downloading Skyline $TAG ($ASSET)..."
   curl -fL --progress-bar -o "$TMP/$ASSET" "$URL"
   GOT=$($SHA "$TMP/$ASSET" | cut -d' ' -f1)
   [ "$GOT" = "$DIGEST" ] || die "$ASSET doesn't match its SHA-256 (got $GOT, expected $DIGEST): not installed"
@@ -84,8 +84,8 @@ case "$ASSET" in
   *.tar.gz) tar -xzf "$TMP/$ASSET" -C "$TMP/x" ;;
   *.zip) command -v unzip >/dev/null || die "unzip is needed"; unzip -q "$TMP/$ASSET" -d "$TMP/x" ;;
 esac
-SOURCE=$(dirname "$(find "$TMP/x" -name horizon-server -type f | head -n 1)")
-[ -x "$SOURCE/horizon-server" ] || die "$ASSET holds no horizon-server (a release from before it existed?)"
+SOURCE=$(dirname "$(find "$TMP/x" -name skyline-server -type f | head -n 1)")
+[ -x "$SOURCE/horizon-server" ] || die "$ASSET holds no skyline-server (a release from before it existed?)"
 
 RELEASE="$DIR/releases/$TAG"
 mkdir -p "$DIR/releases" "$DIR/game-files/horizon-client" "$BIN"
@@ -93,17 +93,17 @@ rm -rf "$RELEASE"
 mv "$SOURCE" "$RELEASE"
 # Prepared game files live outside the release, so updates and rollbacks keep them.
 mkdir -p "$RELEASE/.local"
-ln -sfn "$DIR/game-files/horizon-client" "$RELEASE/.local/horizon-client"
+ln -sfn "$DIR/game-files/horizon-client" "$RELEASE/.local/skyline"
 ln -sfn "$RELEASE" "$DIR/current"
 # Small launchers rather than links: the programs find their release folder from where they run.
-for tool in horizon-server horizon-prepare; do
+for tool in skyline-server skyline-prepare; do
   printf '#!/bin/sh\nexec "%s/current/%s" "$@"\n' "$DIR" "$tool" > "$BIN/$tool"
   chmod +x "$BIN/$tool"
 done
 
-echo "Installed Horizon $TAG in $RELEASE; horizon-server and horizon-prepare are in $BIN."
+echo "Installed Skyline $TAG in $RELEASE; skyline-server and skyline-prepare are in $BIN."
 # The full game (releases before the server build) links ALSA and udev; minimal Linux images often lack them.
-if [ "$(uname -s)" = Linux ] && [ ! -e "$RELEASE/horizon-engine" ] && command -v ldd >/dev/null; then
+if [ "$(uname -s)" = Linux ] && [ ! -e "$RELEASE/skyline-engine" ] && command -v ldd >/dev/null; then
   MISSING=$(ldd "$RELEASE/horizon-client" 2>/dev/null | awk '/not found/ { printf "%s ", $1 }')
   if [ -n "$MISSING" ]; then
     echo "The game needs libraries this system doesn't have: $MISSING"
@@ -121,6 +121,6 @@ esac
 if [ -z "$(ls -A "$DIR/game-files/horizon-client" 2>/dev/null)" ]; then
   echo "Next, prepare the game files from your own Minecraft 26.3 (it needs Java 25 and the game installed once"
   echo "by the official launcher; see docs/server.md):"
-  echo "  horizon-prepare --prepare --server-jar /path/to/server.jar"
+  echo "  skyline-prepare --prepare --server-jar /path/to/server.jar"
 fi
-echo "Then set up a server: mkdir my-server && cd my-server && horizon-server init"
+echo "Then set up a server: mkdir my-server && cd my-server && skyline-server init"

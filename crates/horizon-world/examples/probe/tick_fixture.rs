@@ -1,4 +1,4 @@
-//! Process vanilla saved block/fluid ticks through Horizon's storage and queues.
+//! Process vanilla saved block/fluid ticks through Skyline's storage and queues.
 use horizon_core::{
     position::ChunkPos,
     ticks::{ScheduledTick, TickPriority, TickTypeId},

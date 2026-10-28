@@ -1,4 +1,4 @@
-//! Replays `tools/test_ambient_sound_parity.py` scripts through Horizon's
+//! Replays `tools/test_ambient_sound_parity.py` scripts through Skyline's
 //! ambient sound handlers over its `SoundEngine`:
 //! `ambient_fixture ROOT INPUT OUTPUT`.
 use crate::audio_common as common;

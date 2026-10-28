@@ -1,5 +1,5 @@
 //! Control-socket commands for menus and item components, so scripts can
-//! drive the workstation screens (`horizon-ctl click-slot 600`, ...).
+//! drive the workstation screens (`skyline-ctl click-slot 600`, ...).
 use super::{Game, Screen};
 use horizon_client::{Result, items::ItemStack};
 use serde_json::{Value, json};

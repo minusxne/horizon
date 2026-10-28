@@ -45,7 +45,7 @@ pub trait ResourceSource {
         vec!["minecraft".into()]
     }
 }
-/// Horizon's own strings, compiled in so they need no prepared resources.
+/// Skyline's own strings, compiled in so they need no prepared resources.
 struct Bundled;
 impl ResourceSource for Bundled {
     fn read(&self, path: &str) -> Option<Vec<u8>> {
@@ -113,7 +113,7 @@ impl Language {
         if code != DEFAULT {
             codes.push(code);
         }
-        // Horizon's own strings first, so a pack or the prepared root can still
+        // Skyline's own strings first, so a pack or the prepared root can still
         // override them. Vanilla has no key for "Controller vibration".
         let bundled = Bundled;
         let mut all: Vec<&dyn ResourceSource> = vec![&bundled];

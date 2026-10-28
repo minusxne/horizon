@@ -297,7 +297,7 @@ fn packed_rgba(packed: u8) -> [u8; 4] {
 pub(super) fn map_id(stack: &ItemStack) -> Option<i32> {
     stack.data().and_then(|d| d.map_id)
 }
-/// `MapDecorationTypes` Horizon draws: (type, sprite).
+/// `MapDecorationTypes` Skyline draws: (type, sprite).
 const DECORATION_TYPES: [(&str, &str); 24] = [
     ("player", "map/decorations/player"),
     ("frame", "map/decorations/frame"),

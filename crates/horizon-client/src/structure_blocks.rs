@@ -126,7 +126,7 @@ pub fn loot_data(root: &Path) -> Option<Arc<LootData>> {
     loot.get_or_insert_with(|| match LootData::load(root) {
         Ok(data) => Some(Arc::new(data)),
         Err(e) => {
-            log::warn!("Horizon: loot tables unavailable, structure containers stay empty: {e}");
+            log::warn!("Skyline: loot tables unavailable, structure containers stay empty: {e}");
             None
         }
     })
@@ -149,7 +149,7 @@ pub fn forget_loot_data() {
 
 /// `RandomizableContainer.unpackLootTable` of a container at `pos`: `table`
 /// rolled into `slots`. A missing or zero seed is the level's random in
-/// vanilla; Horizon derives one from the position. Without loot data the
+/// vanilla; Skyline derives one from the position. Without loot data the
 /// container stays empty and still saves its table.
 pub fn roll_container(
     slots: &mut [Option<ItemStack>],

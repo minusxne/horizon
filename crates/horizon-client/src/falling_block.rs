@@ -281,11 +281,11 @@ mod tests {
         assert!(!passes_cobweb(beside, beside, None, is_web));
     }
     #[test]
-    #[ignore = "requires prepared entity models/data in HORIZON_TEST_RESOURCES"]
+    #[ignore = "requires prepared entity models/data in SKYLINE_TEST_RESOURCES"]
     fn impact_hurts_only_living_intersecting_noninvulnerable_mobs() {
         use crate::mobs::{Mob, MobTypes};
         use std::{path::Path, sync::Arc};
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES").expect("HORIZON_TEST_RESOURCES");
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES").expect("SKYLINE_TEST_RESOURCES");
         let types = MobTypes::load(Path::new(&root)).unwrap();
         let cow = Arc::new(types.types["minecraft:cow"].clone());
         let mut mobs = vec![

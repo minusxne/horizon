@@ -5,8 +5,8 @@
 use horizon_shaders::{RENDER_STAGES, render_stage};
 
 /// Where a run of `Frame::entities` begins, and what it is (slice 7): the run lasts until the
-/// next span. Recorded only while a shader pack draws entities, so Horizon's own frames carry
-/// none; Horizon itself still draws the whole list at once.
+/// next span. Recorded only while a shader pack draws entities, so Skyline's own frames carry
+/// none; Skyline itself still draws the whole list at once.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct EntitySpan {
     /// The first vertex.
@@ -18,7 +18,7 @@ pub struct EntitySpan {
     pub id: i32,
     /// An entity part that blends (a name tag, a shadow): `gbuffers_entities_translucent`.
     pub translucent: bool,
-    /// Hidden from the camera (Horizon's entity culling, the player in first person): only the
+    /// Hidden from the camera (Skyline's entity culling, the player in first person): only the
     /// shadow pass draws it.
     pub hidden: bool,
     /// The local player (`shadowPlayer`).

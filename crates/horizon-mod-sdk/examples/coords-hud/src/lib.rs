@@ -1,4 +1,4 @@
-//! Example Horizon mod (`docs/mods.md`): coordinates, facing and the time of
+//! Example Skyline mod (`docs/mods.md`): coordinates, facing and the time of
 //! day in the top-left corner, `/where` to put them in chat and `/coords`
 //! to hide or show the panel.
 use horizon_mod_sdk::{

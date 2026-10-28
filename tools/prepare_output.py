@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The prepared output's version: what keeps `OUTPUT_VERSION` (crates/horizon-prepare/src/lib.rs) honest.
 
-The launcher copies a prepared version's resources (`.local/horizon-client/<version>`) to a newly installed
+The launcher copies a prepared version's resources (`.local/skyline/<version>`) to a newly installed
 one when both pin the same Minecraft jars and their preparers declare the same `OUTPUT_VERSION`, so a release
 that changes the preparer's code without changing what it makes asks nobody to prepare again. The number is
 bumped by hand; this tool catches a change to the output without a bump.
@@ -11,7 +11,7 @@ It only grows: the last line is the current version, and a change to the output 
 
     python3 tools/prepare_output.py digest [RESOURCES]          the digest of a preparation
     python3 tools/prepare_output.py check [--base SHA] [--cache] [RESOURCES]
-        fails when RESOURCES (default: this checkout's .local/horizon-client/<version>, as CI prepares it) is
+        fails when RESOURCES (default: this checkout's .local/skyline/<version>, as CI prepares it) is
         not what the last line says, or when the file changed other than by appending since SHA. --cache keeps
         the digest beside RESOURCES (CI: a preparation never changes once made; it takes ~30 s to compute)
 
@@ -36,7 +36,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 VERSIONS = 'crates/horizon-prepare/output-versions.txt'
 LIB = 'crates/horizon-prepare/src/lib.rs'
-MANIFEST = 'horizon-resources.json'
+MANIFEST = 'skyline-resources.json'
 LAMBDA = re.compile(r'\$\$Lambda/0x[0-9a-fA-F]+')
 CONSTANT = re.compile(r'^pub const OUTPUT_VERSION: u32 = (\d+);', re.M)
 
@@ -120,7 +120,7 @@ def problems(versions: list[tuple[int, str]], constant: int | None) -> list[str]
 
 def default_resources() -> Path:
     lock = json.loads((ROOT / 'research-lock.json').read_text())
-    return ROOT / '.local/horizon-client' / lock['minecraft']['version']
+    return ROOT / '.local/skyline' / lock['minecraft']['version']
 
 
 def main() -> int:

@@ -1,4 +1,4 @@
-//! Shader packs: the `shaderpacks/*.zip` format, written from Horizon's clean-room specification
+//! Shader packs: the `shaderpacks/*.zip` format, written from Skyline's clean-room specification
 //! (`shader-packs-spec.md`, revision 1). This crate reads the format and knows nothing of wgpu;
 //! the game's renderer runs what it produces.
 //!

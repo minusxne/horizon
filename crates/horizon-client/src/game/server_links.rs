@@ -57,7 +57,7 @@ pub(super) fn trusted(links: Vec<ServerLink>) -> Vec<ServerLink> {
         .filter(|l| {
             let ok = valid_untrusted_uri(&l.link);
             if !ok {
-                log::warn!("Horizon: server sent an invalid link: {}", l.link);
+                log::warn!("Skyline: server sent an invalid link: {}", l.link);
             }
             ok
         })

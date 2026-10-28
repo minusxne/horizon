@@ -1,4 +1,4 @@
-//! Replays `tools/test_sound_engine_parity.py` scripts through Horizon's
+//! Replays `tools/test_sound_engine_parity.py` scripts through Skyline's
 //! `SoundEngine` with a backend recording what an OpenAL source would hold:
 //! `sound_engine_fixture ROOT INPUT OUTPUT`.
 use crate::audio_common as common;

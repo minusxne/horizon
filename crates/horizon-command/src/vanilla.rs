@@ -1,5 +1,5 @@
 //! The vanilla command tree (Commands.java registrations) for the commands
-//! Horizon implements. Leaves carry command ids that the game executes;
+//! Skyline implements. Leaves carry command ids that the game executes;
 //! mode keywords are read back from the parsed literals.
 use super::{
     Dispatcher,
@@ -40,7 +40,7 @@ pub fn build_with(dev: bool) -> Dispatcher {
     apply_vanilla_order(&mut d);
     d
 }
-/// The tree in the order Horizon's code registers it, before
+/// The tree in the order Skyline's code registers it, before
 /// [`vanilla_order`](super::vanilla_order) puts children in vanilla's order
 /// (tools/generate_command_order.py compares the two).
 pub fn registered(dev: bool) -> Dispatcher {
@@ -537,35 +537,35 @@ fn apply_vanilla_order(d: &mut Dispatcher) {
     }
 }
 /// The tree the game runs: a release integrated server's, or with
-/// `HORIZON_DEV_COMMANDS` set the development one
-/// (SharedConstants.DEBUG_DEV_COMMANDS), plus Horizon's own commands when
+/// `SKYLINE_DEV_COMMANDS` set the development one
+/// (SharedConstants.DEBUG_DEV_COMMANDS), plus Skyline's own commands when
 /// the server turned them on (`set_horizon_commands`).
 pub fn game_dispatcher() -> &'static Dispatcher {
     game_tree(
-        std::env::var_os("HORIZON_DEV_COMMANDS").is_some(),
-        HORIZON_COMMANDS.load(std::sync::atomic::Ordering::Relaxed),
+        std::env::var_os("SKYLINE_DEV_COMMANDS").is_some(),
+        SKYLINE_COMMANDS.load(std::sync::atomic::Ordering::Relaxed),
     )
 }
-/// Whether this process's server has Horizon's own commands (`/pregen`). Off
+/// Whether this process's server has Skyline's own commands (`/pregen`). Off
 /// by default, so `/help` and the command tree are vanilla's; a dedicated
 /// server turns them on with `horizon-pregen=true` in server.properties, the
 /// game with `--pregen` (docs/pregeneration.md).
-static HORIZON_COMMANDS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-/// Turns Horizon's own commands on or off for the trees `game_dispatcher`
+static SKYLINE_COMMANDS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// Turns Skyline's own commands on or off for the trees `game_dispatcher`
 /// returns from now on.
 pub fn set_horizon_commands(on: bool) {
-    HORIZON_COMMANDS.store(on, std::sync::atomic::Ordering::Relaxed);
+    SKYLINE_COMMANDS.store(on, std::sync::atomic::Ordering::Relaxed);
 }
-/// The server.properties key that turns `/pregen` on (Horizon's own; vanilla
+/// The server.properties key that turns `/pregen` on (Skyline's own; vanilla
 /// ignores keys it doesn't know).
 pub const PREGEN_PROPERTY: &str = "horizon-pregen";
 pub(crate) fn game_tree(dev: bool, horizon: bool) -> &'static Dispatcher {
-    static HORIZON: [std::sync::OnceLock<Dispatcher>; 2] =
+    static SKYLINE: [std::sync::OnceLock<Dispatcher>; 2] =
         [const { std::sync::OnceLock::new() }; 2];
     match (dev, horizon) {
         (true, false) => dispatcher(),
         (false, false) => release_dispatcher(),
-        (dev, true) => HORIZON[usize::from(dev)].get_or_init(|| {
+        (dev, true) => SKYLINE[usize::from(dev)].get_or_init(|| {
             let mut d = build_with(dev);
             horizon_commands(&mut d, 0);
             d

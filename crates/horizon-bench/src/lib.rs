@@ -411,7 +411,7 @@ mod tests {
         let mut r = Report::new(
             Kind::Game,
             App {
-                name: "horizon-client".into(),
+                name: "skyline".into(),
                 version: "0.1.0".into(),
                 ..App::default()
             },
@@ -445,7 +445,7 @@ mod tests {
 
     #[test]
     fn writes_into_a_folder() {
-        let dir = std::env::temp_dir().join(format!("horizon-bench-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-bench-test-{}", std::process::id()));
         let mut r = Report::new(Kind::Launcher, App::default());
         r.created = "2026-10-15T14:03:27Z".into();
         r.conditions.scenario = Some("cold start".into());

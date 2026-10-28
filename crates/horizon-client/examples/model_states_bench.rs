@@ -20,7 +20,7 @@ struct Fixture {
 impl Fixture {
     fn new(target_bytes: usize) -> Result<Self> {
         let root =
-            std::env::temp_dir().join(format!("horizon-model-states-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-model-states-{}", std::process::id()));
         fs::create_dir_all(root.join("assets/minecraft/blockstates"))?;
         fs::create_dir_all(root.join("assets/minecraft/models/block"))?;
         let mut possible = Vec::new();

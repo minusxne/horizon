@@ -9,14 +9,14 @@ use std::{
 
 /// Two independent operators, so one outage doesn't break discovery; both
 /// run free public STUN for WebRTC at a global scale. Configurable with
-/// `HORIZON_STUN_SERVERS` (a comma list; `none` turns STUN off).
+/// `SKYLINE_STUN_SERVERS` (a comma list; `none` turns STUN off).
 pub const DEFAULT_SERVERS: &[&str] = &["stun.cloudflare.com:3478", "stun.l.google.com:19302"];
 
 const MAGIC: u32 = 0x2112_A442;
 
-/// The servers to ask: `HORIZON_STUN_SERVERS`, else the defaults.
+/// The servers to ask: `SKYLINE_STUN_SERVERS`, else the defaults.
 pub fn servers_from_env() -> Vec<String> {
-    match std::env::var("HORIZON_STUN_SERVERS") {
+    match std::env::var("SKYLINE_STUN_SERVERS") {
         Ok(v) => parse_servers(&v),
         Err(_) => DEFAULT_SERVERS.iter().map(|s| (*s).to_owned()).collect(),
     }

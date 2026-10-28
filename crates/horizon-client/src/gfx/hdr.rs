@@ -1,4 +1,4 @@
-//! HDR output (Horizon setting, off by default): the frame renders exactly as
+//! HDR output (Skyline setting, off by default): the frame renders exactly as
 //! without it, into an 8-bit target in vanilla's gamma space, and one pass
 //! (`hdr.wgsl`) writes it to an HDR10 or scRGB swapchain at the player's paper
 //! white, expanding the world's highlights towards their peak brightness. The
@@ -35,9 +35,9 @@ impl Output {
 }
 
 /// The HDR output `caps` can present: HDR10 where offered, else scRGB.
-/// `HORIZON_HDR_OUTPUT=pq` or `scrgb` allows only that one.
+/// `SKYLINE_HDR_OUTPUT=pq` or `scrgb` allows only that one.
 pub fn output(caps: &wgpu::SurfaceCapabilities) -> Option<Output> {
-    pick(caps, std::env::var("HORIZON_HDR_OUTPUT").ok().as_deref())
+    pick(caps, std::env::var("SKYLINE_HDR_OUTPUT").ok().as_deref())
 }
 fn pick(caps: &wgpu::SurfaceCapabilities, only: Option<&str>) -> Option<Output> {
     [(Output::Pq, "pq"), (Output::ScRgb, "scrgb")]
@@ -62,7 +62,7 @@ pub struct Hdr {
     /// The frame's format: what every other pipeline draws in.
     format: wgpu::TextureFormat,
     targets: Option<Targets>,
-    /// `HORIZON_HDR_DEBUG=1`: paint expanded pixels magenta.
+    /// `SKYLINE_HDR_DEBUG=1`: paint expanded pixels magenta.
     debug: bool,
     /// Paper white and peak brightness, in nits.
     pub paper_white: f32,
@@ -72,7 +72,7 @@ pub struct Hdr {
 impl Hdr {
     pub fn new(device: &wgpu::Device, format: wgpu::TextureFormat, output: Output) -> Self {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Horizon HDR"),
+            label: Some("Skyline HDR"),
             source: wgpu::ShaderSource::Wgsl(include_str!("../hdr.wgsl").into()),
         });
         let texture = |binding| wgpu::BindGroupLayoutEntry {
@@ -86,7 +86,7 @@ impl Hdr {
             count: None,
         };
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("Horizon HDR bindings"),
+            label: Some("Skyline HDR bindings"),
             entries: &[
                 texture(0),
                 texture(1),
@@ -103,12 +103,12 @@ impl Hdr {
             ],
         });
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Horizon HDR"),
+            label: Some("Skyline HDR"),
             bind_group_layouts: &[Some(&layout)],
             ..Default::default()
         });
         let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Horizon HDR"),
+            label: Some("Skyline HDR"),
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &shader,
@@ -133,7 +133,7 @@ impl Hdr {
             cache: None,
         });
         let params = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Horizon HDR parameters"),
+            label: Some("Skyline HDR parameters"),
             size: 32,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
@@ -145,7 +145,7 @@ impl Hdr {
             output,
             format,
             targets: None,
-            debug: std::env::var_os("HORIZON_HDR_DEBUG").is_some_and(|v| v == "1"),
+            debug: std::env::var_os("SKYLINE_HDR_DEBUG").is_some_and(|v| v == "1"),
             paper_white: 200.0,
             peak: 1000.0,
         }
@@ -171,13 +171,13 @@ impl Hdr {
                 })
             };
             let frame = texture(
-                "Horizon HDR frame",
+                "Skyline HDR frame",
                 wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
             );
-            let world = texture("Horizon HDR world", wgpu::TextureUsages::COPY_DST);
+            let world = texture("Skyline HDR world", wgpu::TextureUsages::COPY_DST);
             let view = |t: &wgpu::Texture| t.create_view(&Default::default());
             let group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("Horizon HDR bindings"),
+                label: Some("Skyline HDR bindings"),
                 layout: &self.layout,
                 entries: &[
                     wgpu::BindGroupEntry {
@@ -250,7 +250,7 @@ impl Hdr {
             },
         })];
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("Horizon HDR"),
+            label: Some("Skyline HDR"),
             color_attachments: &attachments,
             ..Default::default()
         });

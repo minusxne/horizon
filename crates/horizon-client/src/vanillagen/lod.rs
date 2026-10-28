@@ -72,7 +72,7 @@ impl Builder {
                 ) {
                     Ok(generator) => generator,
                     Err(error) => {
-                        log::warn!("Horizon: far decoration unavailable: {error}");
+                        log::warn!("Skyline: far decoration unavailable: {error}");
                         worker.stop.store(true, Ordering::Relaxed);
                         return;
                     }
@@ -111,7 +111,7 @@ impl Builder {
                         Ok(_) => {}
                         Err(error) => {
                             log::warn!(
-                                "Horizon: far decoration failed at {} {}: {error}",
+                                "Skyline: far decoration failed at {} {}: {error}",
                                 key.0,
                                 key.1
                             );
@@ -397,7 +397,7 @@ impl LodSampler for VanillaLodSampler {
         {
             Ok(samples) => samples,
             Err(error) => {
-                log::warn!("Horizon: direct far sampling failed: {error}");
+                log::warn!("Skyline: direct far sampling failed: {error}");
                 return vec![Column::default(); side * side];
             }
         };
@@ -474,10 +474,10 @@ impl VanillaLodSampler {
 mod tests {
     use super::*;
     #[test]
-    #[ignore = "requires prepared worldgen data in HORIZON_TEST_RESOURCES"]
+    #[ignore = "requires prepared worldgen data in SKYLINE_TEST_RESOURCES"]
     fn decorated_lod_refines_real_seed_canopies_and_all_dimensions() -> crate::Result<()> {
         let root = std::path::PathBuf::from(
-            std::env::var_os("HORIZON_TEST_RESOURCES").expect("resources"),
+            std::env::var_os("SKYLINE_TEST_RESOURCES").expect("resources"),
         );
         let assets = crate::assets::Assets::load(&root)?;
         let biomes = crate::biome::Biomes::load(&root)?;

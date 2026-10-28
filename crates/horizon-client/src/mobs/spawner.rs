@@ -2,7 +2,7 @@
 //! saved state and `SpawnData`, the server tick that spawns its mobs and the
 //! client tick that spins the mob inside and puffs flames.
 //!
-//! Vanilla keeps a server and a client copy of the block entity; Horizon keeps
+//! Vanilla keeps a server and a client copy of the block entity; Skyline keeps
 //! one [`Spawner`] with the client's own delay and spin beside the server's
 //! state. The level's random drives the server tick in vanilla's draw order;
 //! what the spawner asks of the level goes through [`SpawnerLevel`], so the
@@ -465,7 +465,7 @@ impl Spawner {
             let kind = l.mob_type(&id);
             let (species, width, height, category) = match kind {
                 Some((s, w, h, c)) => (Some(s), w, h, c),
-                // Entity types Horizon cannot create: a unit box, misc.
+                // Entity types Skyline cannot create: a unit box, misc.
                 None => (None, 1.0, 1.0, Category::Misc),
             };
             let spawn_box = match species {

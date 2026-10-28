@@ -26,12 +26,12 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 fn int(value: &Value) -> Result<i32> {
     Ok(i32::try_from(value.as_i64().ok_or("expected integer")?)?)
 }
-/// Horizon packs RGBA little endian (red in the low byte); vanilla uses ARGB.
+/// Skyline packs RGBA little endian (red in the low byte); vanilla uses ARGB.
 fn argb(color: u32) -> i32 {
     let [r, g, b, a] = color.to_le_bytes();
     i32::from_be_bytes([a, r, g, b])
 }
-/// Horizon keeps sky*16 in the low byte and block*16 above it; vanilla's light
+/// Skyline keeps sky*16 in the low byte and block*16 above it; vanilla's light
 /// coords keep block in the low half-word and sky in the high one.
 fn light_coords(light: u16) -> i32 {
     let light = u32::from(light);

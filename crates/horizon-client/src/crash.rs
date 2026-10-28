@@ -68,7 +68,7 @@ impl Report {
     pub fn text(&self) -> String {
         let comment = COMMENTS[self.time.timestamp().rem_euclid(COMMENTS.len() as i64) as usize];
         let mut out = String::new();
-        let _ = writeln!(out, "---- Horizon Crash Report ----");
+        let _ = writeln!(out, "---- Skyline Crash Report ----");
         let _ = writeln!(out, "// {comment}\n");
         let _ = writeln!(out, "Time: {}", self.time.format("%Y-%m-%d %H:%M:%S"));
         let _ = writeln!(out, "Description: {}\n", self.description);
@@ -250,10 +250,10 @@ fn memory() -> String {
     }
 }
 
-/// The report's details: Horizon's and the machine's, then what the game set as it ran.
+/// The report's details: Skyline's and the machine's, then what the game set as it ran.
 pub fn system_details() -> Vec<(String, String)> {
     let mut out = vec![
-        ("Horizon Version".to_owned(), version()),
+        ("Skyline Version".to_owned(), version()),
         (
             "Minecraft Version".to_owned(),
             horizon_core::VANILLA_VERSION.to_owned(),
@@ -283,7 +283,7 @@ fn deliver(home: &Path, report: Report) -> Option<PathBuf> {
     crate::logging::write_only(
         log::Level::Error,
         &format!(
-            "Horizon crashed: {}\n{}",
+            "Skyline crashed: {}\n{}",
             report.error,
             report
                 .stack
@@ -297,11 +297,11 @@ fn deliver(home: &Path, report: Report) -> Option<PathBuf> {
     crate::telemetry::keep_crash(home, &report);
     match report.save(home) {
         Ok(path) => {
-            eprintln!("Horizon: crash report saved to {}", path.display());
+            eprintln!("Skyline: crash report saved to {}", path.display());
             Some(path)
         }
         Err(e) => {
-            eprintln!("Horizon: could not save a crash report: {e}");
+            eprintln!("Skyline: could not save a crash report: {e}");
             eprintln!("{}", report.text());
             None
         }
@@ -503,7 +503,7 @@ pub fn report_error(
     )
 }
 
-/// Called every frame: panics once `HORIZON_DEBUG_CRASH` asks (development builds only).
+/// Called every frame: panics once `SKYLINE_DEBUG_CRASH` asks (development builds only).
 pub fn debug_crash_tick() {
     static AT: std::sync::OnceLock<Option<(std::time::Instant, std::time::Duration)>> =
         std::sync::OnceLock::new();
@@ -515,13 +515,13 @@ pub fn debug_crash_tick() {
     }
 }
 
-/// Development builds crash on purpose when `HORIZON_DEBUG_CRASH` is set (vanilla has F3+C held
+/// Development builds crash on purpose when `SKYLINE_DEBUG_CRASH` is set (vanilla has F3+C held
 /// for ten seconds): the number is seconds after the first frame (default 5).
 pub fn debug_crash_after() -> Option<std::time::Duration> {
     if !cfg!(debug_assertions) {
         return None;
     }
-    let value = std::env::var("HORIZON_DEBUG_CRASH").ok()?;
+    let value = std::env::var("SKYLINE_DEBUG_CRASH").ok()?;
     let seconds = value.parse::<f64>().unwrap_or(5.0).max(0.0);
     Some(std::time::Duration::from_secs_f64(seconds))
 }
@@ -532,7 +532,7 @@ mod tests {
 
     #[test]
     fn a_release_reports_its_built_in_version() {
-        // release.yml builds with HORIZON_VERSION (docs/versioning.md): `v0.2.3`, wherever it is installed.
+        // release.yml builds with SKYLINE_VERSION (docs/versioning.md): `v0.2.3`, wherever it is installed.
         if let Some(label) = horizon_core::release::nightly_label() {
             assert_eq!(super::version(), label);
             assert_eq!(release_tag(), horizon_core::release::nightly_version());
@@ -556,7 +556,7 @@ mod tests {
             thread: "Render thread".into(),
             side: "client",
             details: vec![
-                ("Horizon Version".into(), "0.1.0".into()),
+                ("Skyline Version".into(), "0.1.0".into()),
                 ("Minecraft Version".into(), "26.3".into()),
                 ("Graphics".into(), "Test GPU (Vulkan), driver 1.0".into()),
             ],
@@ -576,7 +576,7 @@ mod tests {
     fn the_report_reads_like_vanillas() {
         let text = report().text();
         let lines: Vec<&str> = text.lines().collect();
-        assert_eq!(lines[0], "---- Horizon Crash Report ----");
+        assert_eq!(lines[0], "---- Skyline Crash Report ----");
         assert!(lines[1].starts_with("// "));
         assert_eq!(lines[3], "Time: 2026-10-14 09:05:07");
         assert_eq!(lines[4], "Description: Unexpected error");
@@ -644,7 +644,7 @@ mod tests {
         )));
         assert!(text.contains("\tOperating System: "));
         assert!(text.contains("\tCPU: "));
-        let home = std::env::temp_dir().join(format!("horizon-crash-save-{}", std::process::id()));
+        let home = std::env::temp_dir().join(format!("skyline-crash-save-{}", std::process::id()));
         let path = report.save(&home).unwrap();
         assert_eq!(std::fs::read_to_string(&path).unwrap(), text);
         assert!(

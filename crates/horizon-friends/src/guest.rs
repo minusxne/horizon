@@ -133,7 +133,7 @@ pub fn join(config: &GuestConfig) -> Result<Tunnel, JoinError> {
     }
 }
 
-/// Dial every endpoint of the code; the first that answers as a Horizon
+/// Dial every endpoint of the code; the first that answers as a Skyline
 /// host gets the handshake, the others are dropped before it.
 fn join_direct(invite: &Invite) -> Result<Option<Tunnel>, JoinError> {
     let (tx, rx) = channel();

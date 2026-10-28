@@ -1,6 +1,6 @@
-# Horizon's mark and icons
+# Skyline's mark and icons
 
-**The mark.** An H whose crossbar is the horizon: the line runs edge to edge in Horizon's violet,
+**The mark.** An H whose crossbar is the horizon: the line runs edge to edge in Skyline's violet,
 the stems above it in full strength and their reflection below at a third. It is drawn on whole
 units of a 16-unit grid, so it is sharp at 16 px and holds at 1024 px. `docs/design-system.md`
 places it in the design system; `candidates/` keeps the two alternatives that were shown with it.
@@ -21,11 +21,11 @@ places it in the design system; `candidates/` keeps the two alternatives that we
 
 | Output | Used by |
 |--------|---------|
-| `packaging/icons/hicolor/<size>/apps/horizon.png` (16–512) and `scalable/apps/horizon.svg` | Linux: copy the tree into `~/.local/share/icons/hicolor` (or `/usr/share/icons/hicolor`) |
-| `packaging/linux/horizon-launcher.desktop`, `horizon.desktop` (hand-written) | Linux: the launcher installs both and the hicolor icons itself, under `$XDG_DATA_HOME` (`~/.local/share`), with its own path in `Exec` (`launcher/src/desktop.rs`; `horizon-launcher desktop-entry --remove` takes them out). Wayland matches the windows' app ids `horizon-launcher` and `horizon` |
-| `packaging/icons/horizon.ico` | Windows: embedded in `horizon-client.exe`, its tools and `horizon-launcher.exe` as icon resource 1 (`build.rs` of each, Windows builds only) |
-| `packaging/icons/horizon.icns` | macOS: `Horizon.app/Contents/Resources/horizon.icns`, packaged with the .dmg by `packaging/macos/package.sh` |
-| `crates/horizon-theme/icons/horizon-64.png` | the game window's icon at run time (X11 and Windows title bars, `window::icon`) |
+| `packaging/icons/hicolor/<size>/apps/skyline.png` (16–512) and `scalable/apps/skyline.svg` | Linux: copy the tree into `~/.local/share/icons/hicolor` (or `/usr/share/icons/hicolor`) |
+| `packaging/linux/horizon-launcher.desktop`, `skyline.desktop` (hand-written) | Linux: the launcher installs both and the hicolor icons itself, under `$XDG_DATA_HOME` (`~/.local/share`), with its own path in `Exec` (`launcher/src/desktop.rs`; `skyline-launcher desktop-entry --remove` takes them out). Wayland matches the windows' app ids `skyline-launcher` and `horizon` |
+| `packaging/icons/skyline.ico` | Windows: embedded in `horizon-client.exe`, its tools and `skyline-launcher.exe` as icon resource 1 (`build.rs` of each, Windows builds only) |
+| `packaging/icons/skyline.icns` | macOS: `Skyline.app/Contents/Resources/skyline.icns`, packaged with the .dmg by `packaging/macos/package.sh` |
+| `crates/horizon-theme/icons/skyline-64.png` | the game window's icon at run time (X11 and Windows title bars, `window::icon`) |
 | `web/favicon.svg`, `web/favicon-32.png`, `web/apple-touch-icon.png` | the website (its `npm run assets` copies them into its `public/`) |
 | `icon-1024.png`, `icon-macos-1024.png` | previews, store listings |
 | `social/github-avatar-500.png` | GitHub: the organisation or account avatar |
@@ -41,7 +41,7 @@ NODE_PATH="$d/node_modules" node -e 'const {chromium}=require("playwright");(asy
 
 | Where | What |
 |-------|------|
-| `crates/horizon-client/src/title_edition.rs` | the R, U and S of "RUST EDITION" under the classic title screen's logo: Horizon's own glyphs (MIT), rectangles in that file. The banner is rebuilt at load time from the player's own `textures/gui/title/edition.png` (its "EDITION" and "T" carried over, its shades sampled), so no Mojang pixels are in the repository; a resource pack's banner is left as drawn |
+| `crates/horizon-client/src/title_edition.rs` | the R, U and S of "RUST EDITION" under the classic title screen's logo: Skyline's own glyphs (MIT), rectangles in that file. The banner is rebuilt at load time from the player's own `textures/gui/title/edition.png` (its "EDITION" and "T" carried over, its shades sampled), so no Mojang pixels are in the repository; a resource pack's banner is left as drawn |
 
 ## Uploading (the accounts are Ludovic's)
 

@@ -1,4 +1,4 @@
-//! Horizon's sprite mip levels for tools/test_mipmap_parity.py: each sprite
+//! Skyline's sprite mip levels for tools/test_mipmap_parity.py: each sprite
 //! loads through `sprites::Sprites` (its .mcmeta settings and transparency)
 //! and `mipmap::generate` makes its levels down to 1x1, printed as RGBA hex
 //! rows like VanillaMipmapOracle.

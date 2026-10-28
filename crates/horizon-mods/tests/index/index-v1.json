@@ -9,7 +9,7 @@
       "summary": "Your coordinates, facing and the time of day in a corner of the screen.",
       "description": "`/where` puts them in chat, `/coords` hides or shows the panel.",
       "authors": [
-        "Horizon"
+        "Skyline"
       ],
       "owners": [
         "ludovic111"
@@ -47,7 +47,7 @@
       "name": "Cozy",
       "summary": "Coordinates and a calm render distance.",
       "authors": [
-        "Horizon"
+        "Skyline"
       ],
       "owners": [
         "ludovic111"
@@ -82,7 +82,7 @@
       "name": "Soft Glow",
       "summary": "A post-processing pass over the world.",
       "authors": [
-        "Horizon"
+        "Skyline"
       ],
       "owners": [
         "ludovic111"

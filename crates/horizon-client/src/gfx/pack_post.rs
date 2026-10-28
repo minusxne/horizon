@@ -1,8 +1,8 @@
-//! A shader pack's post-processing over Horizon's own world (spec 2.1 rows 4, 6, 8, 9; 6.1; 6.2;
+//! A shader pack's post-processing over Skyline's own world (spec 2.1 rows 4, 6, 8, 9; 6.1; 6.2;
 //! 6.4): the world renders into its own target as with a resolution scale, its colour becomes
 //! colortex0 and its depth `depthtex0`, then the pack's `prepare`, `deferred`, `composite` and
 //! `final` programs run in order, and `final` draws onto the screen under the hand and HUD.
-//! Gbuffers programs come later; until then the pack's composites read Horizon's picture.
+//! Gbuffers programs come later; until then the pack's composites read Skyline's picture.
 //!
 //! Every colortex buffer a program reads or writes has two textures, A and B. Programs read
 //! "main" and write "alt", and each buffer a program wrote flips afterwards (6.1.6). The
@@ -133,7 +133,7 @@ fn share_samplers(module: &mut naga::Module, slot: &HashMap<u32, u32>) {
 
 /// The sky's geometry and the programs that draw it: `gbuffers_skybasic` (disc, sunset, stars,
 /// void) and `gbuffers_skytextured` (sun, moon), each with its fallbacks. A part without a
-/// program is Horizon's own.
+/// program is Skyline's own.
 struct Sky {
     geometry: PackSky,
     basic: Option<Pass>,
@@ -141,7 +141,7 @@ struct Sky {
 }
 
 /// Entities, block entities, translucent entity parts and particles a pack draws
-/// (`pack_entities::ENTITY`... order), after terrain or, `late`, after deferred; Horizon draws
+/// (`pack_entities::ENTITY`... order), after terrain or, `late`, after deferred; Skyline draws
 /// the others.
 struct Entities {
     geometry: PackEntities,
@@ -1161,8 +1161,8 @@ impl PackPost {
             .clouds
             .zip(cloud_geometry.as_ref())
             .and_then(|(p, g)| build(p, Some(g)));
-        // Developers' aid: `HORIZON_SHADER_PACK_SKIP=composite,final` leaves programs out.
-        let skip = std::env::var("HORIZON_SHADER_PACK_SKIP").unwrap_or_default();
+        // Developers' aid: `SKYLINE_SHADER_PACK_SKIP=composite,final` leaves programs out.
+        let skip = std::env::var("SKYLINE_SHADER_PACK_SKIP").unwrap_or_default();
         let passes: Vec<Pass> = post
             .programs
             .into_iter()
@@ -1875,8 +1875,8 @@ impl PackPost {
         self.entities = Some(entities);
     }
 
-    /// Splits `entities` (`Frame::entities`) between the pack and Horizon by its runs
-    /// (`spans`): the pack's part is uploaded for this frame's draw, Horizon's goes to `rest`.
+    /// Splits `entities` (`Frame::entities`) between the pack and Skyline by its runs
+    /// (`spans`): the pack's part is uploaded for this frame's draw, Skyline's goes to `rest`.
     pub fn prepare_entities(
         &mut self,
         device: &wgpu::Device,

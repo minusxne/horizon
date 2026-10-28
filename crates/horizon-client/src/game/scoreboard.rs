@@ -699,7 +699,7 @@ impl Game<'_> {
             screen_width: batch.width as i32,
             online_mode,
             gui_ticks: self.ticks as i64,
-            // Horizon has no "chat background only" option: vanilla's default (on).
+            // Skyline has no "chat background only" option: vanilla's default (on).
             background: tab_list::row_background(
                 true,
                 f64::from(self.settings.text_background_opacity),

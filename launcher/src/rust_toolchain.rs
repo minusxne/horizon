@@ -337,7 +337,7 @@ mod tests {
 
     #[test]
     fn a_component_archive_unpacks_as_its_installer_would() {
-        let dir = std::env::temp_dir().join(format!("horizon-rust-unpack-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-rust-unpack-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         let archive = dir.join("cargo.tar.gz");

@@ -1,4 +1,4 @@
-//! `horizon-server init`: the first run (docs/server.md, section 3). It asks about the EULA, the world, the
+//! `skyline-server init`: the first run (docs/server.md, section 3). It asks about the EULA, the world, the
 //! port and who may join, imports an existing `server.properties`, finds the game, and writes `server.toml`.
 //! Every question has a flag, so it also runs unattended (Docker, scripts).
 
@@ -30,24 +30,24 @@ pub struct Answers {
 }
 
 impl Answers {
-    /// The answers in the environment, for containers: `HORIZON_EULA=true`, `HORIZON_WORLD`,
-    /// `HORIZON_SEED`, `HORIZON_PORT`, `HORIZON_WHITELIST=true|false`, `HORIZON_PLAYERS` (names separated by
-    /// commas), `HORIZON_OP` and `HORIZON_ONLINE=true|false`. Flags given on the command line win.
+    /// The answers in the environment, for containers: `SKYLINE_EULA=true`, `SKYLINE_WORLD`,
+    /// `SKYLINE_SEED`, `SKYLINE_PORT`, `SKYLINE_WHITELIST=true|false`, `SKYLINE_PLAYERS` (names separated by
+    /// commas), `SKYLINE_OP` and `SKYLINE_ONLINE=true|false`. Flags given on the command line win.
     pub fn from_env() -> Result<Self, String> {
         let var = |name: &str| std::env::var(name).ok().filter(|v| !v.is_empty());
         let flag = |name: &str| var(name).map(|v| v.eq_ignore_ascii_case("true"));
         Ok(Self {
-            eula: flag("HORIZON_EULA").unwrap_or(false),
-            world: var("HORIZON_WORLD"),
-            seed: var("HORIZON_SEED"),
-            port: var("HORIZON_PORT")
+            eula: flag("SKYLINE_EULA").unwrap_or(false),
+            world: var("SKYLINE_WORLD"),
+            seed: var("SKYLINE_SEED"),
+            port: var("SKYLINE_PORT")
                 .map(|p| {
                     p.parse()
-                        .map_err(|_| format!("HORIZON_PORT is {p:?}: use a port number"))
+                        .map_err(|_| format!("SKYLINE_PORT is {p:?}: use a port number"))
                 })
                 .transpose()?,
-            whitelist: flag("HORIZON_WHITELIST"),
-            players: var("HORIZON_PLAYERS")
+            whitelist: flag("SKYLINE_WHITELIST"),
+            players: var("SKYLINE_PLAYERS")
                 .map(|p| {
                     p.split([',', ' '])
                         .filter(|n| !n.is_empty())
@@ -55,8 +55,8 @@ impl Answers {
                         .collect()
                 })
                 .unwrap_or_default(),
-            op: var("HORIZON_OP"),
-            online: flag("HORIZON_ONLINE"),
+            op: var("SKYLINE_OP"),
+            online: flag("SKYLINE_ONLINE"),
             yes: false,
         })
     }
@@ -103,7 +103,7 @@ pub fn run(dir: &Path, answers: Answers) -> Result<(), String> {
     let toml_path = dir.join(config::FILE);
     if toml_path.exists() {
         return Err(format!(
-            "{} already exists: this server is set up. Edit it, or start the server with `horizon-server run`",
+            "{} already exists: this server is set up. Edit it, or start the server with `skyline-server run`",
             toml_path.display()
         ));
     }
@@ -218,7 +218,7 @@ pub fn run(dir: &Path, answers: Answers) -> Result<(), String> {
 
     std::fs::write(&toml_path, config::render(&cfg)).map_err(|e| e.to_string())?;
     println!(
-        "Wrote {}. Start the server with: horizon-server run --dir {}",
+        "Wrote {}. Start the server with: skyline-server run --dir {}",
         toml_path.display(),
         dir.display()
     );
@@ -268,7 +268,7 @@ mod tests {
 
     #[test]
     fn unattended_init_writes_everything() {
-        let dir = std::env::temp_dir().join(format!("horizon-server-init-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-server-init-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let answers = Answers {
             eula: true,
@@ -311,7 +311,7 @@ mod tests {
 
     #[test]
     fn no_eula_no_server() {
-        let dir = std::env::temp_dir().join(format!("horizon-server-eula-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-server-eula-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let answers = Answers {
             yes: true,

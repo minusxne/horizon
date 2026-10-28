@@ -476,22 +476,22 @@ fn mix(mixer: &mut Mixer, data: &mut [f32], channels: usize, rate: u32) {
     }
 }
 /// Why the game should not open an output, if it should not:
-/// `HORIZON_NO_AUDIO`, or a virtual screen (`vscreen`), where agents and
+/// `SKYLINE_NO_AUDIO`, or a virtual screen (`vscreen`), where agents and
 /// harnesses run the game and must stay off the user's speakers.
-/// `HORIZON_AUDIO=1` opens the output anyway (testing into a null sink).
+/// `SKYLINE_AUDIO=1` opens the output anyway (testing into a null sink).
 #[cfg(any(feature = "audio", test))]
 fn output_disabled(var: impl Fn(&str) -> Option<std::ffi::OsString>) -> Option<String> {
-    if var("HORIZON_NO_AUDIO").is_some() {
-        return Some("audio off: HORIZON_NO_AUDIO is set".into());
+    if var("SKYLINE_NO_AUDIO").is_some() {
+        return Some("audio off: SKYLINE_NO_AUDIO is set".into());
     }
-    if var("HORIZON_AUDIO").is_some_and(|v| v == "1") {
+    if var("SKYLINE_AUDIO").is_some_and(|v| v == "1") {
         return None;
     }
     let display = var("WAYLAND_DISPLAY")?;
     Path::new(&display)
         .components()
         .any(|c| c.as_os_str() == "vscreen")
-        .then(|| "audio off on a virtual screen (vscreen); HORIZON_AUDIO=1 opens it".into())
+        .then(|| "audio off on a virtual screen (vscreen); SKYLINE_AUDIO=1 opens it".into())
 }
 /// An output stream on `device` in its default configuration, whatever its
 /// sample format: the mixer works in f32 and converts.
@@ -538,7 +538,7 @@ fn build_stream<T: cpal::SizedSample + cpal::FromSample<f32>>(
                 *out = T::from_sample(*s);
             }
         },
-        |e| log::warn!("Horizon: audio stream error: {e}"),
+        |e| log::warn!("Skyline: audio stream error: {e}"),
         None,
     )?;
     Ok(stream)
@@ -556,9 +556,9 @@ impl Audio {
         if output && registry.is_empty() {
             // The game then plays nothing on a working output (#1035, #1076).
             log::warn!(
-                "Horizon: no sounds in {}: they were not copied from your Minecraft \
+                "Skyline: no sounds in {}: they were not copied from your Minecraft \
                  install; prepare the game again in the launcher (or run \
-                 horizon-prepare sounds)",
+                 skyline-prepare sounds)",
                 root.join("assets").display()
             );
         }
@@ -572,7 +572,7 @@ impl Audio {
             Ok(v) => (Some(v), true),
             Err(e) => {
                 if output {
-                    log::warn!("Horizon: no sound: {e}");
+                    log::warn!("Skyline: no sound: {e}");
                 }
                 (None, false)
             }
@@ -627,7 +627,7 @@ impl Audio {
             match open_device(&device, mixer.clone()) {
                 Ok((stream, config)) => {
                     log::info!(
-                        "Horizon: audio output {name} ({} Hz, {} channels, {})",
+                        "Skyline: audio output {name} ({} Hz, {} channels, {})",
                         config.sample_rate().0,
                         config.channels(),
                         config.sample_format()
@@ -955,10 +955,10 @@ mod tests {
         const VSCREEN: &str = "/run/user/1000/vscreen/main/wayland-1";
         assert!(output_disabled(env(&[("WAYLAND_DISPLAY", VSCREEN)])).is_some());
         assert!(
-            output_disabled(env(&[("WAYLAND_DISPLAY", VSCREEN), ("HORIZON_AUDIO", "1")])).is_none()
+            output_disabled(env(&[("WAYLAND_DISPLAY", VSCREEN), ("SKYLINE_AUDIO", "1")])).is_none()
         );
         assert!(
-            output_disabled(env(&[("HORIZON_NO_AUDIO", "1"), ("HORIZON_AUDIO", "1")])).is_some()
+            output_disabled(env(&[("SKYLINE_NO_AUDIO", "1"), ("SKYLINE_AUDIO", "1")])).is_some()
         );
     }
     #[test]

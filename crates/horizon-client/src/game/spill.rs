@@ -238,7 +238,7 @@ pub(super) fn pop_position(
     ]
 }
 
-/// The block entity at `pos` Horizon keeps as it was loaded, if any
+/// The block entity at `pos` Skyline keeps as it was loaded, if any
 /// (campfires, decorated pots, chiseled bookshelves, shelves).
 pub(super) fn saved_entity(
     world: &horizon_client::world::World,
@@ -261,7 +261,7 @@ pub(super) fn saved_entity(
         .cloned()
 }
 
-/// Keep `tag` as the block entity at its position Horizon does not model,
+/// Keep `tag` as the block entity at its position Skyline does not model,
 /// replacing the one there.
 pub(super) fn put_saved_entity(
     world: &mut horizon_client::world::World,
@@ -392,7 +392,7 @@ impl GameLevel<'_> {
         }
     }
     /// `BlockEntity.preRemoveSideEffects` and `removeBlockEntity` for the block
-    /// entity of `old` at `pos`. A block entity Horizon never created reads as
+    /// entity of `old` at `pos`. A block entity Skyline never created reads as
     /// vanilla's fresh one: an empty container still draws a spot per slot.
     pub(super) fn remove_entity(
         &mut self,
@@ -532,7 +532,7 @@ impl GameLevel<'_> {
             data: 0,
         });
     }
-    /// A block entity Horizon keeps as it was loaded (campfires, decorated
+    /// A block entity Skyline keeps as it was loaded (campfires, decorated
     /// pots, chiseled bookshelves, shelves): its items spill as vanilla's do.
     fn remove_saved_entity(
         &mut self,

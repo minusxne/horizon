@@ -11,7 +11,7 @@ pub struct Keys {
     pub jump: bool,
     pub shift: bool,
     pub sprint: bool,
-    /// A controller stick's move vector (`[left, forward]`, Horizon's own),
+    /// A controller stick's move vector (`[left, forward]`, Skyline's own),
     /// used instead of the keys' direction while it is pushed.
     pub analog: Option<[f32; 2]>,
 }

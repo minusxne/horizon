@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 
 fn scratch(name: &str) -> PathBuf {
     let root = std::env::temp_dir().join(format!(
-        "horizon-launcher-instances-{name}-{}",
+        "skyline-launcher-instances-{name}-{}",
         std::process::id()
     ));
     let _ = fs::remove_dir_all(&root);
@@ -40,7 +40,7 @@ fn player_home(home: &Path) {
     put(&home.join("saves/World/region/r.0.0.mca"), "region");
     put(&home.join("saves/Other/level.dat"), "other");
     put(&home.join("options.txt"), "fov:90\n");
-    put(&home.join("horizon-player.txt"), "name:Player123\n");
+    put(&home.join("skyline-player.txt"), "name:Player123\n");
     put(&home.join("resourcepacks/faithful.zip"), "pack");
     put(&home.join("logs/latest.log"), "log");
     put(&home.join("sessions/a.json"), "token");
@@ -58,11 +58,11 @@ fn player_home(home: &Path) {
         "modded",
     );
     put(
-        &home.join("horizon-packs/cozy/pack.json"),
+        &home.join("skyline-packs/cozy/pack.json"),
         r#"{"id":"cozy","name":"Cozy","version":"1.0.0","sha256":"00","mods":[]}"#,
     );
     put(
-        &home.join("horizon-packs/cozy/home/saves/Cozy/level.dat"),
+        &home.join("skyline-packs/cozy/home/saves/Cozy/level.dat"),
         "cozy",
     );
 }
@@ -78,9 +78,9 @@ fn existing_worlds_stay_where_they_are_and_every_folder_becomes_an_instance() {
     let all = list_in(&home, &data);
     let ids: Vec<&str> = all.iter().map(|i| i.id.as_str()).collect();
     assert_eq!(ids, [DEFAULT, "pack:cozy", "port:small-pack"]);
-    assert_eq!(all[0].name, "Horizon");
+    assert_eq!(all[0].name, "Skyline");
     assert_eq!(all[0].home, home);
-    assert_eq!(all[1].home, home.join("horizon-packs/cozy/home"));
+    assert_eq!(all[1].home, home.join("skyline-packs/cozy/home"));
     assert_eq!(all[2].name, "Small Pack");
     assert_eq!(all[2].home, home.join("ports/small-pack/home"));
 
@@ -105,7 +105,7 @@ fn existing_worlds_stay_where_they_are_and_every_folder_becomes_an_instance() {
     let empty_files: Vec<PathBuf> = files(&empty.home).into_keys().collect();
     assert_eq!(
         empty_files,
-        [PathBuf::from("horizon-player.txt"), "options.txt".into()]
+        [PathBuf::from("skyline-player.txt"), "options.txt".into()]
     );
     let copied = files(&copy.home);
     for kept in [
@@ -169,7 +169,7 @@ fn an_instance_follows_the_players_answers() {
     let root = scratch("follow");
     let (main, own) = (root.join("main"), root.join("own"));
     put(&main.join("options.txt"), "fov:90\n");
-    put(&main.join("horizon-player.txt"), "name:Player123\n");
+    put(&main.join("skyline-player.txt"), "name:Player123\n");
     put(&main.join("telemetry/consent.json"), r#"{"version":1}"#);
     horizon_core::no_ai::set(&main, true).unwrap();
     put(&own.join("options.txt"), "fov:70\n");
@@ -179,7 +179,7 @@ fn an_instance_follows_the_players_answers() {
         "fov:70\n"
     );
     assert_eq!(
-        fs::read_to_string(own.join("horizon-player.txt")).unwrap(),
+        fs::read_to_string(own.join("skyline-player.txt")).unwrap(),
         "name:Player123\n"
     );
     assert_eq!(

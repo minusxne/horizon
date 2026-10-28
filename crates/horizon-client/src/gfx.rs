@@ -122,7 +122,7 @@ fn world_pass_after_culling<'e>(
     keep_depth: bool,
 ) -> wgpu::RenderPass<'e> {
     encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-        label: Some("Horizon world, after culling"),
+        label: Some("Skyline world, after culling"),
         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
             view,
             resolve_target: None,
@@ -186,7 +186,7 @@ struct Globals {
     crumbling_sprite: [f32; 4],
     /// Framebuffer size, selection stroke width, perspective layering scale.
     outline_params: [f32; 4],
-    /// Horizon Extras' dynamic lights: camera-relative position and level (`dynamic_light`).
+    /// Skyline Extras' dynamic lights: camera-relative position and level (`dynamic_light`).
     dynamic_lights: [[f32; 4]; crate::dynamic_light::MAX],
 }
 pub type SectionKey = (i32, i32, i32);
@@ -282,7 +282,7 @@ pub struct Frame<'a> {
     pub entity_spans: &'a [pack_draw::EntitySpan],
     pub weather: &'a [crate::weather::Vertex],
     pub weather_time: crate::weather::Time,
-    /// Horizon Extras' dynamic lights, nearest first (`dynamic_light::select`); empty when off.
+    /// Skyline Extras' dynamic lights, nearest first (`dynamic_light::select`); empty when off.
     pub dynamic_lights: &'a [[f32; 4]],
     /// Cloud mesh inputs; geometry and GPU storage are retained by the renderer.
     pub clouds: Option<crate::clouds::Input<'a>>,
@@ -533,19 +533,19 @@ pub struct Renderer {
     block_entity_revision: u64,
     /// VisGraph face connectivity per meshed section (cave culling).
     occlusion: occlusion::Occlusion,
-    /// Resolution scale and FXAA (Horizon settings).
+    /// Resolution scale and FXAA (Skyline settings).
     world_post: world_post::Post,
-    /// HDR output (Horizon setting): `Some` while the swapchain is HDR.
+    /// HDR output (Skyline setting): `Some` while the swapchain is HDR.
     hdr: Option<hdr::Hdr>,
     /// The HDR output the window's surface can present.
     hdr_output: Option<hdr::Output>,
     /// The shader pack's post-processing, and the dimension (legacy id) it was loaded for.
     pack_post: Option<(i32, Option<pack_post::PackPost>)>,
-    /// The post passes of one of Horizon's own shader packs; never beside `pack_post`'s.
+    /// The post passes of one of Skyline's own shader packs; never beside `pack_post`'s.
     native: Option<native_pack::NativePack>,
-    /// Time the shader pack's passes on the GPU (F3, or `HORIZON_SHADER_PACK_TIMING`).
+    /// Time the shader pack's passes on the GPU (F3, or `SKYLINE_SHADER_PACK_TIMING`).
     pass_timing: bool,
-    /// The entity vertices Horizon draws itself while a shader pack draws the others.
+    /// The entity vertices Skyline draws itself while a shader pack draws the others.
     pack_entity_rest: Vec<Vertex>,
     /// Set 1 of the cloud pipeline, for a shader pack's `gbuffers_clouds`.
     cloud_bindings: wgpu::BindGroupLayout,
@@ -573,22 +573,22 @@ pub struct Renderer {
     pub screenshot_result: Option<std::result::Result<[u32; 2], String>>,
     /// Brightness option (lightmap gamma), 0..1.
     pub gamma: f32,
-    /// Optional full-light lightmap (Horizon Extras).
+    /// Optional full-light lightmap (Skyline Extras).
     pub fullbright: bool,
-    /// Advance animated block textures (Horizon setting; vanilla always does).
+    /// Advance animated block textures (Skyline setting; vanilla always does).
     pub animated_textures: bool,
     present_modes: Vec<wgpu::PresentMode>,
 }
 /// Every layer's mip levels, layer major (`first` is the first layer's
 /// index into `settings`), made by `MipmapGenerator`.
 /// Block sprite layers per texture array: the smallest
-/// `max_texture_array_layers` of the GPUs Horizon runs on. Mods add sprites
+/// `max_texture_array_layers` of the GPUs Skyline runs on. Mods add sprites
 /// past it into more arrays (terrain.wgsl's `sprite`).
 pub(crate) const SPRITE_SPLIT: u32 = 2048;
-/// [`SPRITE_SPLIT`], or a smaller split from `HORIZON_SPRITE_SPLIT` (dev
+/// [`SPRITE_SPLIT`], or a smaller split from `SKYLINE_SPRITE_SPLIT` (dev
 /// only: vanilla's sprites drawn from several arrays must look the same).
 fn sprite_split() -> u32 {
-    std::env::var("HORIZON_SPRITE_SPLIT")
+    std::env::var("SKYLINE_SPRITE_SPLIT")
         .ok()
         .and_then(|v| v.parse().ok())
         .filter(|&n| (1..=SPRITE_SPLIT).contains(&n))
@@ -815,7 +815,7 @@ struct Opened {
 fn describe_adapter(adapter: &wgpu::Adapter) {
     let info = adapter.get_info();
     log::info!(
-        "Horizon renderer: {} ({:?}, {:?})",
+        "Skyline renderer: {} ({:?}, {:?})",
         info.name,
         info.backend,
         info.device_type
@@ -837,7 +837,7 @@ fn describe_adapter(adapter: &wgpu::Adapter) {
         ),
     );
 }
-/// Whether an adapter's texture arrays hold the block textures Horizon puts
+/// Whether an adapter's texture arrays hold the block textures Skyline puts
 /// in one array.
 fn check_layers(limits: &wgpu::Limits, layers: u32) -> Result<()> {
     let needed = layers.min(sprite_split());
@@ -885,7 +885,7 @@ async fn open_device(
     for (attempt, backends) in order.iter().copied().enumerate() {
         let name = backends_name(backends);
         if attempt > 0 {
-            log::warn!("Horizon renderer: trying {name} ({})", failures.join("; "));
+            log::warn!("Skyline renderer: trying {name} ({})", failures.join("; "));
         }
         let instance = wgpu::Instance::new(instance_descriptor(backends));
         let surface = if offscreen {
@@ -946,7 +946,7 @@ async fn open_device(
             limits.max_texture_array_layers,
         ));
         let desc = wgpu::DeviceDescriptor {
-            label: Some("Horizon device"),
+            label: Some("Skyline device"),
             required_features: features,
             required_limits: limits,
             ..Default::default()
@@ -981,20 +981,20 @@ async fn open_device(
 /// Vulkan is loaded at run time (the game links no graphics library), so a
 /// missing driver shows here rather than as a missing-DLL dialog.
 #[cfg(target_os = "windows")]
-const NO_GPU_DRIVER: &str = "No graphics driver with Vulkan, DirectX 12 or OpenGL found: Horizon needs \
+const NO_GPU_DRIVER: &str = "No graphics driver with Vulkan, DirectX 12 or OpenGL found: Skyline needs \
      a GPU driver with one of them. Install the latest driver for your NVIDIA, AMD or Intel GPU and \
      start the game again";
 #[cfg(target_os = "macos")]
 const NO_GPU_DRIVER: &str = "No Metal graphics device found";
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-const NO_GPU_DRIVER: &str = "No Vulkan or OpenGL graphics driver found: Horizon needs the Vulkan loader \
+const NO_GPU_DRIVER: &str = "No Vulkan or OpenGL graphics driver found: Skyline needs the Vulkan loader \
      (libvulkan.so.1) and a Vulkan driver for your GPU (Mesa's, or NVIDIA's), or OpenGL through EGL";
 /// Logs a step of the renderer's start, for a native crash in the graphics
 /// driver: it leaves no panic or crash report, so the log's last line is the
 /// only sign of where the game stopped. The log file is written unbuffered;
 /// the flush is for loggers that buffer.
 fn startup_step(step: std::fmt::Arguments) {
-    log::info!("Horizon renderer: {step}");
+    log::info!("Skyline renderer: {step}");
     log::logger().flush();
 }
 /// How far the first frame on a new device got, for `startup_step`.
@@ -1054,7 +1054,7 @@ impl Renderer {
         let split = sprite_split();
         if layers > split * SPRITE_ARRAYS {
             return Err(format!(
-                "{layers} block textures; Horizon draws at most {}",
+                "{layers} block textures; Skyline draws at most {}",
                 split * SPRITE_ARRAYS
             )
             .into());
@@ -1149,7 +1149,7 @@ impl Renderer {
         }
         let gpu_timer = timing::GpuTimer::new(&device, &queue);
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Horizon terrain"),
+            label: Some("Skyline terrain"),
             source: wgpu::ShaderSource::Wgsl(include_str!("terrain.wgsl").into()),
         });
         let entry = |binding, visibility, ty| wgpu::BindGroupLayoutEntry {
@@ -1166,14 +1166,14 @@ impl Renderer {
         };
         let sprite_arrays = layers.div_ceil(split).max(1);
         if sprite_arrays > 1 {
-            log::info!("Horizon: {layers} block textures in {sprite_arrays} arrays");
+            log::info!("Skyline: {layers} block textures in {sprite_arrays} arrays");
         }
         let sprite_constants = [
             ("SPRITE_ARRAYS", f64::from(sprite_arrays)),
             ("SPRITE_SPLIT", f64::from(split)),
         ];
         let bindings = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("Horizon terrain bindings"),
+            label: Some("Skyline terrain bindings"),
             entries: &[
                 entry(
                     0,
@@ -1222,7 +1222,7 @@ impl Renderer {
             ],
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Horizon terrain layout"),
+            label: Some("Skyline terrain layout"),
             bind_group_layouts: &[Some(&bindings)],
             ..Default::default()
         });
@@ -1413,7 +1413,7 @@ impl Renderer {
             Some(alpha_blend),
         );
         let globals = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Horizon globals"),
+            label: Some("Skyline globals"),
             size: std::mem::size_of::<Globals>() as u64,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
@@ -1532,7 +1532,7 @@ impl Renderer {
         });
         let group = terrain_group(
             &device,
-            "Horizon terrain resources",
+            "Skyline terrain resources",
             &bindings,
             &globals,
             &sprite_views,
@@ -1668,7 +1668,7 @@ impl Renderer {
         )?;
         hud.atlas_texture = Some(atlas.clone());
         let entity_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Horizon entities"),
+            label: Some("Skyline entities"),
             source: wgpu::ShaderSource::Wgsl(entity_shader().into()),
         });
         let entity_bindings = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -2266,7 +2266,7 @@ impl Renderer {
             ..Default::default()
         });
         let border_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Horizon world border"),
+            label: Some("Skyline world border"),
             source: wgpu::ShaderSource::Wgsl(include_str!("border.wgsl").into()),
         });
         let border_attributes = wgpu::vertex_attr_array![0=>Float32x3,1=>Float32x2];
@@ -2326,7 +2326,7 @@ impl Renderer {
             cache: None,
         });
         let screen_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Horizon screen effects"),
+            label: Some("Skyline screen effects"),
             source: wgpu::ShaderSource::Wgsl(include_str!("screen.wgsl").into()),
         });
         let screen_attributes =
@@ -2470,10 +2470,10 @@ impl Renderer {
             },
             mapped_at_creation: false,
         });
-        // HORIZON_GPU_CULL=0 turns occlusion culling off, `all` culls every
+        // SKYLINE_GPU_CULL=0 turns occlusion culling off, `all` culls every
         // frame however few its draws and little it hides, `shader` tests in
         // the shader as on Metal (A/B checks).
-        let cull_env = std::env::var("HORIZON_GPU_CULL");
+        let cull_env = std::env::var("SKYLINE_GPU_CULL");
         let cull = cull::Cull::supported(&adapter, &device)
             .filter(|_| cull_env.as_deref() != Ok("0"))
             .map(|depth_test| match cull_env.as_deref() {
@@ -2757,7 +2757,7 @@ impl Renderer {
         let read = cull.is_some_and(|c| c.depth_test() == cull::DepthTest::InShader);
         device
             .create_texture(&wgpu::TextureDescriptor {
-                label: Some("Horizon depth"),
+                label: Some("Skyline depth"),
                 size: wgpu::Extent3d {
                     width: config.width,
                     height: config.height,
@@ -2777,7 +2777,7 @@ impl Renderer {
             .create_view(&Default::default())
     }
     /// VSync on presents with Fifo, capped to the display's refresh rate in a
-    /// window and in fullscreen alike; Horizon's present-mode setting applies
+    /// window and in fullscreen alike; Skyline's present-mode setting applies
     /// only with VSync off (`window::chosen_present_mode`).
     pub fn set_present_mode(&mut self, vsync: bool, mode: crate::graphics::PresentMode) {
         use crate::graphics::PresentMode as P;
@@ -2879,7 +2879,7 @@ impl Renderer {
         self.sections.len()
     }
     /// What a shader pack's shadow pass draws of the entities this frame: (entities or block
-    /// entities other than the player, so those Horizon's culling hides from the camera are
+    /// entities other than the player, so those Skyline's culling hides from the camera are
     /// kept for it; the local player, so its model is built in first person too). (false,
     /// false) without a pack or its shadow pass.
     pub fn pack_shadow_casters(&self) -> (bool, bool) {
@@ -3159,7 +3159,7 @@ impl Renderer {
                 .map(|s| (s.page, s.start, u64::from(s.solid + s.translucent) * 4)),
         );
     }
-    /// Horizon's resolution scale (world pixels per window pixel) and FXAA.
+    /// Skyline's resolution scale (world pixels per window pixel) and FXAA.
     /// Configures `surface` and, while HDR output is on, sends its HDR metadata
     /// again: a new swapchain starts without it.
     fn configure(
@@ -3200,7 +3200,7 @@ impl Renderer {
         }
         config
     }
-    /// HDR output (Horizon setting): HDR10 or scRGB at `paper_white` nits, the world's
+    /// HDR output (Skyline setting): HDR10 or scRGB at `paper_white` nits, the world's
     /// highlights expanded up to `peak` nits. Off where the surface can't present it.
     pub fn set_hdr(&mut self, on: bool, paper_white: f32, peak: f32) {
         let output = self.hdr_output.filter(|_| on && self.surface.is_some());
@@ -3292,7 +3292,7 @@ impl Renderer {
         self.native = None;
         self.pack_atlas = None;
     }
-    /// Runs the sky, material and post stages of one of Horizon's own shader packs from now
+    /// Runs the sky, material and post stages of one of Skyline's own shader packs from now
     /// on (`None`: no pack), with its options' values; replaces a `shaders/` pack. Returns the
     /// stages' labels; on an error the pack that ran keeps running.
     pub fn set_native_shader_pack(
@@ -3318,7 +3318,7 @@ impl Renderer {
         }
         Ok(labels)
     }
-    /// What a shader pack's gbuffers programs read from Horizon's geometry: the sky's, and
+    /// What a shader pack's gbuffers programs read from Skyline's geometry: the sky's, and
     /// terrain's in the pack's block atlas (made here when missing; none when it does not fit).
     pub fn pack_inputs(&mut self) -> horizon_shaders::GameInputs {
         horizon_shaders::GameInputs {
@@ -3359,7 +3359,7 @@ impl Renderer {
         )
     }
     /// Times the shader pack's passes on the GPU while `on` (the F3 overlay is open), or always
-    /// with `HORIZON_SHADER_PACK_TIMING`.
+    /// with `SKYLINE_SHADER_PACK_TIMING`.
     pub fn set_pass_timing(&mut self, on: bool) {
         self.pass_timing = on || pack_timing::PassTiming::logging();
     }
@@ -3406,7 +3406,7 @@ impl Renderer {
         let views = sprite_views(&self.sprite_textures, &self.sprite_unused, Some(levels + 1));
         self.group = terrain_group(
             &self.device,
-            "Horizon terrain resources",
+            "Skyline terrain resources",
             &self.terrain_layout,
             &self.globals,
             &views,
@@ -3583,7 +3583,7 @@ impl Renderer {
         let mut encoder = section_copies.unwrap_or_else(|| {
             self.device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                    label: Some("Horizon frame"),
+                    label: Some("Skyline frame"),
                 })
         });
         if self.animated_textures {
@@ -3839,7 +3839,7 @@ impl Renderer {
         // to phase 2, after the others, with instance counts of 0. Whether
         // the frame has draws enough goes by the last one's.
         // A shader pack drawing terrain draws all of it: occlusion culling reads the depth of
-        // Horizon's own terrain draw.
+        // Skyline's own terrain draw.
         let pack_terrain = !frame.title
             && self
                 .pack_post
@@ -4177,7 +4177,7 @@ impl Renderer {
                 .buffer(&mut encoder, &self.outline, 0, bytemuck::cast_slice(&lines));
         }
         // While a shader pack draws entities, the runs of `entity_spans` its programs draw are
-        // left out of Horizon's own entity draw.
+        // left out of Skyline's own entity draw.
         let mut entities = frame.entities;
         if !frame.title
             && let Some((_, Some(post))) = &mut self.pack_post
@@ -4446,7 +4446,7 @@ impl Renderer {
         }
         // The world's targets: the screen, or the scaled target of `post`.
         let pack_post = !frame.title && self.pack_post.as_ref().is_some_and(|p| p.1.is_some());
-        // One of Horizon's own packs reads the same world target.
+        // One of Skyline's own packs reads the same world target.
         let native_post = !frame.title && self.native.as_ref().is_some_and(|n| n.post.is_some());
         if let Some(timer) = Self::pass_timer(&mut self.pack_post, &mut self.native)
             && timer.is_some() != self.pass_timing
@@ -4521,7 +4521,7 @@ impl Renderer {
             }
         };
         let sky_visible = sky_open(frame);
-        // One of Horizon's own packs: this frame's inputs; in a timed frame its sky draws in a
+        // One of Skyline's own packs: this frame's inputs; in a timed frame its sky draws in a
         // pass of its own, so that it has a time of its own.
         let mut native_sky_pass = false;
         if !frame.title
@@ -4572,7 +4572,7 @@ impl Renderer {
             pass.set_bind_group(0, &self.group, &[]);
             sky.draw(&mut pass, &native.frame);
         }
-        // One of Horizon's own packs with a material stage: terrain draws with its pipelines,
+        // One of Skyline's own packs with a material stage: terrain draws with its pipelines,
         // which read the pack's frame at group 3.
         let material = self
             .native
@@ -4602,7 +4602,7 @@ impl Renderer {
                 },
             })];
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Horizon world"),
+                label: Some("Skyline world"),
                 color_attachments: &attachments,
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                     view: world_depth,
@@ -5269,7 +5269,7 @@ impl Renderer {
         texture: &wgpu::Texture,
     ) -> wgpu::Buffer {
         let buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Horizon screenshot"),
+            label: Some("Skyline screenshot"),
             size: u64::from(self.padded_row()) * u64::from(self.config.height),
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
             mapped_at_creation: false,
@@ -5747,7 +5747,7 @@ mod sprite_upload_tests {
     #[test]
     fn real_rail_mips_do_not_change_with_larger_array_layers() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root
             .join("assets/minecraft/textures/block/rail.png")

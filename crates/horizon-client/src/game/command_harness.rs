@@ -1,5 +1,5 @@
 //! Headless command runner for `tools/test_command_exec_parity.py`: with
-//! `HORIZON_COMMAND_SCRIPT` and `HORIZON_COMMAND_OUTPUT` set, the opened world
+//! `SKYLINE_COMMAND_SCRIPT` and `SKYLINE_COMMAND_OUTPUT` set, the opened world
 //! runs on its server thread with a connected, headless client. Each script
 //! line is a JSON operation: `cmd` runs a
 //! command as the player (Commands.performPrefixedCommand) and records every
@@ -143,7 +143,7 @@ impl Game<'_> {
                     return Ok(());
                 }
             }
-            if std::env::var_os("HORIZON_HARNESS_DEBUG").is_some() {
+            if std::env::var_os("SKYLINE_HARNESS_DEBUG").is_some() {
                 eprintln!(
                     "settle: player {:?} center {:?} chunks {} pending {}",
                     self.player.as_ref().map(|p| p.position),
@@ -161,7 +161,7 @@ impl Game<'_> {
     pub(super) fn run_command_harness(&mut self, script: &Path, output: &Path) -> Result<()> {
         let deadline = Instant::now()
             + Duration::from_secs(
-                std::env::var("HORIZON_HARNESS_TIMEOUT")
+                std::env::var("SKYLINE_HARNESS_TIMEOUT")
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(600),

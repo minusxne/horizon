@@ -2913,7 +2913,7 @@ impl Game<'_> {
     }
 }
 impl Game<'_> {
-    /// The dragon and fight for `horizon-ctl status`.
+    /// The dragon and fight for `skyline-ctl status`.
     pub(super) fn dragon_status(&self) -> serde_json::Value {
         serde_json::json!({
             "dragon": self.dragon.as_ref().map(|d| serde_json::json!({

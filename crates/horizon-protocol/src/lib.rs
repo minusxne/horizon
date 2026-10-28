@@ -1,6 +1,6 @@
 //! The Minecraft Java Edition network protocol (of the version in `horizon_core::version`):
 //! primitive codecs, framing, compression, encryption, and typed packets for
-//! every connection state, shared by the Horizon client and (later) server.
+//! every connection state, shared by the Skyline client and (later) server.
 #![forbid(unsafe_code)]
 pub mod buf;
 pub mod chunk;

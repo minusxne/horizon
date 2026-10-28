@@ -1,6 +1,6 @@
-//! The Horizon side of a mod port's harness (tools/mod_port_harness.py,
+//! The Skyline side of a mod port's harness (tools/mod_port_harness.py,
 //! docs/modpacks.md): builds the content root for carried-over mods and
-//! writes what Horizon makes of every block state, drop, recipe and tag the
+//! writes what Skyline makes of every block state, drop, recipe and tag the
 //! NeoForge oracle exported.
 //!
 //! cargo run -p horizon-client --example mod_port_probe -- PREPARED WORK OUT.json [MOD...]

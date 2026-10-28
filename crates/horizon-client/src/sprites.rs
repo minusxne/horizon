@@ -176,7 +176,7 @@ impl Sprites {
                 // `MissingTextureAtlasSprite.getLocation()`: vanilla models name the
                 // missing texture on purpose (block/air.json's particle), #853.
                 if name != "minecraft:missingno" {
-                    log::warn!("Horizon: using the missing texture for {name}: {e}");
+                    log::warn!("Skyline: using the missing texture for {name}: {e}");
                 }
                 // MissingTextureAtlasSprite.generateMissingImage: 16x16,
                 // magenta and black quarters.
@@ -386,7 +386,7 @@ mod tests {
     #[test]
     fn identical_still_textures_share_a_layer() {
         let root =
-            std::env::temp_dir().join(format!("horizon-sprite-share-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-sprite-share-{}", std::process::id()));
         let directory = root.join("assets/a/textures/block");
         fs::create_dir_all(&directory).unwrap();
         let write = |name: &str, red: u8| {
@@ -465,7 +465,7 @@ mod tests {
     #[test]
     fn native_fire_sprites_register_full_animation_sequences() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root
             .join("assets/minecraft/textures/block/fire_0.png")
@@ -501,7 +501,7 @@ mod tests {
     #[test]
     fn native_32_pixel_animation_frames_keep_every_texel() {
         let root = std::env::temp_dir().join(format!(
-            "horizon-sprite-detail-{}-{}",
+            "skyline-sprite-detail-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

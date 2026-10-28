@@ -16,17 +16,17 @@ use std::{
     sync::Arc,
 };
 
-/// What Horizon remembers about loaded entities to save them faithfully.
+/// What Skyline remembers about loaded entities to save them faithfully.
 #[derive(Default)]
 pub struct EntityMemory {
-    /// UUIDs of mobs and item entities by Horizon entity ID.
+    /// UUIDs of mobs and item entities by Skyline entity ID.
     pub(super) uuids: HashMap<u32, [i32; 4]>,
     /// The compound each mob or item entity was loaded with.
     pub(super) raw: HashMap<u32, Tag>,
-    /// Entities of types Horizon does not simulate, kept per chunk and
+    /// Entities of types Skyline does not simulate, kept per chunk and
     /// written back unchanged.
     unknown: HashMap<(i32, i32), Vec<Tag>>,
-    /// Entities without a Horizon entity ID (orbs, arrows, falling blocks, crystals,
+    /// Entities without a Skyline entity ID (orbs, arrows, falling blocks, crystals,
     /// the dragon): the UUID and compound they were loaded with, found again by
     /// type and position (an entity that has moved since loading is saved afresh).
     anon: HashMap<(String, [u64; 3]), (Vec3, Option<[i32; 4]>, Tag)>,
@@ -38,7 +38,7 @@ fn anon_key(kind: &str, p: Vec3) -> (String, [u64; 3]) {
         [p.x.to_bits(), p.y.to_bits(), p.z.to_bits()],
     )
 }
-/// The loaded compound underneath the fields Horizon models: what the entity was
+/// The loaded compound underneath the fields Skyline models: what the entity was
 /// loaded with, with every key of `modelled` replacing its loaded value.
 fn with_raw(modelled: Tag, raw: Option<&Tag>) -> Tag {
     let (Some(Tag::Compound(raw)), Tag::Compound(modelled)) = (raw, &modelled) else {
@@ -46,7 +46,7 @@ fn with_raw(modelled: Tag, raw: Option<&Tag>) -> Tag {
     };
     let mut out = raw.clone();
     for (k, v) in modelled {
-        // Defaults Horizon invents for fields it does not simulate give way to the save.
+        // Defaults Skyline invents for fields it does not simulate give way to the save.
         let invented = matches!(
             k.to_string_lossy().as_str(),
             "Fire" | "Air" | "Invulnerable" | "PortalCooldown" | "HasBeenShot"
@@ -415,7 +415,7 @@ impl Game<'_> {
         Some(id)
     }
     /// The mobs under an entity's `Passengers`, taken out of it; the
-    /// passengers Horizon doesn't simulate stay.
+    /// passengers Skyline doesn't simulate stay.
     fn take_mob_passengers(&self, tag: &mut Tag) -> Vec<Tag> {
         let mut riders = Vec::new();
         if let Tag::Compound(c) = tag
@@ -457,7 +457,7 @@ impl Game<'_> {
             }
         }
     }
-    /// An entity of a type Horizon does not simulate, kept as its compound.
+    /// An entity of a type Skyline does not simulate, kept as its compound.
     fn load_other(&mut self, mut tag: Tag, kind: &str) -> Option<u32> {
         strip_finalize(&mut tag);
         let position = entity_nbt::position(&tag)?;
@@ -484,7 +484,7 @@ impl Game<'_> {
         });
         Some(id)
     }
-    /// The compound of an entity Horizon does not simulate, with its current
+    /// The compound of an entity Skyline does not simulate, with its current
     /// position, rotation and UUID.
     pub(super) fn other_to_nbt(&self, o: &super::commands::OtherEntity, uuid: [i32; 4]) -> Tag {
         let mut tag = self
@@ -541,7 +541,7 @@ impl Game<'_> {
         self.persist.uuids.remove(&id);
         self.persist.raw.remove(&id);
     }
-    /// The compound an entity without a Horizon entity ID was loaded with
+    /// The compound an entity without a Skyline entity ID was loaded with
     /// (the crystals and the dragon), found again by type and position.
     pub(super) fn persist_anon(&self, kind: &str, p: Vec3) -> (Option<[i32; 4]>, Option<&Tag>) {
         self.persist
@@ -554,7 +554,7 @@ impl Game<'_> {
         self.persist.raw.get(&id)
     }
     /// A loaded chest minecart with a loot table and no items: the table
-    /// rolled now, as generated containers are (Horizon does not unpack on
+    /// rolled now, as generated containers are (Skyline does not unpack on
     /// first open), and kept to save it again while unchanged.
     fn roll_cart_loot(&self, cart: &mut super::minecarts::Minecart, tag: &Tag) {
         let Some(table) = horizon_client::save::text(tag.get("LootTable")) else {
@@ -1020,7 +1020,7 @@ impl Game<'_> {
         let keys: HashSet<(i32, i32)> = unloaded.iter().map(|c| (c.x, c.z)).collect();
         let chunks = self.entity_chunks(&keys, true);
         if let Err(e) = self.save.save_entities_later(chunks) {
-            log::warn!("Horizon: failed to save entities: {e}");
+            log::warn!("Skyline: failed to save entities: {e}");
         }
     }
     /// Leaving a dimension: its entities are saved with it.

@@ -61,7 +61,7 @@ fn files_pass_against_their_entries() {
 #[test]
 fn a_changed_file_key_or_manifest_is_refused() {
     let index = sample();
-    let dir = std::env::temp_dir().join(format!("horizon-index-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("skyline-index-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let hmod = fixtures().join("coords_hud-0.1.0.hmod");
     let mut bytes = std::fs::read(&hmod).unwrap();
@@ -155,7 +155,7 @@ fn refuses_broken_indexes() {
 #[test]
 fn resource_packs_need_a_pack_mcmeta() {
     use std::io::Write;
-    let dir = std::env::temp_dir().join(format!("horizon-index-rp-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("skyline-index-rp-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let pack = |files: &[(&str, &str)]| {
         let path = dir.join("look.zip");
@@ -222,7 +222,7 @@ fn shader_packs_pass_the_game_s_own_check() {
             .package()
             .unwrap()
     };
-    let dir = std::env::temp_dir().join(format!("horizon-mods-shader-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("skyline-mods-shader-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let good = dir.join("glow-1.0.0.hshader");
     std::fs::write(

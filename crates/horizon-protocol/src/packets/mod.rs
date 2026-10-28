@@ -1,7 +1,7 @@
 //! Typed packets per connection state and direction. Every state has a
 //! `Clientbound` and a `Serverbound` enum whose `decode` checks that the
 //! whole body was consumed (vanilla rejects oversized packets the same way)
-//! and whose `encode` writes the id and payload. Packets Horizon does not
+//! and whose `encode` writes the id and payload. Packets Skyline does not
 //! model decode as `Unknown` and keep their raw payload.
 pub mod configuration;
 pub mod handshake;
@@ -20,7 +20,7 @@ macro_rules! packet_enum {
         #[derive(Clone, Debug, PartialEq)]
         pub enum $name {
             $($variant($ty),)*
-            /// A packet Horizon does not model: id and raw payload.
+            /// A packet Skyline does not model: id and raw payload.
             Unknown(i32, Vec<u8>),
         }
         impl $name {

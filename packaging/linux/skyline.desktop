@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Horizon
+Name=Skyline
 Comment=Minecraft: Java Edition 26.3, rewritten in Rust
-Exec=horizon-client
-Icon=horizon
+Exec=skyline
+Icon=skyline
 Terminal=false
 Categories=Game;
-StartupWMClass=horizon
+StartupWMClass=skyline
 NoDisplay=true

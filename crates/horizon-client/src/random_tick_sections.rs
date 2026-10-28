@@ -262,19 +262,19 @@ mod tick_parity {
 
     #[test]
     fn actual_random_ticks_match_a_block_scan() {
-        let root = std::env::var_os("HORIZON_RESOURCES")
+        let root = std::env::var_os("SKYLINE_RESOURCES")
             .map(PathBuf::from)
             .unwrap_or_else(|| {
                 let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
                 let local = manifest
-                    .join("../../.local/horizon-client")
+                    .join("../../.local/skyline")
                     .join(horizon_core::VANILLA_VERSION);
                 if local.join("gameplay-facts.json").exists() {
                     local
                 } else {
                     // The branch worktree lives below the main checkout.
                     manifest
-                        .join("../../../../.local/horizon-client")
+                        .join("../../../../.local/skyline")
                         .join(horizon_core::VANILLA_VERSION)
                 }
             });

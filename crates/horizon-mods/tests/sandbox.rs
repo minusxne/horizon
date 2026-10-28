@@ -200,8 +200,8 @@ fn undeclared_capabilities_are_refused() {
     assert_eq!(mods.entries()[0].status, refused);
 }
 
-/// A mod calling a function this Horizon doesn't have is refused with
-/// "update Horizon", not a linking error; the test mods' levels are read
+/// A mod calling a function this Skyline doesn't have is refused with
+/// "update Skyline", not a linking error; the test mods' levels are read
 /// from the functions they import.
 #[test]
 fn a_mod_for_a_newer_horizon_is_refused() {
@@ -247,7 +247,7 @@ experimental = ["ui", "render", "input", "recipes"]
     std::fs::write(dir.join("horizon-mod.toml"), manifest).unwrap();
     std::fs::write(dir.join("mod.wasm"), wasm).unwrap();
     let mods = Mods::load(&[dir], |_| true, |_| false);
-    let refused = "made for a newer Horizon (it uses render.set-sky): update Horizon to run it";
+    let refused = "made for a newer Skyline (it uses render.set-sky): update Skyline to run it";
     assert_eq!(mods.entries()[0].status, Status::Failed(refused.into()));
 
     let level = |file: &str| {

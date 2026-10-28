@@ -1,4 +1,4 @@
-//! Play with Friends: Horizon's own sharing of the open world behind an
+//! Play with Friends: Skyline's own sharing of the open world behind an
 //! invite code (`game/friends.rs`). The pause menu's Friends button, the icon
 //! vanilla's PauseScreen already has, opens it. It is drawn the way a mod adds
 //! a screen to vanilla: the menu background, a centred title and text,

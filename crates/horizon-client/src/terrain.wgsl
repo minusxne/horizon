@@ -22,7 +22,7 @@ struct Globals {
     // Atlas rect of the current destroy stage (read by entity.wgsl).
     crumbling_sprite: vec4<f32>,
     outline_params: vec4<f32>,
-    // Horizon Extras' dynamic lights: camera-relative position and level (dynamic_light.rs).
+    // Skyline Extras' dynamic lights: camera-relative position and level (dynamic_light.rs).
     dynamic_lights: array<vec4<f32>, 16>,
 }
 @group(0) @binding(0) var<uniform> globals: Globals;
@@ -72,7 +72,7 @@ struct TerrainOut {
     // The light the face emits, 0 to 15 (mesher.rs's `EMISSION_BITS`).
     @location(5) @interpolate(flat) emission: u32,
 }
-// Horizon Extras' dynamic lights (dynamic_light.rs): the block light, in the vertex's units
+// Skyline Extras' dynamic lights (dynamic_light.rs): the block light, in the vertex's units
 // (16 per level), a vertex at camera-relative `pos` gets from the frame's light sources, one
 // level less per block. time.z of them are set: none when the extra is off, so no loop runs.
 fn dynamic_block_light(pos: vec3<f32>) -> f32 {

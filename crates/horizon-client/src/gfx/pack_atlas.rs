@@ -1,5 +1,5 @@
 //! The block atlas of shader packs (spec 5.1, `atlasSize` in 5.2): packs sample one 2D atlas
-//! with atlas coordinates, Horizon keeps block sprites in texture arrays. With a pack, every
+//! with atlas coordinates, Skyline keeps block sprites in texture arrays. With a pack, every
 //! layer is copied into a grid, row by row from the top left, and an animated layer again
 //! whenever its frame changes.
 

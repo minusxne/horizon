@@ -1,15 +1,15 @@
-//! The offline player name, when neither `--name`, `HORIZON_PLAYER_NAME` nor a
+//! The offline player name, when neither `--name`, `SKYLINE_PLAYER_NAME` nor a
 //! signed-in account gives one. Vanilla's client defaults `--username` to
 //! `"Player" + System.currentTimeMillis() % 1000` (net.minecraft.client.main.Main)
 //! and the official launcher always passes the account's name, so two players
-//! rarely share one. Horizon used plain `Player` for everyone, which is also
+//! rarely share one. Skyline used plain `Player` for everyone, which is also
 //! the LAN host's own profile: every guest got the host's offline UUID and was
 //! refused with "You logged in from another location". The generated name is
-//! kept in `horizon-player.txt` next to `options.txt` so the same player gets
+//! kept in `skyline-player.txt` next to `options.txt` so the same player gets
 //! the same offline UUID (and inventory on a friend's world) every time.
 use std::{fs, path::Path};
 
-pub const FILE: &str = "horizon-player.txt";
+pub const FILE: &str = "skyline-player.txt";
 const KEY: &str = "name:";
 
 /// StringUtil.isValidPlayerName, plus not empty (the login screen sends at least one character).
@@ -33,7 +33,7 @@ pub fn load_or_create(dir: &Path) -> String {
     let name = generate(seed());
     if let Err(e) = fs::write(&path, format!("{KEY}{name}\n")) {
         log::warn!(
-            "Horizon: could not keep the player name in {}: {e}",
+            "Skyline: could not keep the player name in {}: {e}",
             path.display()
         );
     }
@@ -64,7 +64,7 @@ mod tests {
 
     fn dir(name: &str) -> std::path::PathBuf {
         let d = std::env::temp_dir().join(format!(
-            "horizon-offline-name-{name}-{}",
+            "skyline-offline-name-{name}-{}",
             std::process::id()
         ));
         let _ = fs::remove_dir_all(&d);

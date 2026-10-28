@@ -30,7 +30,7 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 /**
  * Original oracle: runs vanilla structure placement checks, start selection
  * and Structure.generate (as ChunkGenerator.createStructures does for a fresh
- * chunk) for a rectangle of chunks (overworld, or HORIZON_DIMENSION=the_nether /
+ * chunk) for a rectangle of chunks (overworld, or SKYLINE_DIMENSION=the_nether /
  * the_end) and prints every valid start.
  */
 public final class VanillaStructureStartOracle {
@@ -46,7 +46,7 @@ public final class VanillaStructureStartOracle {
         RegistryAccess.Frozen world=RegistryDataLoader.load(resources,context,RegistryDataLoader.WORLD_REGISTRIES,Runnable::run).join();
         staticTags.forEach(Registry.PendingTags::apply);
         RegistryAccess access=layers.replaceFrom(RegistryLayer.WORLD,world).compositeAccess();
-        String dimension=System.getenv().getOrDefault("HORIZON_DIMENSION","overworld");
+        String dimension=System.getenv().getOrDefault("SKYLINE_DIMENSION","overworld");
         var settings=world.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(switch(dimension){case "the_nether"->NoiseGeneratorSettings.NETHER;case "the_end"->NoiseGeneratorSettings.END;default->NoiseGeneratorSettings.OVERWORLD;});
         var randomState=RandomState.create(world.lookupOrThrow(Registries.NOISE),seed,settings.value());
         var presets=world.lookupOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST);
@@ -65,10 +65,10 @@ public final class VanillaStructureStartOracle {
         var structures=world.lookupOrThrow(Registries.STRUCTURE);
         try(var w=new PrintWriter(Files.newBufferedWriter(out,StandardCharsets.UTF_8))) {
             structures.listElements().forEach(h->w.println("registry "+h.key().identifier()+" "+h.value().step().ordinal()));
-            if(System.getenv("HORIZON_RINGS")!=null)for(var set:state.possibleStructureSets())
+            if(System.getenv("SKYLINE_RINGS")!=null)for(var set:state.possibleStructureSets())
                 if(set.value().placement() instanceof net.minecraft.world.level.levelgen.structure.placement.ConcentricRingsStructurePlacement rings)
                     for(var p:state.getRingPositionsFor(rings))w.println("ring "+set.unwrapKey().get().identifier()+" "+p.x()+" "+p.z());
-            if(System.getenv("HORIZON_HEIGHTS")!=null)for(String p:System.getenv("HORIZON_HEIGHTS").split(";")){
+            if(System.getenv("SKYLINE_HEIGHTS")!=null)for(String p:System.getenv("SKYLINE_HEIGHTS").split(";")){
                 String[] xz=p.split(",");int x=Integer.parseInt(xz[0]),z=Integer.parseInt(xz[1]);
                 int floor=generator.getBaseHeight(x,z,Heightmap.Types.OCEAN_FLOOR_WG,height,randomState),surface=generator.getBaseHeight(x,z,Heightmap.Types.WORLD_SURFACE_WG,height,randomState);
                 var resolver=biomeSource.createResolver(climate);
@@ -76,9 +76,9 @@ public final class VanillaStructureStartOracle {
                 for(int qy=(floor-12)>>2;qy<=(floor+8)>>2;qy++)biomes.append(" "+qy+":"+resolver.getNoiseBiome(x>>2,qy,z>>2).unwrapKey().get().identifier().getPath());
                 w.println("height "+x+" "+z+" "+floor+" "+surface+biomes);
             }
-            // HORIZON_CHUNKS="cx,cz;cx,cz": only these chunks, instead of the rectangle.
+            // SKYLINE_CHUNKS="cx,cz;cx,cz": only these chunks, instead of the rectangle.
             List<int[]> chunks=new ArrayList<>();
-            String only=System.getenv("HORIZON_CHUNKS");
+            String only=System.getenv("SKYLINE_CHUNKS");
             if(only!=null)for(String c:only.split(";")){String[] xz=c.split(",");chunks.add(new int[]{Integer.parseInt(xz[0]),Integer.parseInt(xz[1])});}
             else for(int cx=x0;cx<=x1;cx++)for(int cz=z0;cz<=z1;cz++)chunks.add(new int[]{cx,cz});
             for(int[] chunk:chunks) {
@@ -87,7 +87,7 @@ public final class VanillaStructureStartOracle {
                 for(var set:state.possibleStructureSets()) {
                     var placement=set.value().placement();var entries=set.value().structures();
                     if(!placement.isStructureChunk(state,cx,cz))continue;
-                    if(System.getenv("HORIZON_PLACED")!=null)w.println("placed "+cx+" "+cz+" "+set.unwrapKey().get().identifier());
+                    if(System.getenv("SKYLINE_PLACED")!=null)w.println("placed "+cx+" "+cz+" "+set.unwrapKey().get().identifier());
                     var options=new ArrayList<>(entries);
                     WorldgenRandom random=new WorldgenRandom(new LegacyRandomSource(0L));random.setLargeFeatureSeed(seed,cx,cz);
                     int total=0;for(var o:options)total+=o.weight();
@@ -97,7 +97,7 @@ public final class VanillaStructureStartOracle {
                         else{int choice=random.nextInt(total);for(var o:options){choice-=o.weight();if(choice<0)break;index++;}selected=options.get(index);}
                         var structure=selected.structure();
                         StructureStart start=structure.value().generate(structure,levelKey,access,generator,biomeSource,climate,randomState,templates,seed,pos,0,height,structure.value().biomes()::contains);
-                        if(System.getenv("HORIZON_PLACED")!=null){
+                        if(System.getenv("SKYLINE_PLACED")!=null){
                             w.println("generate "+structure.unwrapKey().get().identifier()+" "+start.isValid());
                             var ctx=new Structure.GenerationContext(access,generator,biomeSource,climate,randomState,templates,seed,pos,height,structure.value().biomes()::contains);
                             try{var m=Structure.class.getDeclaredMethod("findGenerationPoint",Structure.GenerationContext.class);m.setAccessible(true);
@@ -113,7 +113,7 @@ public final class VanillaStructureStartOracle {
                                 if(piece instanceof PoolElementStructurePiece pool)extra=" "+pool.getPosition().getX()+" "+pool.getPosition().getY()+" "+pool.getPosition().getZ()+" "+pool.getRotation()+" "+pool.getGroundLevelDelta()+" "+pool.getJunctions().size()+" "+pool.getElement();
                                 w.println("piece "+BuiltInRegistries.STRUCTURE_PIECE.getKey(piece.getType())+" "+pb.minX()+" "+pb.minY()+" "+pb.minZ()+" "+pb.maxX()+" "+pb.maxY()+" "+pb.maxZ()+extra);
                             }
-                            if(System.getenv("HORIZON_START_NBT")!=null)
+                            if(System.getenv("SKYLINE_START_NBT")!=null)
                                 w.println("nbt "+cx+" "+cz+" "+canonical(start.createTag(new net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext(resources,access,templates),pos)));
                             break;
                         }

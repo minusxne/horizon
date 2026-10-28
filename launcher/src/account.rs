@@ -9,7 +9,7 @@
 //! Minecraft: Java Edition, as other launchers do. Offline names play behind such an account.
 //! The game binary itself, its harnesses and the servers don't go through the launcher's gate.
 //!
-//! The Azure app (client ID) is Horizon's own and is configuration: `HORIZON_MSA_CLIENT_ID` at
+//! The Azure app (client ID) is Skyline's own and is configuration: `SKYLINE_MSA_CLIENT_ID` at
 //! build time, or at run time to override it. Without one, sign-in says it is not configured.
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -21,7 +21,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 pub const SERVICE: &str = "dev.playhorizon.launcher";
 const SCOPE: &str = "XboxLive.signin offline_access";
 pub const NOT_CONFIGURED: &str =
-    "This build of the launcher has no Microsoft sign-in (HORIZON_MSA_CLIENT_ID): Play starts the game offline.";
+    "This build of the launcher has no Microsoft sign-in (SKYLINE_MSA_CLIENT_ID): Play starts the game offline.";
 /// What every Play says while no account in the launcher owns the game.
 pub const NEEDS_OWNER: &str =
     "Sign in with a Microsoft account that owns Minecraft: Java Edition to play";
@@ -37,9 +37,9 @@ const RENEW_BEFORE: u64 = 3600;
 /// The configured Azure app, if any: the run-time variable wins over the build-time one, and an
 /// empty value means none.
 pub fn client_id() -> Option<String> {
-    std::env::var("HORIZON_MSA_CLIENT_ID")
+    std::env::var("SKYLINE_MSA_CLIENT_ID")
         .ok()
-        .or_else(|| option_env!("HORIZON_MSA_CLIENT_ID").map(str::to_owned))
+        .or_else(|| option_env!("SKYLINE_MSA_CLIENT_ID").map(str::to_owned))
         .map(|id| id.trim().to_owned())
         .filter(|id| !id.is_empty())
 }
@@ -57,9 +57,9 @@ pub struct Endpoints {
 
 impl Endpoints {
     pub fn live() -> Self {
-        // Development builds only: `HORIZON_MSA_MICROSOFT_ENDPOINT` points the device-code and
+        // Development builds only: `SKYLINE_MSA_MICROSOFT_ENDPOINT` points the device-code and
         // token requests at a local mock, to see and screenshot the sign-in panel.
-        let microsoft = std::env::var("HORIZON_MSA_MICROSOFT_ENDPOINT")
+        let microsoft = std::env::var("SKYLINE_MSA_MICROSOFT_ENDPOINT")
             .ok()
             .filter(|_| cfg!(debug_assertions))
             .unwrap_or_else(|| "https://login.microsoftonline.com/consumers/oauth2/v2.0".into());
@@ -78,7 +78,7 @@ fn request_to(method: &str, url: &str) -> ureq::Request {
     crate::proxy::agent(
         ureq::AgentBuilder::new()
             .timeout(Duration::from_secs(20))
-            .user_agent(&format!("horizon-launcher/{}", crate::backend::VERSION)),
+            .user_agent(&format!("skyline-launcher/{}", crate::backend::VERSION)),
         url,
     )
     .build()
@@ -604,7 +604,7 @@ impl SecretStore for SystemStore {
             let attributes = vec![("service", SERVICE), ("account", key)];
             keyring
                 .create_item(
-                    "Horizon launcher: Minecraft account",
+                    "Skyline launcher: Minecraft account",
                     &attributes,
                     secret.as_bytes(),
                     true,
@@ -744,7 +744,7 @@ pub fn store() -> &'static dyn SecretStore {
                     target_os = "windows"
                 )
             ))]
-            if std::env::var_os("HORIZON_NO_KEYCHAIN").is_none() && SystemStore.get("probe").is_ok()
+            if std::env::var_os("SKYLINE_NO_KEYCHAIN").is_none() && SystemStore.get("probe").is_ok()
             {
                 return Box::new(SystemStore);
             }
@@ -765,7 +765,7 @@ pub struct Accounts {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub offline: Vec<String>,
     /// The offline name that plays when no account is selected; none: the name the game made up
-    /// (`horizon-player.txt`).
+    /// (`skyline-player.txt`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub offline_selected: Option<String>,
     /// Each offline name's skin and cape (`skins`), by the name in lowercase.
@@ -1145,7 +1145,7 @@ impl SignIn {
 }
 
 /// Whether Play needs an account that owns the game: only where sign-in is set up. A build without
-/// Horizon's Azure app can't sign anyone in, so it plays offline as `cargo run -p horizon-client`
+/// Skyline's Azure app can't sign anyone in, so it plays offline as `cargo run -p horizon-client`
 /// does, from the player's own prepared Minecraft files.
 pub fn owner_gate() -> bool {
     client_id().is_some()

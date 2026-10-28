@@ -12,10 +12,10 @@ use std::sync::{Arc, Mutex};
 pub const REPO: &str = "horizon-rust/horizon";
 pub const README_URL: &str = "https://github.com/horizon-rust/horizon/blob/main/launcher/README.md";
 /// The players' page on connecting an AI agent (the website's docs/agents.md).
-/// This launcher's version: the release workflow sets `HORIZON_LAUNCHER_VERSION` from the
+/// This launcher's version: the release workflow sets `SKYLINE_LAUNCHER_VERSION` from the
 /// tag it builds (no version-bump commits); other builds say Cargo.toml's.
-pub const VERSION: &str = version_or(option_env!("HORIZON_LAUNCHER_VERSION"));
-/// Launcher releases are tagged `launcher@X.Y.Z` from 0.2 on (docs/versioning.md), and Horizon's
+pub const VERSION: &str = version_or(option_env!("SKYLINE_LAUNCHER_VERSION"));
+/// Launcher releases are tagged `launcher@X.Y.Z` from 0.2 on (docs/versioning.md), and Skyline's
 /// own `vX.Y.Z`. Before 0.2 they were `launcher-vX.Y.Z` and `vYYYY.MM.DD[.N]`: every 0.2 tag is
 /// newer than every one of those ([`release_order`]).
 pub const LAUNCHER_TAG_PREFIX: &str = "launcher@";
@@ -55,11 +55,11 @@ pub const ASSET: Option<&str> = Some("horizon-windows-x64.zip");
 pub const ASSET: Option<&str> = None;
 
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
-pub const LAUNCHER_ASSET: Option<&str> = Some("horizon-launcher-linux-x86_64.tar.gz");
+pub const LAUNCHER_ASSET: Option<&str> = Some("skyline-launcher-linux-x86_64.tar.gz");
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-pub const LAUNCHER_ASSET: Option<&str> = Some("horizon-launcher-macos-arm64.zip");
+pub const LAUNCHER_ASSET: Option<&str> = Some("skyline-launcher-macos-arm64.zip");
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-pub const LAUNCHER_ASSET: Option<&str> = Some("horizon-launcher-windows-x64.zip");
+pub const LAUNCHER_ASSET: Option<&str> = Some("skyline-launcher-windows-x64.zip");
 #[cfg(not(any(
     all(target_os = "linux", target_arch = "x86_64"),
     all(target_os = "macos", target_arch = "aarch64"),
@@ -68,22 +68,22 @@ pub const LAUNCHER_ASSET: Option<&str> = Some("horizon-launcher-windows-x64.zip"
 pub const LAUNCHER_ASSET: Option<&str> = None;
 
 const LAUNCHER_BINARY: &str = if cfg!(windows) {
-    "horizon-launcher.exe"
+    "skyline-launcher.exe"
 } else {
-    "horizon-launcher"
+    "skyline-launcher"
 };
 
 pub(crate) const CLIENT: &str = if cfg!(windows) {
-    "horizon-client.exe"
+    "skyline.exe"
 } else {
-    "horizon-client"
+    "skyline"
 };
 
 /// The agent `url` is fetched with: the launcher's own user agent, through the player's proxy when
 /// one is set (`proxy`).
 fn agent(url: &str) -> ureq::Agent {
     crate::proxy::agent(
-        ureq::AgentBuilder::new().user_agent(&format!("horizon-launcher/{VERSION}")),
+        ureq::AgentBuilder::new().user_agent(&format!("skyline-launcher/{VERSION}")),
         url,
     )
     .build()
@@ -92,7 +92,7 @@ fn agent(url: &str) -> ureq::Agent {
 pub(crate) fn get(url: &str) -> Result<ureq::Response, String> {
     let mut request = agent(url).get(url);
     // CI runners share addresses and hit GitHub's anonymous rate limit; they pass their own token.
-    if let Some(token) = std::env::var("HORIZON_GITHUB_TOKEN")
+    if let Some(token) = std::env::var("SKYLINE_GITHUB_TOKEN")
         .ok()
         .filter(|t| !t.is_empty())
     {
@@ -109,7 +109,7 @@ pub(crate) fn get(url: &str) -> Result<ureq::Response, String> {
     })
 }
 
-/// A Horizon game tag: `v` then a digit (`v2026.10.13`). Launcher tags never match.
+/// A Skyline game tag: `v` then a digit (`v2026.10.13`). Launcher tags never match.
 pub fn is_game_tag(tag: &str) -> bool {
     tag.strip_prefix('v')
         .is_some_and(|rest| rest.starts_with(|c: char| c.is_ascii_digit()))
@@ -122,13 +122,13 @@ pub fn launcher_version(tag: &str) -> Option<&str> {
         .filter(|v| v.starts_with(|c: char| c.is_ascii_digit()))
 }
 
-/// The tag this launcher was released as. launcher.yml gives it (`HORIZON_LAUNCHER_TAG`); a release
+/// The tag this launcher was released as. launcher.yml gives it (`SKYLINE_LAUNCHER_TAG`); a release
 /// built before it did gave only the version, of a `launcher-v` tag; a build from source is
 /// Cargo.toml's version on the 0.2 line.
 pub fn own_tag() -> String {
     own_tag_of(
-        option_env!("HORIZON_LAUNCHER_TAG"),
-        option_env!("HORIZON_LAUNCHER_VERSION"),
+        option_env!("SKYLINE_LAUNCHER_TAG"),
+        option_env!("SKYLINE_LAUNCHER_VERSION"),
     )
 }
 
@@ -143,7 +143,7 @@ fn own_tag_of(tag: Option<&str>, injected: Option<&str>) -> String {
     }
 }
 
-/// Where a tag or version stands among Horizon's releases (docs/versioning.md): the tags from
+/// Where a tag or version stands among Skyline's releases (docs/versioning.md): the tags from
 /// before 0.2 (`vYYYY.MM.DD[.N]`, `launcher-vX.Y.Z`) and bare versions first, compared number by
 /// number with missing parts as zero and anything after a `-` ignored, as launchers always did;
 /// then the 0.2 tags (`vX.Y.Z`, `launcher@X.Y.Z`) in semver's order, a pre-release
@@ -233,7 +233,7 @@ pub fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
 
 /// Why this build never lists releases, installs updates or replaces itself.
 pub const OFFLINE_SNAPSHOT: &str =
-    "This is an offline snapshot of Horizon: it never looks for releases or updates.";
+    "This is an offline snapshot of Skyline: it never looks for releases or updates.";
 
 /// Every published release of the repository: none in the offline snapshot, which never asks
 /// GitHub, so no update, nightly or new version is ever found or installed.
@@ -283,7 +283,7 @@ fn is_launcher_tag(tag: &str) -> bool {
     launcher_version(tag).is_some()
 }
 
-/// Published Horizon releases, newest first. Drafts never reach the anonymous API, and launcher
+/// Published Skyline releases, newest first. Drafts never reach the anonymous API, and launcher
 /// releases are left out.
 pub fn releases() -> Result<Vec<Release>, String> {
     Ok(parse_releases(&release_list()?, ASSET, is_game_tag))
@@ -346,7 +346,7 @@ fn newest_launcher_tags(refs: &serde_json::Value) -> Vec<String> {
     tags
 }
 
-/// The newest Horizon release that has a build for this platform.
+/// The newest Skyline release that has a build for this platform.
 pub fn latest(releases: &[Release]) -> Option<&Release> {
     releases.iter().find(|r| r.asset.is_some())
 }
@@ -405,14 +405,14 @@ pub fn links() -> Links {
     Links::default()
 }
 
-/// The launcher's data folder; `HORIZON_LAUNCHER_HOME` overrides it (for tests and scripts).
+/// The launcher's data folder; `SKYLINE_LAUNCHER_HOME` overrides it (for tests and scripts).
 pub fn data_dir() -> PathBuf {
-    if let Some(home) = std::env::var_os("HORIZON_LAUNCHER_HOME").filter(|h| !h.is_empty()) {
+    if let Some(home) = std::env::var_os("SKYLINE_LAUNCHER_HOME").filter(|h| !h.is_empty()) {
         return PathBuf::from(home);
     }
-    dirs::data_dir()
-        .unwrap_or_else(std::env::temp_dir)
-        .join("horizon-launcher")
+    let data = dirs::data_dir().unwrap_or_else(std::env::temp_dir);
+    horizon_core::rebrand::migrate_data_dirs(&data);
+    data.join("skyline-launcher")
 }
 
 fn versions_dir() -> PathBuf {
@@ -438,7 +438,7 @@ pub fn game_mod_api_level() -> Option<u32> {
 
 /// A game version's mod API level, read once from the mark its program carries
 /// (`horizon_mods::api_level::MARK`). A program from before the mark serves level 0, the
-/// contract of Horizon 0.2.67 and 0.2.68.
+/// contract of Skyline 0.2.67 and 0.2.68.
 pub fn mod_api_level(tag: &str) -> u32 {
     static LEVELS: Mutex<Vec<(String, u32)>> = Mutex::new(Vec::new());
     let mut levels = LEVELS.lock().unwrap_or_else(|e| e.into_inner());
@@ -556,7 +556,7 @@ fn unpack(archive: &Path, url: &str, to: &Path) -> Result<(), String> {
 pub fn install(release: &Release, progress: impl Fn(f32)) -> Result<(), String> {
     let tag = release.tag.as_str();
     if !is_game_tag(tag) {
-        return Err(format!("{tag} is not a Horizon release."));
+        return Err(format!("{tag} is not a Skyline release."));
     }
     let sha256 = signed_digest(tag, ASSET.unwrap_or_default())?;
     install_as(release, tag, &sha256, progress)
@@ -627,7 +627,7 @@ pub fn remove(tag: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// The Minecraft version a Horizon build targets, from its research-lock.json.
+/// The Minecraft version a Skyline build targets, from its research-lock.json.
 pub fn game_version(tag: &str) -> String {
     game_version_at(&version_dir(tag))
 }
@@ -647,10 +647,11 @@ pub fn resources(tag: &str) -> PathBuf {
 }
 
 fn resources_at(dir: &Path) -> PathBuf {
-    dir.join(".local/horizon-client").join(game_version_at(dir))
+    horizon_core::rebrand::migrate_resources(dir);
+    dir.join(".local/skyline").join(game_version_at(dir))
 }
 
-const RESOURCES_MANIFEST: &str = "horizon-resources.json";
+const RESOURCES_MANIFEST: &str = "skyline-resources.json";
 
 pub fn is_prepared(tag: &str) -> bool {
     resources(tag).join(RESOURCES_MANIFEST).exists()
@@ -673,7 +674,7 @@ pub fn resources_summary(prepared: bool, sounds: bool, version: &str) -> String 
     use crate::i18n::trf;
     match (prepared, sounds) {
         (false, _) => trf(
-            "Not prepared. Horizon needs the files of your own Minecraft {version}.",
+            "Not prepared. Skyline needs the files of your own Minecraft {version}.",
             &[("version", version)],
         ),
         (true, true) => trf("Prepared for Minecraft {version}", &[("version", version)]),
@@ -883,7 +884,7 @@ pub(crate) fn copy_dir(from: &Path, to: &Path) -> std::io::Result<()> {
 /// After an install: when `tag` is not prepared but another installed version made the same
 /// resources, copies them (not hard links: preparing again rewrites files in place, which would
 /// change both). The player then needs neither their Minecraft folder nor a new preparation to
-/// play a release that only changed Horizon. Returns the version they came from.
+/// play a release that only changed Skyline. Returns the version they came from.
 fn reuse_prepared(versions: &Path, tag: &str) -> Option<String> {
     let target = versions.join(tag);
     let to = resources_at(&target);
@@ -1012,7 +1013,7 @@ fn complete_reports(versions: &Path, tag: &str) -> bool {
 }
 
 /// What a prepared version may lack that the launcher adds without preparing again, each copied
-/// from the player's own Minecraft asset store as `horizon-prepare <kind>` does: what the
+/// from the player's own Minecraft asset store as `skyline-prepare <kind>` does: what the
 /// player misses without it, whether the resources lack it, and the copy.
 type Completion = (
     &'static str,
@@ -1130,8 +1131,8 @@ fn complete_assets_in(
 }
 
 /// The Minecraft folders whose asset store can hold what a prepared version lacks: the one
-/// chosen in the launcher, the official launcher's (or HORIZON_MINECRAFT_DIR), the folder
-/// other launchers' files are linked into and Horizon's own download, then every launcher's
+/// chosen in the launcher, the official launcher's (or SKYLINE_MINECRAFT_DIR), the folder
+/// other launchers' files are linked into and Skyline's own download, then every launcher's
 /// default folder.
 fn minecraft_folders() -> Vec<PathBuf> {
     let mut folders: Vec<PathBuf> = Settings::load().minecraft_dir.into_iter().collect();
@@ -1186,19 +1187,19 @@ fn python() -> Option<&'static str> {
 
 /// How a version's resources are prepared.
 pub enum Preparer {
-    /// horizon-prepare, linked into the launcher: the version ships the same preparer sources.
+    /// skyline-prepare, linked into the launcher: the version ships the same preparer sources.
     InProcess(horizon_prepare::Options),
-    /// The version's own preparer: its horizon-prepare binary when its sources differ from the
+    /// The version's own preparer: its skyline-prepare binary when its sources differ from the
     /// launcher's (a newer or older release), or the Python script of versions made before it.
     Process(Command),
 }
 
-/// The version's horizon-prepare binary, when it ships one.
+/// The version's skyline-prepare binary, when it ships one.
 fn preparer_binary(dir: &Path) -> Option<PathBuf> {
     let binary = dir.join(if cfg!(windows) {
-        "horizon-prepare.exe"
+        "skyline-prepare.exe"
     } else {
-        "horizon-prepare"
+        "skyline-prepare"
     });
     binary.is_file().then_some(binary)
 }
@@ -1236,7 +1237,7 @@ fn download_for_owner(
                 sources::Os::Windows => "windows",
             };
             mojang::download(pins, dir, os, 8, fetch, &mojang::CANCEL, log).map_err(|e| {
-                format!("\n  • Horizon tried to download {v} from Mojang for {name}, but: {e}")
+                format!("\n  • Skyline tried to download {v} from Mojang for {name}, but: {e}")
             })
         }
         // An owner by its last answer, who can't be asked now.
@@ -1246,11 +1247,11 @@ fn download_for_owner(
             pass.offline.unwrap_or_default()
         )),
         Err(_) if !accounts.accounts.is_empty() => Err(
-            "\n  • No signed-in account owns Minecraft: Java Edition, so Horizon can't download it."
+            "\n  • No signed-in account owns Minecraft: Java Edition, so Skyline can't download it."
                 .into(),
         ),
         Err(_) => Err(format!(
-            "\n  • Or sign in with the Microsoft account that owns Minecraft: Horizon then \
+            "\n  • Or sign in with the Microsoft account that owns Minecraft: Skyline then \
              downloads {v} from Mojang itself."
         )),
     }
@@ -1259,7 +1260,7 @@ fn download_for_owner(
 /// The Java home for this version: a runtime for precompiled exporters, a JDK for older
 /// preparers or changed sources. Forward the selection to external preparers too.
 /// Else try the official launcher's Java in `games`, then download the runtime named by
-/// `manifest` into Horizon's game folder (Mojang's runtimes are whole JDKs).
+/// `manifest` into Skyline's game folder (Mojang's runtimes are whole JDKs).
 fn java(
     major: i64,
     compiler: bool,
@@ -1309,7 +1310,7 @@ fn java(
     let runtime = data_dir().join("minecraft").join("runtime");
     let home = mojang::java_runtime(&component, &runtime, 8, &fetch, &mojang::CANCEL, log)
         .map_err(|e| {
-        format!("{missing}\n  • Horizon also tried to download Minecraft's own Java from Mojang, but: {e}")
+        format!("{missing}\n  • Skyline also tried to download Minecraft's own Java from Mojang, but: {e}")
     })?;
     find(major, &[home]).map(|jdk| jdk.home())
 }
@@ -1372,7 +1373,7 @@ pub enum MinecraftFrom {
 
 /// Checks what the preparation needs and picks how to run it. PLAY.txt describes the same
 /// steps: the player's own launcher install, the server jar from that version's own json, and
-/// Java (and Python, for versions before horizon-prepare). Also returns the Minecraft folder
+/// Java (and Python, for versions before skyline-prepare). Also returns the Minecraft folder
 /// to prepare from: `minecraft`, or the files another launcher keeps, linked into the official
 /// launcher's layout (sources.rs).
 pub fn preparer(
@@ -1391,7 +1392,7 @@ pub fn preparer(
             .and_then(|lock| sources::Pins::read(&lock))
             .ok_or("The version's research-lock.json doesn't pin the Minecraft files")?;
         let own = data_dir().join("minecraft");
-        let mut known = vec![("Horizon's own download", own.clone())];
+        let mut known = vec![("Skyline's own download", own.clone())];
         known.extend(
             sources::Folders::current()
                 .map(|f| sources::known_folders(sources::Os::current(), &f))
@@ -1438,7 +1439,7 @@ pub fn preparer(
             "This version prepares with Python: Python 3.10 or newer is needed. Install it, or pick a newer version.",
         )?),
     };
-    // The Java the version pins, found as horizon-prepare finds it, so a missing one is
+    // The Java the version pins, found as skyline-prepare finds it, so a missing one is
     // reported (or downloaded) before the server jar is downloaded. Versions from before
     // java_major ran Java 25.
     let major = read_json(&dir.join("research-lock.json"))
@@ -1515,7 +1516,7 @@ pub fn preparer(
 }
 
 /// Copies the pinned version's sounds from the player's own launcher install into the version's
-/// resources (`horizon-prepare sounds`), each line to `log`. Sound is optional, so a launcher
+/// resources (`skyline-prepare sounds`), each line to `log`. Sound is optional, so a launcher
 /// install without them is a line in the log, never a failed preparation. The version's own
 /// preparer does it when it is not the launcher's and knows how; versions from before it read
 /// the sounds where the launcher's preparer puts them.
@@ -1527,7 +1528,7 @@ pub fn sounds(tag: &str, minecraft: &Path, log: &dyn Fn(String)) {
         !own && crate::process::command(binary)
             .arg("--help")
             .output()
-            .is_ok_and(|o| String::from_utf8_lossy(&o.stdout).contains("horizon-prepare sounds"))
+            .is_ok_and(|o| String::from_utf8_lossy(&o.stdout).contains("skyline-prepare sounds"))
     });
     log("Copying the sounds from your Minecraft install".into());
     let result = match binary {
@@ -1574,20 +1575,20 @@ pub fn prepare_in_process(
     .map(|_| ())
 }
 
-/// Where the game keeps saves and options.txt: `HORIZON_HOME`, else `horizon` in the platform's
-/// data folder (~/.local/share/horizon on Linux, as the release folders' horizon.sh uses). It is
+/// Where the game keeps saves and options.txt: `SKYLINE_HOME`, else `horizon` in the platform's
+/// data folder (~/.local/share/skyline on Linux, as the release folders' horizon.sh uses). It is
 /// never inside a version folder, so installing, updating or removing a version keeps the saves.
 pub fn game_home() -> PathBuf {
-    if let Some(home) = std::env::var_os("HORIZON_HOME").filter(|h| !h.is_empty()) {
+    if let Some(home) = std::env::var_os("SKYLINE_HOME").filter(|h| !h.is_empty()) {
         return PathBuf::from(home);
     }
-    dirs::data_dir()
-        .unwrap_or_else(std::env::temp_dir)
-        .join("horizon")
+    let data = dirs::data_dir().unwrap_or_else(std::env::temp_dir);
+    horizon_core::rebrand::migrate_data_dirs(&data);
+    data.join("skyline")
 }
 
 /// Whether No AI is on: every AI feature hidden and off (`horizon_core::no_ai`, kept in the
-/// game's `horizon-extras.txt` so the game reads the same switch).
+/// game's `skyline-extras.txt` so the game reads the same switch).
 pub fn no_ai() -> bool {
     horizon_core::no_ai::is_on(&game_home())
 }
@@ -1661,10 +1662,10 @@ pub fn crash_summary(report: &str) -> Option<String> {
 }
 
 /// The line the game prints when it has drawn its first frame.
-pub const GAME_FIRST_FRAME: &str = "Horizon: first frame";
+pub const GAME_FIRST_FRAME: &str = "Skyline: first frame";
 
 /// Whether a game's output ends in a crash while its Vulkan renderer started: an adapter line
-/// (`Horizon renderer: <GPU> (Vulkan, <type>)`) and no first frame. A native crash in a graphics
+/// (`Skyline renderer: <GPU> (Vulkan, <type>)`) and no first frame. A native crash in a graphics
 /// driver leaves no crash report, only those lines (#746).
 pub fn vulkan_start_crashed<S: AsRef<str>>(lines: impl IntoIterator<Item = S>) -> bool {
     let mut vulkan = false;
@@ -1673,7 +1674,7 @@ pub fn vulkan_start_crashed<S: AsRef<str>>(lines: impl IntoIterator<Item = S>) -
         if line.starts_with(GAME_FIRST_FRAME) {
             return false;
         }
-        if let Some(adapter) = line.strip_prefix("Horizon renderer: ") {
+        if let Some(adapter) = line.strip_prefix("Skyline renderer: ") {
             // The adapter line, not one of the start's steps: "<GPU> (<backend>, <type>)".
             if adapter.ends_with(')') && adapter.contains(" (") {
                 vulkan = adapter.contains(" (Vulkan, ");
@@ -1684,7 +1685,7 @@ pub fn vulkan_start_crashed<S: AsRef<str>>(lines: impl IntoIterator<Item = S>) -
 }
 
 /// The game's graphics settings file in its home (the game's `graphics.rs`).
-const GRAPHICS_FILE: &str = "horizon-graphics.txt";
+const GRAPHICS_FILE: &str = "skyline-graphics.txt";
 
 /// Sets `graphicsApi:dx12` in `home`'s graphics settings when it is unset or `auto`, keeping
 /// every other line. True when it changed; a player's own `vulkan` or `dx12` stays.
@@ -1814,18 +1815,18 @@ pub fn client_command(tag: &str) -> Command {
     cmd.current_dir(home).arg("--resources").arg(resources(tag));
     // PipeWire remembers volume and mute per application name. The game's own name is
     // "PipeWire ALSA [horizon-client]", shared with development and test runs, where
-    // muting it once left every later game silent: played from here it is "Horizon".
+    // muting it once left every later game silent: played from here it is "Skyline".
     if std::env::var_os("PIPEWIRE_PROPS").is_none() {
         cmd.env(
             "PIPEWIRE_PROPS",
-            "{ application.name = \"Horizon\" media.role = \"Game\" }",
+            "{ application.name = \"Skyline\" media.role = \"Game\" }",
         );
     }
     cmd
 }
 
-/// The game's program: on macOS the one inside the version's Horizon.app, so the Dock and Cmd+Tab
-/// show Horizon's name and icon (game_app.rs); the bare binary elsewhere, or if that fails.
+/// The game's program: on macOS the one inside the version's Skyline.app, so the Dock and Cmd+Tab
+/// show Skyline's name and icon (game_app.rs); the bare binary elsewhere, or if that fails.
 fn client_program(tag: &str) -> PathBuf {
     let dir = version_dir(tag);
     #[cfg(target_os = "macos")]
@@ -1923,7 +1924,7 @@ pub fn need_prepared(tag: &str) -> Result<(), String> {
 /// offline.
 pub fn client(tag: &str) -> Result<Command, String> {
     let (session, offline) = account::session_for_game(&game_home())
-        .map_err(|refused| format!("{refused} Sign in with `horizon-launcher account sign-in`."))?;
+        .map_err(|refused| format!("{refused} Sign in with `skyline-launcher account sign-in`."))?;
     need_prepared(tag)?;
     complete_assets(tag);
     crate::browser::horizon::before_play(&game_home());
@@ -1967,7 +1968,7 @@ pub fn release_notes(tag: Option<&str>) -> Result<Release, String> {
         Some(tag) => releases
             .into_iter()
             .find(|r| r.tag == tag)
-            .ok_or_else(|| format!("No Horizon release is tagged {tag}.")),
+            .ok_or_else(|| format!("No Skyline release is tagged {tag}.")),
         None => releases
             .into_iter()
             .next()
@@ -2045,14 +2046,14 @@ impl Logged {
 
 // ----- Updates -----------------------------------------------------------------------------------
 
-/// What a check found: a Horizon build newer than every installed one, and a newer launcher.
+/// What a check found: a Skyline build newer than every installed one, and a newer launcher.
 #[derive(Clone, Debug, Default, serde::Serialize)]
 pub struct Updates {
     pub horizon: Option<Release>,
     pub launcher: Option<Release>,
 }
 
-/// The newest Horizon release with a build here, if it is newer than every installed version.
+/// The newest Skyline release with a build here, if it is newer than every installed version.
 pub fn horizon_update(releases: &[Release], installed: &[String]) -> Option<Release> {
     let newest = latest(releases)?;
     let newer = installed
@@ -2133,7 +2134,7 @@ pub fn install_tag(tag: &str, as_update: bool, progress: impl Fn(f32)) -> Result
         releases
             .iter()
             .find(|r| r.tag == tag)
-            .ok_or_else(|| format!("No Horizon release is tagged {tag}."))?
+            .ok_or_else(|| format!("No Skyline release is tagged {tag}."))?
     };
     if release.asset.is_none() {
         return Err(format!("{} has no build for this platform.", release.tag));
@@ -2159,10 +2160,10 @@ pub fn self_update_allowed() -> bool {
     false
 }
 
-/// The version in `horizon-launcher --version`'s output (`horizon-launcher 0.1.5`).
+/// The version in `skyline-launcher --version`'s output (`skyline-launcher 0.1.5`).
 fn parse_version_output(out: &str) -> Option<&str> {
     out.trim()
-        .strip_prefix("horizon-launcher ")
+        .strip_prefix("skyline-launcher ")
         .map(str::trim)
         .filter(|v| !v.is_empty())
 }
@@ -2206,8 +2207,8 @@ fn replace_binary(new: &Path, _exe: &Path) -> std::io::Result<()> {
     self_replace::self_replace(new)
 }
 
-/// The app bundle the launcher runs from (`…/Horizon.app` for `…/Horizon.app/Contents/MacOS/
-/// horizon-launcher`), or None for a bare binary, as launchers before the .app shipped.
+/// The app bundle the launcher runs from (`…/Skyline.app` for `…/Skyline.app/Contents/MacOS/
+/// skyline-launcher`), or None for a bare binary, as launchers before the .app shipped.
 pub fn app_bundle(exe: &Path) -> Option<&Path> {
     let macos = exe.parent()?;
     let contents = macos.parent()?;
@@ -2329,9 +2330,9 @@ pub fn self_update(release: &Release, progress: impl Fn(f32)) -> Result<(), Stri
     download(&url, size, &sha256, &archive, &progress)?;
     let unpacked = work.join("unpacked");
     unpack(&archive, &url, &unpacked)?;
-    // A launcher inside Horizon.app replaces the whole bundle (its Info.plist, icon and
+    // A launcher inside Skyline.app replaces the whole bundle (its Info.plist, icon and
     // signature belong with the binary); a bare binary, as older launchers are, only the binary,
-    // which the macOS archive also holds (Horizon.app/Contents/MacOS/horizon-launcher).
+    // which the macOS archive also holds (Skyline.app/Contents/MacOS/skyline-launcher).
     if let Some(app) = app_bundle(exe_path()) {
         if let Some(new) = find_app(&unpacked) {
             replace_bundle(&new, app)?;
@@ -2488,7 +2489,7 @@ pub enum Msg {
     PackLine(String),
     /// A modpack step ended: the pack as it now is.
     PackDone(Result<Box<crate::modpacks::Imported>, String>),
-    /// How many play Horizon now, or none when the server can't be reached (`telemetry`).
+    /// How many play Skyline now, or none when the server can't be reached (`telemetry`).
     Playing(Option<u64>),
     /// The nightly being installed, done this far (`nightly`).
     NightlyProgress(f32),
@@ -2621,7 +2622,7 @@ impl WhilePlaying {
 #[derive(Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub selected: Option<String>,
-    /// The instance Play starts (`instances`), by id. Unset means Horizon, the game's home.
+    /// The instance Play starts (`instances`), by id. Unset means Skyline, the game's home.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub instance: Option<String>,
     pub minecraft_dir: Option<PathBuf>,
@@ -2666,11 +2667,11 @@ pub struct Settings {
     /// What the window does while the game runs. Stays by default.
     #[serde(default)]
     pub while_playing: WhilePlaying,
-    /// The accent colour on top of the appearance (`themes::Accent`). Horizon's violet by default.
+    /// The accent colour on top of the appearance (`themes::Accent`). Skyline's violet by default.
     #[serde(default)]
     pub accent: crate::themes::Accent,
     /// Home's background: a picture the player picked, kept in the data folder under this name
-    /// (`themes::keep_background`). Unset shows Horizon's landscape.
+    /// (`themes::keep_background`). Unset shows Skyline's landscape.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub background: Option<String>,
     /// The window's language. Unset follows the system's (`i18n::Language::system`).
@@ -2726,7 +2727,7 @@ impl Settings {
     pub fn language(&self) -> crate::i18n::Language {
         self.language.unwrap_or_else(crate::i18n::Language::system)
     }
-    /// Whether new Horizon versions are installed automatically.
+    /// Whether new Skyline versions are installed automatically.
     /// Never in the offline snapshot: it stays on the versions installed here.
     pub fn auto_install(&self) -> bool {
         false
@@ -2757,7 +2758,7 @@ mod tests {
     /// and older) or none at all serves level 0.
     #[test]
     fn a_game_program_says_its_mod_api_level() {
-        let dir = std::env::temp_dir().join(format!("horizon-api-level-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-api-level-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let marked = dir.join("marked");
         let mut program = b"\x7fELF code code".to_vec();
@@ -2777,7 +2778,7 @@ mod tests {
     #[test]
     fn reused_imports_take_the_assets_from_the_launcher_that_has_them() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-reused-assets-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-reused-assets-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let client = b"fake client jar";
         let manifest = br#"{"id": "26.3"}"#;
@@ -2820,7 +2821,7 @@ mod tests {
 
     #[test]
     fn resources_without_sounds_are_reported() {
-        let dir = std::env::temp_dir().join(format!("horizon-no-sounds-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-no-sounds-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(dir.join("assets/minecraft/textures")).unwrap();
         fs::write(dir.join(RESOURCES_MANIFEST), "{}").unwrap();
@@ -2854,24 +2855,24 @@ mod tests {
             .and_then(|(_, v)| v);
         assert!(props.is_some_and(|v| v
             .to_string_lossy()
-            .contains("application.name = \"Horizon\"")));
+            .contains("application.name = \"Skyline\"")));
     }
 
     #[test]
     fn a_crash_after_the_vulkan_adapter_line_and_before_the_first_frame_is_a_start_crash() {
         let start = [
-            "Horizon: resources loaded in 11.3s; 35723 block states, 1658 items, 67 biomes",
-            "Horizon renderer: Intel(R) HD Graphics 530 (Vulkan, IntegratedGpu)",
+            "Skyline: resources loaded in 11.3s; 35723 block states, 1658 items, 67 biomes",
+            "Skyline renderer: Intel(R) HD Graphics 530 (Vulkan, IntegratedGpu)",
         ];
         assert!(vulkan_start_crashed(start));
         // A step line after the adapter keeps it a start crash.
-        let step = [start[1], "Horizon renderer: creating the pipelines"];
+        let step = [start[1], "Skyline renderer: creating the pipelines"];
         assert!(vulkan_start_crashed(step));
         // A crash after the first frame is the game's, not the renderer start's.
-        let later = [start[1], "Horizon: first frame after 812 ms"];
+        let later = [start[1], "Skyline: first frame after 812 ms"];
         assert!(!vulkan_start_crashed(later));
         // Already on DirectX 12, or no renderer yet: nothing to switch.
-        let dx12 = ["Horizon renderer: Intel(R) HD Graphics 530 (Dx12, IntegratedGpu)"];
+        let dx12 = ["Skyline renderer: Intel(R) HD Graphics 530 (Dx12, IntegratedGpu)"];
         assert!(!vulkan_start_crashed(dx12));
         assert!(!vulkan_start_crashed(&start[..1]));
         // Vulkan failed to open and DirectX 12 took over: its line is the last adapter.
@@ -2880,7 +2881,7 @@ mod tests {
 
     #[test]
     fn a_renderer_start_crash_switches_auto_to_dx12_once() {
-        let home = std::env::temp_dir().join(format!("horizon-dx12-switch-{}", std::process::id()));
+        let home = std::env::temp_dir().join(format!("skyline-dx12-switch-{}", std::process::id()));
         let _ = fs::remove_dir_all(&home);
         // No settings file yet: one with the API alone.
         assert_eq!(switch_to_dx12(&home), Ok(true));
@@ -2960,7 +2961,7 @@ mod tests {
         assert_eq!(launcher_version("launcher-vx"), None);
         let list = serde_json::json!([
             {"tag_name": "v2026.10.12", "assets": [{"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "u", "size": 1}]},
-            {"tag_name": "launcher-v9.0.0", "assets": [{"name": "horizon-launcher-linux-x86_64.tar.gz", "browser_download_url": "u", "size": 1}]},
+            {"tag_name": "launcher-v9.0.0", "assets": [{"name": "skyline-launcher-linux-x86_64.tar.gz", "browser_download_url": "u", "size": 1}]},
             {"tag_name": "v2026.10.13", "assets": []},
             {"tag_name": "launcher-v0.0.1", "draft": true, "assets": []},
         ]);
@@ -3128,7 +3129,7 @@ mod tests {
         assert_eq!(version_or(None), env!("CARGO_PKG_VERSION"));
         assert_eq!(
             VERSION,
-            option_env!("HORIZON_LAUNCHER_VERSION")
+            option_env!("SKYLINE_LAUNCHER_VERSION")
                 .filter(|v| !v.is_empty())
                 .unwrap_or(env!("CARGO_PKG_VERSION"))
         );
@@ -3144,7 +3145,7 @@ mod tests {
         assert!(launcher_update(&[r(own_tag())]).is_none());
         assert_eq!(launcher_version(&own_tag()), Some(VERSION));
         assert_eq!(
-            parse_version_output(&format!("horizon-launcher {VERSION}\n")),
+            parse_version_output(&format!("skyline-launcher {VERSION}\n")),
             Some(VERSION)
         );
     }
@@ -3422,7 +3423,7 @@ mod tests {
     #[test]
     fn a_new_version_reuses_resources_prepared_by_a_compatible_one() {
         let versions =
-            std::env::temp_dir().join(format!("horizon-launcher-test-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-launcher-test-{}", std::process::id()));
         let _ = fs::remove_dir_all(&versions);
         let oracle = "mods/horizon/src/test/java/dev/horizonlab/parity/VanillaHeightmapOracle.java";
         let camera = "mods/horizon/src/test/java/dev/horizonlab/parity/VanillaCameraOracle.java";
@@ -3447,12 +3448,12 @@ mod tests {
                 serde_json::json!({"schema": 7, "collision_exporters_sha256": {collision: "x"}});
             write(
                 tag,
-                &format!(".local/horizon-client/{minecraft}/{RESOURCES_MANIFEST}"),
+                &format!(".local/skyline/{minecraft}/{RESOURCES_MANIFEST}"),
                 &manifest.to_string(),
             );
             write(
                 tag,
-                &format!(".local/horizon-client/{minecraft}/worldgen/biomes.json"),
+                &format!(".local/skyline/{minecraft}/worldgen/biomes.json"),
                 "{}",
             );
         };
@@ -3475,7 +3476,7 @@ mod tests {
         assert!(resources_at(&versions.join("v2026.10.13.1"))
             .join("worldgen/biomes.json")
             .exists());
-        let left: Vec<_> = fs::read_dir(versions.join("v2026.10.13.1/.local/horizon-client"))
+        let left: Vec<_> = fs::read_dir(versions.join("v2026.10.13.1/.local/skyline"))
             .unwrap()
             .flatten()
             .map(|e| e.file_name())
@@ -3507,7 +3508,7 @@ mod tests {
         assert!(!is_prepared("v2026.10.15") && !is_prepared("v2026.10.16"));
         assert!(reuse_prepared_in(&versions).is_empty());
 
-        // Versions with horizon-prepare: its sources are the preparer, so the same sources
+        // Versions with skyline-prepare: its sources are the preparer, so the same sources
         // reuse each other's resources, and a change or a version without them prepares again.
         let crate_file = "crates/horizon-prepare/src/lib.rs";
         release("v2026.10.18", "26.3");
@@ -3529,7 +3530,7 @@ mod tests {
     #[test]
     fn prepared_resources_follow_the_preparers_output_version() {
         let versions = std::env::temp_dir().join(format!(
-            "horizon-launcher-output-test-{}",
+            "skyline-launcher-output-test-{}",
             std::process::id()
         ));
         let _ = fs::remove_dir_all(&versions);
@@ -3558,10 +3559,10 @@ mod tests {
         let prepared = |tag: &str| {
             write(
                 tag,
-                &format!(".local/horizon-client/26.3/{RESOURCES_MANIFEST}"),
+                &format!(".local/skyline/26.3/{RESOURCES_MANIFEST}"),
                 r#"{"schema": 7}"#,
             );
-            write(tag, ".local/horizon-client/26.3/facts.json", tag);
+            write(tag, ".local/skyline/26.3/facts.json", tag);
         };
         let facts = |tag: &str| {
             fs::read_to_string(resources_at(&versions.join(tag)).join("facts.json")).ok()
@@ -3625,7 +3626,7 @@ mod tests {
     #[test]
     fn prepared_versions_get_the_run_time_reports_without_preparing_again() {
         let versions = std::env::temp_dir().join(format!(
-            "horizon-launcher-reports-test-{}",
+            "skyline-launcher-reports-test-{}",
             std::process::id()
         ));
         let _ = fs::remove_dir_all(&versions);
@@ -3640,7 +3641,7 @@ mod tests {
             write(tag, "research-lock.json", &lock.to_string());
             write(
                 tag,
-                &format!(".local/horizon-client/26.3/{RESOURCES_MANIFEST}"),
+                &format!(".local/skyline/26.3/{RESOURCES_MANIFEST}"),
                 "{}",
             );
         };
@@ -3684,7 +3685,7 @@ mod tests {
     #[test]
     fn prepared_versions_get_what_the_asset_store_adds_without_preparing_again() {
         let dir = std::env::temp_dir().join(format!(
-            "horizon-launcher-packs-test-{}",
+            "skyline-launcher-packs-test-{}",
             std::process::id()
         ));
         let _ = fs::remove_dir_all(&dir);
@@ -3836,20 +3837,20 @@ mod tests {
 
     #[test]
     fn finds_the_app_bundle_around_the_binary() {
-        let exe = Path::new("/Applications/Horizon.app/Contents/MacOS/horizon-launcher");
+        let exe = Path::new("/Applications/Skyline.app/Contents/MacOS/skyline-launcher");
         assert_eq!(
             app_bundle(exe),
-            Some(Path::new("/Applications/Horizon.app"))
+            Some(Path::new("/Applications/Skyline.app"))
         );
-        assert_eq!(app_bundle(Path::new("/Users/me/horizon-launcher")), None);
+        assert_eq!(app_bundle(Path::new("/Users/me/skyline-launcher")), None);
         assert_eq!(
-            app_bundle(Path::new("/x/Contents/MacOS/horizon-launcher")),
+            app_bundle(Path::new("/x/Contents/MacOS/skyline-launcher")),
             None
         );
-        let work = std::env::temp_dir().join(format!("horizon-find-app-{}", std::process::id()));
+        let work = std::env::temp_dir().join(format!("skyline-find-app-{}", std::process::id()));
         let _ = fs::remove_dir_all(&work);
-        fs::create_dir_all(work.join("dist/Horizon.app/Contents/MacOS")).unwrap();
-        assert_eq!(find_app(&work), Some(work.join("dist/Horizon.app")));
+        fs::create_dir_all(work.join("dist/Skyline.app/Contents/MacOS")).unwrap();
+        assert_eq!(find_app(&work), Some(work.join("dist/Skyline.app")));
         let _ = fs::remove_dir_all(&work);
     }
 
@@ -3859,20 +3860,20 @@ mod tests {
     #[test]
     fn an_app_bundle_updates_in_place() {
         use std::os::unix::fs::PermissionsExt;
-        let work = std::env::temp_dir().join(format!("horizon-bundle-{}", std::process::id()));
+        let work = std::env::temp_dir().join(format!("skyline-bundle-{}", std::process::id()));
         let _ = fs::remove_dir_all(&work);
         let make = |dir: &Path, version: &str| {
-            let app = dir.join("Horizon.app");
+            let app = dir.join("Skyline.app");
             fs::create_dir_all(app.join("Contents/MacOS")).unwrap();
             fs::create_dir_all(app.join("Contents/Resources")).unwrap();
-            let bin = app.join("Contents/MacOS/horizon-launcher");
+            let bin = app.join("Contents/MacOS/skyline-launcher");
             fs::copy("/usr/bin/true", &bin).unwrap();
             fs::set_permissions(&bin, fs::Permissions::from_mode(0o755)).unwrap();
             fs::write(app.join("Contents/Resources/version"), version).unwrap();
             fs::write(
                 app.join("Contents/Info.plist"),
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\"><dict>\
-                 <key>CFBundleExecutable</key><string>horizon-launcher</string>\
+                 <key>CFBundleExecutable</key><string>skyline-launcher</string>\
                  <key>CFBundleIdentifier</key><string>dev.horizon.test</string>\
                  <key>CFBundlePackageType</key><string>APPL</string></dict></plist>\n",
             )
@@ -3900,7 +3901,7 @@ mod tests {
         replace_bundle(&new, &installed).unwrap();
         let version = fs::read_to_string(installed.join("Contents/Resources/version")).unwrap();
         assert_eq!(version, "2.0.0");
-        let bin = installed.join("Contents/MacOS/horizon-launcher");
+        let bin = installed.join("Contents/MacOS/skyline-launcher");
         assert!(
             Command::new(&bin).status().unwrap().success(),
             "still executable"
@@ -3918,7 +3919,7 @@ mod tests {
             .collect();
         assert_eq!(
             left,
-            ["Horizon.app"],
+            ["Skyline.app"],
             "nothing staged or moved aside is left"
         );
 
@@ -3936,7 +3937,7 @@ mod tests {
     #[test]
     fn launcher_versions_read_from_the_binary() {
         assert_eq!(
-            parse_version_output("horizon-launcher 0.1.5\n"),
+            parse_version_output("skyline-launcher 0.1.5\n"),
             Some("0.1.5")
         );
         assert_eq!(parse_version_output("something else"), None);
@@ -3947,7 +3948,7 @@ mod tests {
             None
         );
         assert_eq!(
-            installed_launcher_version(Path::new("/nonexistent/horizon-launcher")),
+            installed_launcher_version(Path::new("/nonexistent/skyline-launcher")),
             None
         );
     }
@@ -3959,10 +3960,10 @@ mod tests {
     fn a_replaced_binary_is_replaced_again_at_its_path() {
         use std::os::unix::fs::PermissionsExt;
         let dir =
-            std::env::temp_dir().join(format!("horizon-launcher-replace-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-launcher-replace-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
-        let exe = dir.join("horizon-launcher");
+        let exe = dir.join("skyline-launcher");
         fs::write(&exe, "old").unwrap();
         // Another update swaps the file under the running launcher.
         fs::write(dir.join("other"), "other update").unwrap();
@@ -3990,19 +3991,19 @@ mod tests {
             .map(|e| e.file_name().to_string_lossy().into_owned())
             .collect();
         names.sort();
-        assert_eq!(names, ["horizon-launcher", "new"]);
+        assert_eq!(names, ["skyline-launcher", "new"]);
         let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn crash_reports_are_found_and_summarised() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-launcher-crash-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-launcher-crash-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let start = std::time::SystemTime::now() - std::time::Duration::from_secs(2);
         assert!(crash_report_in_since(&dir, start).is_none());
         fs::create_dir_all(&dir).unwrap();
-        let report = "---- Horizon Crash Report ----\n// Details below.\n\nTime: 2026-10-14 09:05:07\nDescription: Unexpected error\n\npanicked at src/game.rs:10:5:\nboom\n\t0: horizon_client::game::frame\n";
+        let report = "---- Skyline Crash Report ----\n// Details below.\n\nTime: 2026-10-14 09:05:07\nDescription: Unexpected error\n\npanicked at src/game.rs:10:5:\nboom\n\t0: horizon_client::game::frame\n";
         fs::write(dir.join("crash-2026-10-14_09.05.07-client.txt"), report).unwrap();
         fs::write(dir.join("notes.txt"), "x").unwrap();
         assert_eq!(

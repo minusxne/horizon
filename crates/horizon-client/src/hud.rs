@@ -80,7 +80,7 @@ pub struct HudAtlas {
 }
 /// Atlas rows reserved for glyphs rasterized at run time.
 pub const GLYPH_ROWS: u32 = 512;
-/// The largest atlas side: the 2D texture limit of the GPUs Horizon runs on
+/// The largest atlas side: the 2D texture limit of the GPUs Skyline runs on
 /// (Apple silicon, RADV and Intel allow 16384; NVIDIA 32768).
 pub const MAX_ATLAS_SIZE: u32 = 16384;
 /// 128x128 atlas slots for map textures. A lobby paints its signs as walls of
@@ -1152,7 +1152,7 @@ impl HudRenderer {
         glint_sampler: &wgpu::Sampler,
     ) -> Result<Self> {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Horizon HUD"),
+            label: Some("Skyline HUD"),
             source: wgpu::ShaderSource::Wgsl(include_str!("hud.wgsl").into()),
         });
 
@@ -1609,7 +1609,7 @@ mod tests {
     /// A resource root holding one animated block texture: a strip of two
     /// 16x16 frames, red then blue, whose mcmeta starts on the blue one.
     fn animated_root() -> PathBuf {
-        let root = std::env::temp_dir().join(format!("horizon-atlas-anim-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("skyline-atlas-anim-{}", std::process::id()));
         let block = root.join("assets/minecraft/textures/block");
         fs::create_dir_all(&block).unwrap();
         write_strip(
@@ -1689,7 +1689,7 @@ mod tests {
     }
     #[test]
     fn a_pack_texture_keeps_the_default_textures_gui_size() {
-        let temp = std::env::temp_dir().join(format!("horizon-gui-size-{}", std::process::id()));
+        let temp = std::env::temp_dir().join(format!("skyline-gui-size-{}", std::process::id()));
         let (defaults, pack) = (temp.join("defaults"), temp.join("pack"));
         write_png(&defaults, "gui/container/inventory", 256, 256);
         write_png(&defaults, "gui/sprites/widget/button", 200, 20);
@@ -1768,7 +1768,7 @@ mod tests {
     /// A synthetic default font: two 8x8 glyphs, 3 and 5 pixels wide.
     fn two_glyph_font(name: &str) -> std::path::PathBuf {
         let root =
-            std::env::temp_dir().join(format!("horizon-fonts-{name}-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-fonts-{name}-{}", std::process::id()));
         let font = root.join("assets/minecraft/font");
         let textures = root.join("assets/minecraft/textures/font");
         fs::create_dir_all(&font).unwrap();
@@ -1828,7 +1828,7 @@ mod tests {
         // A synthetic resource tree exercises loading and painting together.
         // No Minecraft installation or GPU is needed for this regression test.
         let root =
-            std::env::temp_dir().join(format!("horizon-effect-icons-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-effect-icons-{}", std::process::id()));
         for (name, size) in [
             ("mob_effect/levitation", 18),
             ("gui/sprites/hud/effect_background", 24),

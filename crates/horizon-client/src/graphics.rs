@@ -1,10 +1,10 @@
-//! Horizon's own graphics settings, beyond vanilla's options: kept in
-//! `horizon-graphics.txt` next to `options.txt` so that file stays exactly
+//! Skyline's own graphics settings, beyond vanilla's options: kept in
+//! `skyline-graphics.txt` next to `options.txt` so that file stays exactly
 //! vanilla's. Every default reproduces vanilla's rendering; only choices the
 //! player makes here depart from it.
 use std::{fs, path::Path};
 
-pub const FILE: &str = "horizon-graphics.txt";
+pub const FILE: &str = "skyline-graphics.txt";
 
 /// Simple-level presets. `Custom` leaves every option as the player set it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -135,9 +135,9 @@ impl GraphicsApi {
             .into_iter()
             .find(|api| api.name().eq_ignore_ascii_case(s.trim()))
     }
-    /// `HORIZON_GRAPHICS_API` (auto, vulkan, dx12 or opengl) if set, else the setting.
+    /// `SKYLINE_GRAPHICS_API` (auto, vulkan, dx12 or opengl) if set, else the setting.
     pub fn with_env(self) -> Self {
-        std::env::var("HORIZON_GRAPHICS_API")
+        std::env::var("SKYLINE_GRAPHICS_API")
             .ok()
             .and_then(|v| Self::from_name(&v))
             .unwrap_or(self)
@@ -439,7 +439,7 @@ impl Graphics {
     }
 }
 
-/// A preset's values for vanilla's options and Horizon's own.
+/// A preset's values for vanilla's options and Skyline's own.
 pub fn apply_preset(preset: Preset, s: &mut crate::settings::Settings) {
     let (rd, sim, clouds, particles, shadows, blend, mipmaps, entity, leaves, weather_r) =
         match preset {

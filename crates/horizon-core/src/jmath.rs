@@ -1,4 +1,4 @@
-//! `java.lang.Math` as HotSpot computes it on the machine Horizon runs on.
+//! `java.lang.Math` as HotSpot computes it on the machine Skyline runs on.
 //!
 //! Rust's float functions call the platform's libm, and those round
 //! differently: glibc, Apple's libm and fdlibm disagree in the last bit for

@@ -1,11 +1,15 @@
 [package]
 name = "horizon-client"
-default-run = "horizon-client"
+default-run = "skyline"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 rust-version = "1.90"
-description = "Horizon native development client"
+description = "Skyline native development client"
+
+[[bin]]
+name = "skyline"
+path = "src/main.rs"
 
 [dependencies]
 horizon-assets = { path = "../horizon-assets" }
@@ -23,10 +27,10 @@ horizon-protocol = { path = "../horizon-protocol" }
 horizon-server-files = { path = "../horizon-server-files" }
 # Shader packs: reading them and turning their GLSL into naga modules.
 horizon-shaders = { path = "../horizon-shaders" }
-# Horizon's own shader packs: the format, the stages and the check (docs/shaders.md).
+# Skyline's own shader packs: the format, the stages and the check (docs/shaders.md).
 horizon-shader-api = { path = "../horizon-shader-api" }
 horizon-friends = { path = "../horizon-friends" }
-# Horizon mods: sandboxed WebAssembly components, off unless installed and turned on (docs/mods.md).
+# Skyline mods: sandboxed WebAssembly components, off unless installed and turned on (docs/mods.md).
 # Their runtime is the `mods` feature.
 horizon-mods = { path = "../horizon-mods", default-features = false, features = ["index"] }
 wgpu = { version = "30.0.1", default-features = false, features = ["std", "parking_lot", "vulkan", "metal", "wgsl", "naga-ir"] }
@@ -66,7 +70,7 @@ ureq = { version = "2", default-features = false, features = ["tls"] }
 unicode-bidi = "0.3.18"
 
 [target.'cfg(unix)'.dependencies]
-# The server thread's CPU time per tick (`HORIZON_SPIKES`, spans.rs).
+# The server thread's CPU time per tick (`SKYLINE_SPIKES`, spans.rs).
 rustix = { version = "1", default-features = false, features = ["std", "time"] }
 
 [target.'cfg(windows)'.dependencies]

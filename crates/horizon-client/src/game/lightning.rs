@@ -81,7 +81,7 @@ impl Game<'_> {
     /// `ServerLevel.findLightningRod`: `PoiManager.findClosest` over the
     /// lightning rod points of interest within 128 blocks of `center` whose
     /// block is the top (`WORLD_SURFACE`) of its column; the strike lands one
-    /// above it. Horizon keeps no point-of-interest index, so this scans the
+    /// above it. Skyline keeps no point-of-interest index, so this scans the
     /// loaded chunks the way `/locate poi` does.
     fn find_lightning_rod(&self, center: [i32; 3]) -> Option<[i32; 3]> {
         const RANGE: i32 = 128;

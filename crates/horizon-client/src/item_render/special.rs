@@ -694,7 +694,7 @@ mod tests {
     #[test]
     fn the_decorated_pot_item_culls_its_back_faces() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("entity-models.json").exists() {
             return;

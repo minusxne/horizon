@@ -1,4 +1,4 @@
-//! Horizon Extras' dynamic lights (`horizon_client::dynamic_light`): the light sources near the
+//! Skyline Extras' dynamic lights (`horizon_client::dynamic_light`): the light sources near the
 //! camera this frame. Nothing is gathered while the extra is off.
 use super::{Game, shield};
 use glam::DVec3;

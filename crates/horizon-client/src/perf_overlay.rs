@@ -1,4 +1,4 @@
-//! The performance overlay (Horizon's Overlay setting): frames per second,
+//! The performance overlay (Skyline's Overlay setting): frames per second,
 //! frame, CPU and GPU times, and a graph of recent frame times.
 use crate::{
     graphics::Overlay,

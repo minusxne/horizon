@@ -79,7 +79,7 @@ pub(super) fn cloud_client_tick(
     }
 }
 
-/// The projectile a type id names, as Horizon models it.
+/// The projectile a type id names, as Skyline models it.
 fn projectile_kind(kind: &str) -> Option<ProjectileKind> {
     Some(match kind {
         "minecraft:arrow" | "minecraft:spectral_arrow" => ProjectileKind::Arrow {

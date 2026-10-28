@@ -1,5 +1,5 @@
 //! GPU time of each pass of a shader pack, of either kind: shown in the F3 overlay while it is
-//! open, and logged every `REPORT` timed frames with `HORIZON_SHADER_PACK_TIMING=1`. One frame
+//! open, and logged every `REPORT` timed frames with `SKYLINE_SHADER_PACK_TIMING=1`. One frame
 //! at a time is timed, and the CPU never waits for it: its timestamps are resolved in a later
 //! frame, once the GPU has finished it (Metal resolves them without waiting for the passes that
 //! write them), then read back when mapped. The next frame after that is timed again.
@@ -83,10 +83,10 @@ impl PassTiming {
         })
     }
 
-    /// Whether `HORIZON_SHADER_PACK_TIMING` asks for timing without the F3 overlay.
+    /// Whether `SKYLINE_SHADER_PACK_TIMING` asks for timing without the F3 overlay.
     pub fn logging() -> bool {
         static LOG: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-        *LOG.get_or_init(|| std::env::var_os("HORIZON_SHADER_PACK_TIMING").is_some())
+        *LOG.get_or_init(|| std::env::var_os("SKYLINE_SHADER_PACK_TIMING").is_some())
     }
 
     /// At the start of a frame's passes: moves the last timed frame along, and decides whether

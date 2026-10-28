@@ -15,7 +15,7 @@ use std::f32::consts::PI;
 pub type Atlas<'a> = &'a dyn Fn(&str) -> Option<[f32; 4]>;
 
 /// The overlay code of an enchanted armour layer's glint. 7 and 8 are the
-/// item glint and 9 to 12 Horizon's End-portal and breaking overlays, so 13
+/// item glint and 9 to 12 Skyline's End-portal and breaking overlays, so 13
 /// marks the `ARMOR_ENTITY_GLINT_TEXTURING` sample: entity.wgsl transforms
 /// the model UV and reads `enchanted_glint_armor`.
 pub const ARMOR_GLINT: u32 = 13;
@@ -1517,8 +1517,8 @@ mod tests {
     /// prepared resources: a missing one draws nothing.
     #[test]
     fn villager_layers_name_textures_that_exist() {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client/26.3");
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3");
         if !root.join("entity-models.json").exists() {
             return;
         }
@@ -1552,8 +1552,8 @@ mod tests {
 
     #[test]
     fn sulfur_cube_opaque_core_is_submitted_before_its_translucent_shell() {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client/26.3");
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3");
         if !root.join("entity-models.json").exists() {
             return;
         }
@@ -1639,8 +1639,8 @@ mod tests {
     /// vanilla shows. It was drawn at the full size, like a zombie's.
     #[test]
     fn the_vex_holds_its_item_at_the_small_scale() {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client/26.3");
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3");
         if !root.join("entity-models.json").exists() {
             return;
         }

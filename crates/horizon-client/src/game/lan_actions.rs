@@ -3224,7 +3224,7 @@ impl Game<'_> {
     }
 
     /// A use the server ran swung the guest's hand: their own client is told
-    /// too (`swing(hand, true)` for a SwingSource.SERVER result). Horizon's
+    /// too (`swing(hand, true)` for a SwingSource.SERVER result). Skyline's
     /// client does not run uses itself, so it does not predict the swing; a
     /// client that did (a block placed) is still in the first half of its
     /// swing and ignores it (`SwingState.startIfAble`).

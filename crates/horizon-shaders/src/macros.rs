@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 
-/// `MC_VERSION` of the version Horizon plays: 26.3 → 260300.
+/// `MC_VERSION` of the version Skyline plays: 26.3 → 260300.
 pub const MC_VERSION: u32 = mc_version(horizon_core::version::VERSION_ID);
 
 /// The documented rule, `major * 10000 + minor * 100 + patch` (spec 1.5.1, OQ-1): `1.21` → 12100,
@@ -70,7 +70,7 @@ pub fn render_stage(name: &str) -> u32 {
 
 impl Macros {
     /// The standard macros that need no renderer (spec 1.5.1): `MC_VERSION`, this system's
-    /// `MC_OS_*`, the GL and GLSL versions Horizon's translation accepts, the render stages and
+    /// `MC_OS_*`, the GL and GLSL versions Skyline's translation accepts, the render stages and
     /// the host settings at their defaults. The GPU vendor and family arrive with the renderer.
     pub fn standard() -> Self {
         let mut m = Self::default();

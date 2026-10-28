@@ -1,5 +1,5 @@
-// The Horizon server panel (docs/server.md, section 6). It polls the control API once a second through
-// the panel's session; every change is a POST with the X-Horizon header. Text from the server is only
+// The Skyline server panel (docs/server.md, section 6). It polls the control API once a second through
+// the panel's session; every change is a POST with the X-Skyline header. Text from the server is only
 // ever set with textContent.
 "use strict";
 
@@ -18,7 +18,7 @@ async function api(method, path, body) {
     response = await fetch(path, {
       method,
       credentials: "same-origin",
-      headers: { "X-Horizon": "1", "Content-Type": "application/json" },
+      headers: { "X-Skyline": "1", "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch (e) {
@@ -84,7 +84,7 @@ function renderStatus(status) {
   phase.textContent = status.phase;
   phase.className = `pill ${status.phase}`;
   const game = status.sample && status.sample.game;
-  const parts = [`up ${duration(status.engine_uptime_seconds)}`, `horizon-server ${status.version}`];
+  const parts = [`up ${duration(status.engine_uptime_seconds)}`, `skyline-server ${status.version}`];
   if (status.crashes) parts.push(`${status.crashes} crash${status.crashes > 1 ? "es" : ""}`);
   $("summary").textContent = parts.join(" · ");
   renderUpdate(status.update);
@@ -109,13 +109,13 @@ function renderStatus(status) {
   );
 }
 
-// Updates (horizon-server update): a newer release, one under way, or how the last one ended.
+// Updates (skyline-server update): a newer release, one under way, or how the last one ended.
 function renderUpdate(update) {
   const box = $("update");
   const offer = update && !update.busy && update.available;
   let text = "";
   if (update && update.busy) text = `Updating: ${update.busy}…`;
-  else if (offer) text = `Horizon ${update.available} is out (this server runs ${update.installed}).`;
+  else if (offer) text = `Skyline ${update.available} is out (this server runs ${update.installed}).`;
   else if (update && update.last && !update.ok) text = update.last;
   box.hidden = !text;
   box.className = update && update.last && !update.ok && !update.busy && !offer ? "notice failed" : "notice";

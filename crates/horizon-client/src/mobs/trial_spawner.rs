@@ -156,7 +156,7 @@ pub fn load_registry(root: &Path) {
                             let id = rel.to_string_lossy().replace('\\', "/");
                             out.insert(format!("{ns}:{id}"), c);
                         }
-                        None => log::warn!("Horizon: bad trial spawner config {}", path.display()),
+                        None => log::warn!("Skyline: bad trial spawner config {}", path.display()),
                     }
                 }
             }
@@ -930,7 +930,7 @@ impl TrialSpawner {
                 [x, y, z]
             }
         };
-        // Entity types Horizon cannot create spawn nothing.
+        // Entity types Skyline cannot create spawn nothing.
         let (species, width, height, _) = l.mob_type(&id)?;
         let spawn_box = spawn_selection::spawn_aabb(species, at[0], at[1], at[2], width, height);
         if !l.no_collision(spawn_box) || !in_line_of_sight(l, center(pos), at) {

@@ -1,9 +1,9 @@
 //! "RUST EDITION" under the classic title screen's logo.
 //!
-//! Vanilla's `textures/gui/title/edition.png` reads "JAVA EDITION". Horizon
+//! Vanilla's `textures/gui/title/edition.png` reads "JAVA EDITION". Skyline
 //! never ships Mojang's art, so the banner is rebuilt at load time from the
 //! player's own texture: "EDITION" is kept column for column, the "T" is lifted
-//! out of it, and R, U and S are Horizon's own glyphs (MIT, the rectangles
+//! out of it, and R, U and S are Skyline's own glyphs (MIT, the rectangles
 //! below), drawn the way the texture's letters are built (a face with darker
 //! sides and a light bottom edge, a dark extrusion under it, a black outline
 //! and a soft rim) in the shades sampled from the texture itself. Only
@@ -35,7 +35,7 @@ const GLYPH_WIDTH: usize = 42;
 /// The first face column, as "JAVA"'s.
 const FIRST_FACE: usize = 4;
 
-/// Horizon's R, U and S: face rectangles `[x0, y0, x1, y1)` in texels from the
+/// Skyline's R, U and S: face rectangles `[x0, y0, x1, y1)` in texels from the
 /// face's top-left, 42 wide and 39 tall, with 11-texel stems, 10-texel bars and
 /// 7-texel notches for the rounded corners.
 const R: &[[usize; 4]] = &[
@@ -470,7 +470,7 @@ mod tests {
     #[test]
     fn prepared_vanilla_edition() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION)
             .join("assets/minecraft/textures/gui/title/edition.png");
         let Ok((w, h, pixels)) = crate::hud::decode(&path) else {

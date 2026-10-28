@@ -288,7 +288,7 @@ fn api_rules(module: &naga::Module, kind: StageKind, own: &Composed) -> Vec<Prob
         problems.push(problem(
             file,
             format!(
-                "declares the entry point `{}`: a stage is a function, Horizon adds the entry points",
+                "declares the entry point `{}`: a stage is a function, Skyline adds the entry points",
                 e.name
             ),
         ));
@@ -312,7 +312,7 @@ fn api_rules(module: &naga::Module, kind: StageKind, own: &Composed) -> Vec<Prob
     for name in theirs {
         problems.push(problem(
             file,
-            format!("`{name}`: names starting with horizon_ are Horizon's"),
+            format!("`{name}`: names starting with horizon_ are Skyline's"),
         ));
     }
     problems

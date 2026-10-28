@@ -64,8 +64,8 @@ mod tests {
     #[test]
     fn login_round_trips() {
         let profile = GameProfile {
-            uuid: crate::crypto::offline_uuid("Horizon"),
-            name: "Horizon".into(),
+            uuid: crate::crypto::offline_uuid("Skyline"),
+            name: "Skyline".into(),
             properties: vec![Property {
                 name: "textures".into(),
                 value: "e30=".into(),
@@ -98,7 +98,7 @@ mod tests {
         }
         for p in [
             Serverbound::Hello(ServerHello {
-                name: "Horizon".into(),
+                name: "Skyline".into(),
                 uuid: 1,
             }),
             Serverbound::Key(Key {

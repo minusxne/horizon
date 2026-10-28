@@ -16,7 +16,7 @@ struct World {
     @builtin(frag_depth) depth: f32,
 }
 
-// Pack buffers keep GL's rows (row 0 at the bottom), and GL's window depth: Horizon's
+// Pack buffers keep GL's rows (row 0 at the bottom), and GL's window depth: Skyline's
 // reverse-Z depth is 1 - d for the same near and far planes.
 @fragment
 fn fs_blit(@builtin(position) p: vec4<f32>) -> World {

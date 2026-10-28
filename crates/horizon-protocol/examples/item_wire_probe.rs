@@ -1,7 +1,7 @@
 //! The item wire harness's Rust side (tools/test_item_wire_parity.py): reads
 //! the oracle's stacks (JSON lines with `label` and `hex`), decodes each with
 //! `item::Slot` and prints, per stack, whether every byte was consumed, the
-//! patch's component ids (added, then removed), which of them Horizon
+//! patch's component ids (added, then removed), which of them Skyline
 //! decoded into its own lossy types (the rest it reads past keeping their
 //! bytes, or decodes into ids it writes back unchanged, like trims) and
 //! whether encoding the decoded stack gives the same bytes back.

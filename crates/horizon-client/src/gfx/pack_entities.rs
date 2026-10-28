@@ -2,7 +2,7 @@
 //! `gbuffers_entities`, `gbuffers_block`, `gbuffers_entities_translucent` and
 //! `gbuffers_particles` (spec 2.3, 5.3, 5.4): the runs of `Frame::entities` the game marked (`EntitySpan`), each its
 //! own draw with its `entityId` or `blockEntityId` and `entityColor` in a per-draw slot of
-//! `HzDraw` (set 2). Horizon draws whatever the pack does not.
+//! `HzDraw` (set 2). Skyline draws whatever the pack does not.
 
 use std::ops::Range;
 
@@ -18,7 +18,7 @@ const ATTRIBUTES: [wgpu::VertexAttribute; 6] = wgpu::vertex_attr_array![
     0 => Float32x3, 1 => Float32x2, 2 => Uint32, 3 => Unorm8x4, 4 => Uint8x4, 5 => Snorm8x4
 ];
 
-/// The entity vertex: Horizon's own (`Vertex`).
+/// The entity vertex: Skyline's own (`Vertex`).
 pub fn buffers() -> [Option<wgpu::VertexBufferLayout<'static>>; 1] {
     [Some(wgpu::VertexBufferLayout {
         array_stride: std::mem::size_of::<Vertex>() as u64,
@@ -163,7 +163,7 @@ pub(super) struct Draw {
     pub quads: u32,
     /// The kind of program that draws it (`ENTITY`, `BLOCK`, `TRANSLUCENT`, `PARTICLE`).
     pub program: usize,
-    /// The pack's gbuffers program draws it (else Horizon does).
+    /// The pack's gbuffers program draws it (else Skyline does).
     pub pack: bool,
     /// The pack's shadow program draws it into the shadow map too.
     pub shadow: bool,
@@ -308,7 +308,7 @@ impl PackEntities {
 
     /// Splits `entities` between the pack, which draws the runs of `spans` its programs cover
     /// (`drawn`: whether it has `gbuffers_entities`, `gbuffers_block` or their fallbacks), and
-    /// Horizon, which draws the rest (`rest`). Uploads the pack's part, and the runs its shadow
+    /// Skyline, which draws the rest (`rest`). Uploads the pack's part, and the runs its shadow
     /// programs draw (`shadow`). Runs hidden from the camera only ever cast shadows.
     #[allow(clippy::too_many_arguments)]
     pub fn prepare(
@@ -405,7 +405,7 @@ pub(super) fn quad_indices(device: &wgpu::Device, quads: u32) -> wgpu::Buffer {
 }
 
 /// Whether a run holds only geometry a gbuffers program can draw from the shared atlas: no
-/// celestial body, cloud, beam, End portal, crack or energy swirl (overlay codes Horizon's entity
+/// celestial body, cloud, beam, End portal, crack or energy swirl (overlay codes Skyline's entity
 /// shader draws in its own way; entity.wgsl).
 fn plain(run: &[Vertex]) -> bool {
     run.iter()
@@ -421,7 +421,7 @@ pub const PARTICLE: usize = 3;
 pub const PROGRAMS: usize = 4;
 
 /// Which program draws `span`'s run, given which of them (or their fallbacks) the pack has;
-/// `None`: Horizon draws it.
+/// `None`: Skyline draws it.
 #[cfg(test)]
 fn drawn_by_pack(span: &EntitySpan, drawn: [bool; PROGRAMS]) -> Option<usize> {
     program_of(span).filter(|&p| drawn[p])
@@ -491,7 +491,7 @@ mod tests {
         };
         assert_eq!(drawn_by_pack(&shadow, all), Some(TRANSLUCENT));
         assert_eq!(drawn_by_pack(&span(0, "DESTROY", 0), all), None);
-        // A beacon beam's quads stay Horizon's.
+        // A beacon beam's quads stay Skyline's.
         assert!(plain(&[v(0), v(0), v(0), v(0), v(1)]));
         assert!(!plain(&[v(0), v(0), v(0), v(0), v(6)]));
         assert_eq!(entity_color(1)[0], 1.0);

@@ -184,10 +184,10 @@ impl Launcher {
             .child(
                 text(theme::HEADING)
                     .text_color(t.ink)
-                    .child("Help make Horizon faster and steadier?"),
+                    .child("Help make Skyline faster and steadier?"),
             )
             .child(text(theme::UI).text_color(t.muted).child(
-                "Horizon can send a few things to its developers. Each switch is off until you turn it on, and Settings can change it any time.",
+                "Skyline can send a few things to its developers. Each switch is off until you turn it on, and Settings can change it any time.",
             ))
             .child(
                 div()
@@ -306,7 +306,7 @@ impl Launcher {
         let server = if horizon_telemetry::endpoint().is_some() {
             format!("{waiting} waiting to be sent")
         } else {
-            "Sending is turned off here (HORIZON_TELEMETRY_URL=off)".into()
+            "Sending is turned off here (SKYLINE_TELEMETRY_URL=off)".into()
         };
         let confirm = self.collection.confirm_delete;
         let actions = div()

@@ -1,4 +1,4 @@
-//! Resolves sound instances through Horizon's sound event registry for
+//! Resolves sound instances through Skyline's sound event registry for
 //! `tools/test_sound_event_parity.py`: `sound_event_fixture ROOT INPUT OUTPUT [NAMES]`.
 use horizon_client::sound_engine::{Attenuation, MASTER, SoundEngine, SoundInstance};
 use horizon_client::sound_events::{Sentinel, SoundRegistry};

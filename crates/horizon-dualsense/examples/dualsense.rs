@@ -180,7 +180,7 @@ fn lightbar(pad: &mut DualSense) {
         ("red", [255, 0, 0]),
         ("green", [0, 255, 0]),
         ("blue", [0, 0, 255]),
-        ("Horizon violet", [0x8b, 0x5c, 0xf6]),
+        ("Skyline violet", [0x8b, 0x5c, 0xf6]),
     ] {
         println!("  lightbar {name}");
         write(

@@ -109,7 +109,7 @@ impl SpriteAnimator {
             let bytes: u64 = chains.iter().map(|(chain, _)| chain.len() as u64).sum();
             if bytes > limit {
                 log::warn!(
-                    "Horizon: layer {}'s animation ({bytes} bytes) does not fit in a storage buffer; it stays still",
+                    "Skyline: layer {}'s animation ({bytes} bytes) does not fit in a storage buffer; it stays still",
                     animation.layer
                 );
                 continue;
@@ -386,7 +386,7 @@ fn pipeline(device: &wgpu::Device) -> Option<wgpu::ComputePipeline> {
     match internal.or(pollster::block_on(validation.pop())) {
         None => Some(pipeline),
         Some(e) => {
-            log::warn!("Horizon renderer: animated sprites drawn on the CPU ({e})");
+            log::warn!("Skyline renderer: animated sprites drawn on the CPU ({e})");
             None
         }
     }
@@ -532,7 +532,7 @@ mod tests {
     #[test]
     fn real_animation_chains_repeat_into_the_array_chain() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root
             .join("assets/minecraft/textures/block/water_still.png")

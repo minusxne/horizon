@@ -128,7 +128,7 @@ pub fn vsync_present_mode(supported: &[PresentMode], vsync: bool) -> Option<Pres
     preferred.iter().copied().find(|m| supported.contains(m))
 }
 
-/// The present mode for the VSync option and Horizon's present-mode setting
+/// The present mode for the VSync option and Skyline's present-mode setting
 /// (`None` for Auto). VSync on always means Fifo, in a window and in
 /// fullscreen alike, as in vanilla; the setting chooses only while VSync is
 /// off, when the surface supports it, and otherwise vanilla's choice applies.
@@ -321,8 +321,8 @@ impl FullscreenState {
     }
 }
 
-/// Horizon's icon for the window's title bar and the task bar (X11 and Windows; Wayland takes
-/// it from the `horizon.desktop` entry, macOS from the app bundle). `None` if it can't be read.
+/// Skyline's icon for the window's title bar and the task bar (X11 and Windows; Wayland takes
+/// it from the `skyline.desktop` entry, macOS from the app bundle). `None` if it can't be read.
 pub fn icon() -> Option<winit::window::Icon> {
     let mut decoder = png::Decoder::new(std::io::Cursor::new(horizon_theme::ICON_PNG));
     decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);

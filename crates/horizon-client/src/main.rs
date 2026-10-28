@@ -1,4 +1,4 @@
-//! Horizon: native Rust client for Minecraft Java Edition 26.3 gameplay.
+//! Skyline: native Rust client for Minecraft Java Edition 26.3 gameplay.
 #![forbid(unsafe_code)]
 mod game;
 
@@ -24,11 +24,11 @@ fn main() {
     if !help {
         logging::init(&home, thread);
         // The log's first line names the build, so a bug report that carries the log says which one it was.
-        log::info!("Horizon {}", crash::version());
+        log::info!("Skyline {}", crash::version());
         crash::install(home.clone(), side);
     }
     if let Err(error) = game::run() {
-        log::error!("Horizon: {error}");
+        log::error!("Skyline: {error}");
         if !help {
             crash::report_error(&home, side, &*error);
         }

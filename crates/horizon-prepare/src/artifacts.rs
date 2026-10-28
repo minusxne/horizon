@@ -11,14 +11,14 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 const LAUNCHER_HINT: &str =
-    "Horizon does not download the game: play {version} once in the launcher you play \
-Minecraft Java Edition with so it downloads the game's files, then rerun. Horizon reads the \
+    "Skyline does not download the game: play {version} once in the launcher you play \
+Minecraft Java Edition with so it downloads the game's files, then rerun. Skyline reads the \
 official launcher's folder, ATLauncher's and the CurseForge app's; for Prism Launcher, MultiMC, \
-the Modrinth App or GDLauncher, prepare from the Horizon launcher, which finds their files. If your launcher keeps \
-them in another folder, pass --minecraft-dir or set HORIZON_MINECRAFT_DIR.";
-const SERVER_HINT: &str = "Horizon does not download the game: download the {version} server jar yourself (minecraft.net/download/server \
+the Modrinth App or GDLauncher, prepare from the Skyline launcher, which finds their files. If your launcher keeps \
+them in another folder, pass --minecraft-dir or set SKYLINE_MINECRAFT_DIR.";
+const SERVER_HINT: &str = "Skyline does not download the game: download the {version} server jar yourself (minecraft.net/download/server \
 while {version} is the current release, otherwise the downloads.server.url in your launcher's \
-versions/{version}/{version}.json), then pass --server-jar PATH or set HORIZON_SERVER_JAR.";
+versions/{version}/{version}.json), then pass --server-jar PATH or set SKYLINE_SERVER_JAR.";
 
 fn hint(text: &str, version: &str) -> String {
     text.replace("{version}", version)
@@ -115,7 +115,7 @@ pub fn minecraft_dir(chosen: Option<&Path>) -> PathBuf {
     if let Some(dir) = chosen.filter(|d| !d.as_os_str().is_empty()) {
         return expand_user(dir);
     }
-    if let Some(dir) = std::env::var_os("HORIZON_MINECRAFT_DIR").filter(|d| !d.is_empty()) {
+    if let Some(dir) = std::env::var_os("SKYLINE_MINECRAFT_DIR").filter(|d| !d.is_empty()) {
         return expand_user(Path::new(&dir));
     }
     if cfg!(target_os = "macos") {
@@ -148,7 +148,7 @@ impl GameFiles {
     pub(crate) fn hint(&self, version: &str) -> String {
         let mut text = hint(LAUNCHER_HINT, version);
         if !self.searched.is_empty() {
-            text += &format!(" Horizon looked for {version} in:");
+            text += &format!(" Skyline looked for {version} in:");
             for (launcher, folder) in &self.searched {
                 text += &format!("\n  {} ({launcher})", folder.display());
             }
@@ -157,7 +157,7 @@ impl GameFiles {
     }
 }
 
-/// The layouts horizon-prepare reads in `folder`: the official launcher's, then ATLauncher's,
+/// The layouts skyline-prepare reads in `folder`: the official launcher's, then ATLauncher's,
 /// which saves Mojang's version JSON as is in `configs/json/minecraft` and the client jar as
 /// the library `net.minecraft:client:<version>`.
 fn layouts(folder: &Path, version: &str) -> [GameFiles; 2] {
@@ -191,7 +191,7 @@ fn layouts(folder: &Path, version: &str) -> [GameFiles; 2] {
 /// packages and Flatpak start it in.
 fn launcher_folders() -> Vec<(&'static str, PathBuf)> {
     let mut folders = vec![("the official launcher", minecraft_dir(None))];
-    // The same folders as the Horizon launcher's (launcher/src/sources.rs `known_folders`).
+    // The same folders as the Skyline launcher's (launcher/src/sources.rs `known_folders`).
     let atlauncher: Vec<PathBuf> = if cfg!(target_os = "macos") {
         let app = Path::new("Applications/ATLauncher.app/Contents/Java");
         vec![
@@ -220,7 +220,7 @@ fn launcher_folders() -> Vec<(&'static str, PathBuf)> {
     folders
 }
 
-/// The pinned version's files in the chosen folder (`--minecraft-dir`, HORIZON_MINECRAFT_DIR),
+/// The pinned version's files in the chosen folder (`--minecraft-dir`, SKYLINE_MINECRAFT_DIR),
 /// or the launcher above it when an instance folder (`instances/<name>`) is chosen; with no
 /// folder chosen, in the first launcher folder that has them. When none does, the official
 /// layout of the first folder is returned, for the errors to name, with the folders looked in.
@@ -228,7 +228,7 @@ pub fn game_files(chosen: Option<&Path>, version: &str) -> GameFiles {
     let chosen = chosen
         .filter(|d| !d.as_os_str().is_empty())
         .map(Path::to_path_buf)
-        .or_else(|| std::env::var_os("HORIZON_MINECRAFT_DIR").map(PathBuf::from))
+        .or_else(|| std::env::var_os("SKYLINE_MINECRAFT_DIR").map(PathBuf::from))
         .filter(|d| !d.as_os_str().is_empty())
         .map(|d| expand_user(&d));
     let folders = match chosen {
@@ -315,9 +315,9 @@ pub(crate) fn import_manifest(lock: &Lock, files: &GameFiles) -> Result<Value, S
             let pinned = lock.pin("manifest_sha1")?;
             if !(destination.exists() && lock.manifest_accepted(&digest(&destination, "sha1")?)) {
                 return Err(format!(
-                    "{} is not a {version} version file Horizon knows (sha1 {checksum}): your \
+                    "{} is not a {version} version file Skyline knows (sha1 {checksum}): your \
                      launcher may have rewritten it, or Mojang republished it. Prepare from the \
-                     Horizon launcher, which downloads Mojang's own, or save \
+                     Skyline launcher, which downloads Mojang's own, or save \
                      https://piston-meta.mojang.com/v1/packages/{pinned}/{version}.json as {} \
                      and prepare again.",
                     source.display(),
@@ -353,7 +353,7 @@ fn import_server(lock: &Lock, server_jar: Option<&Path>) -> Result<PathBuf, Stri
     let hint = hint(SERVER_HINT, version);
     let source = server_jar
         .map(Path::to_path_buf)
-        .or_else(|| std::env::var_os("HORIZON_SERVER_JAR").map(PathBuf::from));
+        .or_else(|| std::env::var_os("SKYLINE_SERVER_JAR").map(PathBuf::from));
     let Some(source) = source else {
         if destination.exists() && digest(&destination, "sha1")? == checksum {
             return Ok(destination);
@@ -971,7 +971,7 @@ mod tests {
             static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
             let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             let directory = std::env::temp_dir()
-                .join(format!("horizon-import-reuse-{}-{n}", std::process::id()));
+                .join(format!("skyline-import-reuse-{}-{n}", std::process::id()));
             let source = directory.join("old");
             let target = directory.join("new");
             fs::create_dir_all(&target).unwrap();
@@ -1224,7 +1224,7 @@ mod tests {
     /// as the imported one is then used.
     #[test]
     fn a_rewritten_version_file_falls_back_to_mojangs() {
-        let root = std::env::temp_dir().join(format!("horizon-rewritten-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("skyline-rewritten-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let mojang = r#"{"id":"9.9","javaVersion":{"majorVersion":25},"downloads":{"client":{"sha1":"c"},"server":{"sha1":"s"}}}"#;
         let rewritten = r#"{"id":"9.9","javaVersion":{"majorVersion":25},"downloads":{"client":{"sha1":"c"},"server":{"sha1":"s"}},"patches":[],"root":true}"#;
@@ -1438,7 +1438,7 @@ mod tests {
             .contains("may have rewritten it"));
     }
 
-    /// With no launcher's files in the chosen folder, the error names where Horizon looked and
+    /// With no launcher's files in the chosen folder, the error names where Skyline looked and
     /// the launchers it reads.
     #[test]
     fn the_error_names_the_folders_looked_in() {
@@ -1451,7 +1451,7 @@ mod tests {
             "Missing {}",
             empty.join("versions/9.9/9.9.json").display()
         )));
-        assert!(error.contains("Horizon looked for 9.9 in:"), "{error}");
+        assert!(error.contains("Skyline looked for 9.9 in:"), "{error}");
         assert!(error.contains(&format!("\n  {} (the folder chosen)", empty.display())));
         assert!(error.contains(&format!(
             "\n  {} (the launcher above it)",

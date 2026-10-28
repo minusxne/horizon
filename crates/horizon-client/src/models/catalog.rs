@@ -159,7 +159,7 @@ impl StateModels {
                 Ok(loaded) => loaded,
                 Err(e) => {
                     log::warn!(
-                        "Horizon: blockstate definition of {namespace}:{path} not loaded: {e}"
+                        "Skyline: blockstate definition of {namespace}:{path} not loaded: {e}"
                     );
                     continue;
                 }
@@ -212,7 +212,7 @@ impl StateModels {
         let library = match models.block_library(root, names.clone()) {
             Ok(library) => library,
             Err(e) => {
-                log::warn!("Horizon: block models incomplete ({e}); using the missing model");
+                log::warn!("Skyline: block models incomplete ({e}); using the missing model");
                 models.block_library_or_missing(root, names)?
             }
         };

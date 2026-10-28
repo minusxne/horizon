@@ -81,7 +81,7 @@ public final class VanillaTickDataOracle {
              DataInputStream input = region.getChunkDataInputStream(POS)) {
             if (input == null || !NbtIo.read(input).equals(expected)) throw new AssertionError("Rust region tick data differs from vanilla");
         }
-        System.out.printf("HORIZON_TICK_DATA_RESULT {\"block_ticks\":%d,\"fluid_ticks\":%d,\"region_chunks\":1}%n", blocks.size(), fluids.size());
+        System.out.printf("SKYLINE_TICK_DATA_RESULT {\"block_ticks\":%d,\"fluid_ticks\":%d,\"region_chunks\":1}%n", blocks.size(), fluids.size());
     }
     public static void main(String[] args) throws Exception {
         Path base = Path.of(args[1]);

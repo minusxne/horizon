@@ -852,7 +852,7 @@ mod tests {
     #[test]
     fn a_hit_in_the_hurt_cooldown_knocks_nobody_back() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;
@@ -886,7 +886,7 @@ mod tests {
     #[test]
     fn an_arrow_kills_a_player_at_one_health() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;

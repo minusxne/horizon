@@ -162,10 +162,10 @@ impl JoinError {
     }
 }
 
-/// The services discovery document URL: `HORIZON_API_DISCOVERY` overrides
+/// The services discovery document URL: `SKYLINE_API_DISCOVERY` overrides
 /// it like authlib's `-Dminecraft.api.discovery.host`.
 pub fn discovery_url() -> String {
-    std::env::var("HORIZON_API_DISCOVERY")
+    std::env::var("SKYLINE_API_DISCOVERY")
         .ok()
         .filter(|u| !u.is_empty())
         .unwrap_or_else(|| DEFAULT_DISCOVERY.to_owned())
@@ -174,7 +174,7 @@ pub fn discovery_url() -> String {
 fn agent() -> ureq::Agent {
     ureq::AgentBuilder::new()
         .timeout(Duration::from_secs(15))
-        .user_agent(&format!("Horizon/{}", horizon_core::release::VERSION))
+        .user_agent(&format!("Skyline/{}", horizon_core::release::VERSION))
         .build()
 }
 
@@ -347,7 +347,7 @@ mod tests {
 
     #[test]
     fn session_files_are_read_once_and_must_be_private() {
-        let dir = std::env::temp_dir().join(format!("horizon-auth-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-auth-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let text = r#"{"name":"Notch","uuid":"069a79f4-44e9-4726-a5be-fca90e38aaf5","access_token":"mock-token","user_type":"msa"}"#;
         let path = write(&dir, text, 0o600);

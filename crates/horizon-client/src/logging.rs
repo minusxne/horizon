@@ -5,7 +5,7 @@
 //! `logs/%d{yyyy-MM-dd}-%i.log.gz`, dated by the old file's last write. DefaultRolloverStrategy
 //! keeps 7 archives a day, the newest with the highest index.
 //!
-//! Messages go through the `log` facade. Horizon's own still print their plain text on stderr,
+//! Messages go through the `log` facade. Skyline's own still print their plain text on stderr,
 //! as they did before the log existed; other crates' errors only reach the file (their
 //! warnings are mostly the Vulkan loader's startup chatter).
 use std::collections::VecDeque;
@@ -45,12 +45,16 @@ pub fn data_dir() -> PathBuf {
     std::env::temp_dir()
 }
 
-/// Where the launcher runs the game and keeps its saves: `HORIZON_HOME`, else `horizon` in the
+/// Where the launcher runs the game and keeps its saves: `SKYLINE_HOME`, else `skyline` in the
 /// platform data folder (launcher/src/backend.rs `game_home`).
 pub fn game_home() -> PathBuf {
-    match std::env::var_os("HORIZON_HOME").filter(|h| !h.is_empty()) {
+    match std::env::var_os("SKYLINE_HOME").filter(|h| !h.is_empty()) {
         Some(h) => PathBuf::from(h),
-        None => data_dir().join("horizon"),
+        None => {
+            let data = data_dir();
+            horizon_core::rebrand::migrate_data_dirs(&data);
+            data.join("skyline")
+        }
     }
 }
 
@@ -173,7 +177,7 @@ pub struct Latest {
     _lock: File,
 }
 
-/// Opens `dir/latest.log` for this run, archiving the last run's. None when another Horizon
+/// Opens `dir/latest.log` for this run, archiving the last run's. None when another Skyline
 /// using the same folder is writing it: that game keeps it, this one logs to stderr only. The
 /// lock is a separate file (`.lock`): Windows locks are mandatory, and a locked latest.log could
 /// not be read while the game runs.
@@ -203,7 +207,7 @@ pub fn open_latest(dir: &Path) -> io::Result<Option<Latest>> {
 
 /// What the writer thread is told.
 enum Out {
-    /// Lines for the file, dated, and the message for stderr (Horizon's own).
+    /// Lines for the file, dated, and the message for stderr (Skyline's own).
     Write {
         date: NaiveDate,
         lines: Vec<String>,
@@ -243,7 +247,7 @@ impl Writer {
                         {
                             let _ = writeln!(
                                 stderr.lock(),
-                                "Horizon: could not roll over the log: {e}"
+                                "Skyline: could not roll over the log: {e}"
                             );
                         }
                         self.date = date;
@@ -348,7 +352,7 @@ impl Logger {
             ..
         })) = self.out.send(msg)
         {
-            // No writer (it could not start): the terminal still gets Horizon's messages.
+            // No writer (it could not start): the terminal still gets Skyline's messages.
             eprintln!("{message}");
         }
     }
@@ -362,14 +366,14 @@ pub fn init(home: &Path, main_thread: &'static str) {
         Ok(Some(latest)) => Some(latest),
         Ok(None) => {
             eprintln!(
-                "Horizon: another game is writing {}; this one logs to the terminal only",
+                "Skyline: another game is writing {}; this one logs to the terminal only",
                 dir.join("latest.log").display()
             );
             None
         }
         Err(e) => {
             eprintln!(
-                "Horizon: could not open {}: {e}",
+                "Skyline: could not open {}: {e}",
                 dir.join("latest.log").display()
             );
             None
@@ -386,7 +390,7 @@ pub fn init(home: &Path, main_thread: &'static str) {
             .name("Log writer".into())
             .spawn(move || writer.run(receive))
         {
-            eprintln!("Horizon: could not start the log writer: {e}");
+            eprintln!("Skyline: could not start the log writer: {e}");
         }
         Logger {
             out,
@@ -536,7 +540,7 @@ mod tests {
 
     #[test]
     fn startup_archives_the_last_runs_log() {
-        let dir = std::env::temp_dir().join(format!("horizon-logs-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-logs-test-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         // Empty: nothing is archived (OnStartupTriggeringPolicy's minSize is 1 byte).
@@ -572,7 +576,7 @@ mod tests {
 
     #[test]
     fn the_newest_crash_report_is_found_by_name() {
-        let home = std::env::temp_dir().join(format!("horizon-crash-test-{}", std::process::id()));
+        let home = std::env::temp_dir().join(format!("skyline-crash-test-{}", std::process::id()));
         let _ = fs::remove_dir_all(&home);
         assert!(newest_crash_report(&home).is_none());
         let dir = crash_reports_dir(&home);

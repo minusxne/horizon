@@ -360,7 +360,7 @@ pub fn slider(
     // The control socket's widget tree (`ui`): its label and value.
     crate::widgets::record_as(&label.plain(), [x, y, w, 20.0], active, kind);
     if active {
-        // A controller's D-pad can focus it (Horizon's controller support).
+        // A controller's D-pad can focus it (Skyline's controller support).
         crate::widgets::target_as([x, y, w, 20.0], kind);
     }
     let track = if hover && active {
@@ -786,7 +786,7 @@ impl Caret {
     }
 }
 
-/// `EditBox.extractWidgetRenderState` for Horizon's append-only fields,
+/// `EditBox.extractWidgetRenderState` for Skyline's append-only fields,
 /// unbordered and with the cursor at the end: the text from (x, y), the
 /// highlight when Select All covers the value (`invert_text` as
 /// `setInvertHighlightedTextColor`), and the cursor, blinking from when the

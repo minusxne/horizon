@@ -1,48 +1,48 @@
-//! `horizon-prepare`: prepares Horizon's resources from your own Minecraft Java Edition.
+//! `skyline-prepare`: prepares Skyline's resources from your own Minecraft Java Edition.
 //! Its flags are the ones tools/prepare_native_client.py took.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-/// This release's version: release.yml builds it with `HORIZON_VERSION` from the tag
+/// This release's version: release.yml builds it with `SKYLINE_VERSION` from the tag
 /// (docs/versioning.md); a build from source says Cargo.toml's.
-const VERSION: &str = match option_env!("HORIZON_VERSION") {
+const VERSION: &str = match option_env!("SKYLINE_VERSION") {
     Some(version) if !version.is_empty() => version,
     _ => env!("CARGO_PKG_VERSION"),
 };
 
 const HELP: &str = "\
-horizon-prepare: prepare Horizon's resources from your own Minecraft Java Edition
+skyline-prepare: prepare Skyline's resources from your own Minecraft Java Edition
 
-Usage: horizon-prepare [--prepare] [--server-jar PATH] [--minecraft-dir PATH] [--root PATH]
-       horizon-prepare compile-exporters [--root PATH]
-       horizon-prepare sounds [--minecraft-dir PATH] [--root PATH]
-       horizon-prepare panorama [--minecraft-dir PATH] [--root PATH]
-       horizon-prepare fonts [--minecraft-dir PATH] [--root PATH]
-       horizon-prepare packs [--minecraft-dir PATH] [--root PATH]
-       horizon-prepare languages [--minecraft-dir PATH] [--root PATH]
+Usage: skyline-prepare [--prepare] [--server-jar PATH] [--minecraft-dir PATH] [--root PATH]
+       skyline-prepare compile-exporters [--root PATH]
+       skyline-prepare sounds [--minecraft-dir PATH] [--root PATH]
+       skyline-prepare panorama [--minecraft-dir PATH] [--root PATH]
+       skyline-prepare fonts [--minecraft-dir PATH] [--root PATH]
+       skyline-prepare packs [--minecraft-dir PATH] [--root PATH]
+       skyline-prepare languages [--minecraft-dir PATH] [--root PATH]
 
   --prepare             Import the pinned game files from your own copy first
   --server-jar PATH     The pinned server jar you downloaded yourself
-                        (default: HORIZON_SERVER_JAR, or the copy imported before)
+                        (default: SKYLINE_SERVER_JAR, or the copy imported before)
   --minecraft-dir PATH  The official launcher's game directory with your installed copy
-                        (default: HORIZON_MINECRAFT_DIR, or the launcher's own)
-  --root PATH           The Horizon folder to prepare (default: the folder this program is
+                        (default: SKYLINE_MINECRAFT_DIR, or the launcher's own)
+  --root PATH           The Skyline folder to prepare (default: the folder this program is
                         in, else the nearest folder above the current one with research-lock.json)
 
 Needs Minecraft played once from the official launcher, and Java of the version
 research-lock.json pins. Releases use a runtime; development or changed exporters need a JDK.
 compile-exporters builds and validates a release bundle from the already imported pinned jars.
-The resources go to <root>/.local/horizon-client/<version>; pass that to horizon-client --resources.
+The resources go to <root>/.local/skyline/<version>; pass that to horizon-client --resources.
 
-horizon-prepare panorama repairs the classic menu background in existing resources without Java.
-horizon-prepare fonts adds the GNU Unifont glyphs (characters the bitmap fonts lack) the same way.
-horizon-prepare packs adds the built-in Programmer Art and High Contrast resource packs the same way.
-horizon-prepare languages adds the bundled languages and the language list the JAR lacks the same way.
+skyline-prepare panorama repairs the classic menu background in existing resources without Java.
+skyline-prepare fonts adds the GNU Unifont glyphs (characters the bitmap fonts lack) the same way.
+skyline-prepare packs adds the built-in Programmer Art and High Contrast resource packs the same way.
+skyline-prepare languages adds the bundled languages and the language list the JAR lacks the same way.
 Full preparation also imports all four after extracting the client JAR's placeholders.
 
-horizon-prepare sounds copies the pinned version's sounds (about 380 MB) from the official
+skyline-prepare sounds copies the pinned version's sounds (about 380 MB) from the official
 launcher's asset store into the same folder, checking every file. It is optional: without it the
 game is silent. Nothing is downloaded; it needs the version played once from the official launcher.
 ";
@@ -111,19 +111,19 @@ fn main() -> ExitCode {
                 return ExitCode::SUCCESS;
             }
             "-V" | "--version" => {
-                println!("horizon-prepare {VERSION}");
+                println!("skyline-prepare {VERSION}");
                 return ExitCode::SUCCESS;
             }
             _ => Err(format!("unrecognized argument: {text}")),
         };
         if let Err(e) = parsed {
-            eprintln!("horizon-prepare: error: {e}\n\n{HELP}");
+            eprintln!("skyline-prepare: error: {e}\n\n{HELP}");
             return ExitCode::from(2);
         }
     }
     let Some(root) = root.or_else(default_root) else {
         eprintln!(
-            "horizon-prepare: error: no research-lock.json beside this program or above the current folder; pass --root"
+            "skyline-prepare: error: no research-lock.json beside this program or above the current folder; pass --root"
         );
         return ExitCode::from(2);
     };

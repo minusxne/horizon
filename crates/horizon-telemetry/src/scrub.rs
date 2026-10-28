@@ -284,8 +284,8 @@ mod tests {
             "at /Users/<user>/code/horizon/src/main.rs:10"
         );
         assert_eq!(
-            s.scrub("/home/ana/.local/share/horizon"),
-            "/home/<user>/.local/share/horizon"
+            s.scrub("/home/ana/.local/share/skyline"),
+            "/home/<user>/.local/share/skyline"
         );
         assert_eq!(
             s.scrub("C:\\Users\\Ana Silva\\x\nnext"),

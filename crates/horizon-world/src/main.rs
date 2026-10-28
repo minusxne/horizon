@@ -51,7 +51,7 @@ fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
     };
     match command {
         "--help" | "-h" if args.len() == 1 => println!(
-            "Horizon world data tools — Java Edition {}\n\
+            "Skyline world data tools — Java Edition {}\n\
              inspect <region.mca>\n\
              copy-region <source.mca> <new-directory/r.x.z.mca> [gzip|zlib|none|lz4]\n\
              get-block <region.mca> <x> <y> <z>\n\
@@ -85,7 +85,7 @@ fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
             let mut region = RegionFile::open(&args[1])?;
             let chunks: Vec<_> = region.chunks().collect();
             println!(
-                "Horizon region {},{}: {} chunks",
+                "Skyline region {},{}: {} chunks",
                 region.position().x,
                 region.position().z,
                 chunks.len()
@@ -192,7 +192,7 @@ fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
 
 fn main() {
     if let Err(error) = run(&std::env::args().skip(1).collect::<Vec<_>>()) {
-        eprintln!("Horizon: {error}");
+        eprintln!("Skyline: {error}");
         std::process::exit(2);
     }
 }

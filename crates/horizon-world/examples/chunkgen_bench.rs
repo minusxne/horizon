@@ -100,7 +100,7 @@ fn verify(data: &std::sync::Arc<GeneratorData>, parity: &Path) -> Result<(), Err
     for (seed, x, z) in cases {
         let generator = OverworldGenerator::without_structures(data.clone(), seed)?;
         let lines = dump(&generator.worker().generate_proto(ChunkPos::new(x, z))?);
-        if let Ok(path) = std::env::var("HORIZON_VERIFY_DUMP") {
+        if let Ok(path) = std::env::var("SKYLINE_VERIFY_DUMP") {
             fs::write(format!("{path}{seed}.txt"), lines.join("\n") + "\n")?;
         }
         expected.push((seed, lines));
@@ -323,7 +323,7 @@ fn main() -> Result<(), Error> {
     let start = Instant::now();
     let generator =
         OverworldGenerator::for_dimension(data.clone(), seed, "minecraft:normal", &dimension)?;
-    if std::env::var_os("HORIZON_LIST_UNSUPPORTED").is_some() {
+    if std::env::var_os("SKYLINE_LIST_UNSUPPORTED").is_some() {
         for (feature, error) in generator.unsupported_features() {
             println!("unsupported {feature}: {error}");
         }
@@ -487,7 +487,7 @@ fn main() -> Result<(), Error> {
             totals.unsupported,
             totals.failed
         );
-        if std::env::var_os("HORIZON_FEATURE_ERRORS").is_some() {
+        if std::env::var_os("SKYLINE_FEATURE_ERRORS").is_some() {
             for (name, error) in generator.unsupported_features() {
                 println!("unsupported {name}: {error}");
             }
@@ -517,7 +517,7 @@ fn main() -> Result<(), Error> {
         .map(|c| c.block_entities.len())
         .sum();
     println!("block entities: {block_entities}");
-    if std::env::var_os("HORIZON_BLOCK_ENTITIES").is_some() {
+    if std::env::var_os("SKYLINE_BLOCK_ENTITIES").is_some() {
         for chunk in chunks.iter().flatten() {
             for ([x, y, z], nbt) in &chunk.block_entities {
                 let text = |key: &str| match nbt.get(&key.into()) {

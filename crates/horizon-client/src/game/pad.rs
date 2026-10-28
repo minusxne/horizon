@@ -1,7 +1,7 @@
-//! Controllers through gilrs (Horizon's own; docs/controllers.md): the
+//! Controllers through gilrs (Skyline's own; docs/controllers.md): the
 //! active pad's state each loop iteration, its button edges dispatched as
 //! the vanilla key mappings they are bound to, the left stick as an analog
-//! move vector and the right stick turning the view. `horizon-ctl pad`
+//! move vector and the right stick turning the view. `skyline-ctl pad`
 //! injects a virtual pad on top of the real one.
 use super::{Game, Screen};
 use horizon_client::{
@@ -28,7 +28,7 @@ pub(super) struct Pads {
     /// The real controllers and the DualSense's output.
     #[cfg(feature = "controllers")]
     devices: hardware::Devices,
-    /// The virtual pad of `horizon-ctl pad`.
+    /// The virtual pad of `skyline-ctl pad`.
     injected: PadState,
     /// The virtual pad was in use at the last poll.
     virtual_input: bool,
@@ -57,7 +57,7 @@ pub(super) struct Pads {
 mod hardware;
 
 /// A build without the `controllers` feature (the server build, which must not need libudev): no
-/// hardware pads, only `horizon-ctl pad`'s virtual one.
+/// hardware pads, only `skyline-ctl pad`'s virtual one.
 #[cfg(not(feature = "controllers"))]
 mod hardware {
     use super::{super::Game, Pads};
@@ -160,7 +160,7 @@ impl Game<'_> {
 
     fn pad_button_logged(&mut self, event_loop: &ActiveEventLoop, button: Button, down: bool) {
         if let Err(e) = self.pad_button(event_loop, button, down) {
-            log::warn!("Horizon: controller {}: {e}", button.name());
+            log::warn!("Skyline: controller {}: {e}", button.name());
         }
     }
 
@@ -310,7 +310,7 @@ impl Game<'_> {
         self.pad_vibrate(rumble, pulse);
     }
 
-    /// `horizon-ctl pad ...`.
+    /// `skyline-ctl pad ...`.
     pub(super) fn pad_command(&mut self, words: &[&str]) -> Result<Value> {
         let arg = |i: usize| -> Result<&str> {
             words

@@ -6,7 +6,7 @@ name = "Sample Pack"
 version = "1.0.0"
 api = "0.1"
 description = "Every key of schema 1."
-authors = ["Horizon"]
+authors = ["Skyline"]
 license = "MIT"
 shared = ["common.wgsl"]
 

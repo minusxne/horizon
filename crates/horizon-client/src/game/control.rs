@@ -1,4 +1,4 @@
-//! Commands from the control socket (`horizon-ctl`), run on the game thread.
+//! Commands from the control socket (`skyline-ctl`), run on the game thread.
 use super::{Game, Screen};
 use horizon_client::{Result, items::ItemStack};
 use horizon_core::geometry::Vec3;
@@ -827,7 +827,7 @@ impl Game<'_> {
         }
     }
 
-    /// `horizon-ctl save` and `save-all`.
+    /// `skyline-ctl save` and `save-all`.
     fn control_save(&mut self, all: bool) -> Result<()> {
         if all {
             let keys: Vec<_> = self.world.chunks.keys().copied().collect();

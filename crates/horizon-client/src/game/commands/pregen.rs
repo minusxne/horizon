@@ -1,4 +1,4 @@
-//! `/pregen`, Horizon's own command: generate, light and save every chunk of a
+//! `/pregen`, Skyline's own command: generate, light and save every chunk of a
 //! square or a circle ahead of the players (docs/pregeneration.md). The task
 //! lives on the server and hands its band to the level's streaming, whose
 //! workers do the work; chunks behind the band unload and are saved as any
@@ -206,7 +206,7 @@ impl Game<'_> {
                 .count();
             let [missing, lighting, unlit] = streaming.unstick_light(&mut self.world, &row);
             log::warn!(
-                "Horizon: pregeneration waits on row {:?}: {missing} not loaded, {lighting} being lit, \
+                "Skyline: pregeneration waits on row {:?}: {missing} not loaded, {lighting} being lit, \
                  {unlit} unlit with no light job (queued again), {waiting} not post-processed; {:?}",
                 row.first(),
                 streaming.stages()

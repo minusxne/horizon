@@ -22,7 +22,7 @@ pub fn main() -> Result<()> {
         } else {
             OptionsFile::parse(&String::from_utf8_lossy(&fs::read(&path)?))
         };
-        // Horizon extends the slider to 64; vanilla rejects 33..64 to its default.
+        // Skyline extends the slider to 64; vanilla rejects 33..64 to its default.
         // Compare that deliberate extension as vanilla would serialize it.
         if file.int("renderDistance") > 32 {
             file.set("renderDistance", V::Int(12));

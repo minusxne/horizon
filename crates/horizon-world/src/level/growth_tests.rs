@@ -17,11 +17,11 @@ fn fixture() -> Option<&'static Fixture> {
     static FIXTURE: OnceLock<Option<Fixture>> = OnceLock::new();
     FIXTURE
         .get_or_init(|| {
-            let root = std::env::var_os("HORIZON_RESOURCES")
+            let root = std::env::var_os("SKYLINE_RESOURCES")
                 .map(PathBuf::from)
                 .unwrap_or_else(|| {
                     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                        .join("../../.local/horizon-client")
+                        .join("../../.local/skyline")
                         .join(horizon_core::VANILLA_VERSION)
                 });
             // Trees need the feature block-behaviour exports in the worldgen bundle.

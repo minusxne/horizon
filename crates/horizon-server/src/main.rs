@@ -1,4 +1,4 @@
-//! `horizon-server`: host a Horizon server (docs/server.md). It keeps the server's settings in `server.toml`,
+//! `skyline-server`: host a Skyline server (docs/server.md). It keeps the server's settings in `server.toml`,
 //! runs the game headless as the engine, and manages the vanilla files around it.
 
 mod api;
@@ -21,17 +21,17 @@ mod update;
 
 use std::{path::PathBuf, process::ExitCode};
 
-/// This release's version: release.yml builds it with `HORIZON_VERSION` from the tag
+/// This release's version: release.yml builds it with `SKYLINE_VERSION` from the tag
 /// (docs/versioning.md); a build from source says Cargo.toml's.
-const VERSION: &str = match option_env!("HORIZON_VERSION") {
+const VERSION: &str = match option_env!("SKYLINE_VERSION") {
     Some(version) if !version.is_empty() => version,
     _ => env!("CARGO_PKG_VERSION"),
 };
 
 const HELP: &str = "\
-horizon-server: host a Horizon (Minecraft Java Edition 26.3) server
+skyline-server: host a Skyline (Minecraft Java Edition 26.3) server
 
-Usage: horizon-server [--dir DIR] <command>
+Usage: skyline-server [--dir DIR] <command>
 
   init        Set up a server here: the EULA, the world, the port, who may join (asks, or takes flags:
               --eula --world NAME --seed SEED --port N --whitelist/--no-whitelist --player NAME... --op NAME
@@ -84,7 +84,7 @@ fn main() -> ExitCode {
     let mut dir = PathBuf::from(".");
     if let Some(i) = args.iter().position(|a| a == "--dir") {
         if i + 1 >= args.len() {
-            eprintln!("horizon-server: --dir needs a folder");
+            eprintln!("skyline-server: --dir needs a folder");
             return ExitCode::from(2);
         }
         dir = PathBuf::from(args.remove(i + 1));
@@ -96,7 +96,7 @@ fn main() -> ExitCode {
             Ok(())
         }
         Some("version" | "-V" | "--version") => {
-            println!("horizon-server {VERSION}");
+            println!("skyline-server {VERSION}");
             Ok(())
         }
         Some("init") => init_answers(&args[1..]).and_then(|a| init::run(&dir, a)),
@@ -113,7 +113,7 @@ fn main() -> ExitCode {
         Some("service") => service::command(&dir, &args[1..]),
         Some("restore") => match args.get(1) {
             Some(name) => cli::restore(&dir, name, args[2..].iter().any(|a| a == "--yes")),
-            None => Err("restore needs a backup (`horizon-server backups` lists them)".into()),
+            None => Err("restore needs a backup (`skyline-server backups` lists them)".into()),
         },
         Some("import") => import(&dir, &args[1..]),
         Some("config") => settings::command(&dir, &args[1..]),
@@ -121,13 +121,13 @@ fn main() -> ExitCode {
         Some("rollback") => update::rollback(&dir, &args[1..]),
         Some(command @ ("op" | "deop" | "whitelist")) => lists::run(&dir, command, &args[1..]),
         Some(other) => Err(format!(
-            "unknown command {other}; `horizon-server help` lists them"
+            "unknown command {other}; `skyline-server help` lists them"
         )),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
-            eprintln!("horizon-server: {e}");
+            eprintln!("skyline-server: {e}");
             ExitCode::FAILURE
         }
     }

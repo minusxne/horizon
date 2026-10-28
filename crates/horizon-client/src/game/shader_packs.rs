@@ -1,6 +1,6 @@
-//! Shader packs: the one picked on Options > Horizon Settings > Shader Packs, or
-//! `HORIZON_SHADER_PACK=<name>` (development; it wins over the pick), runs `shaderpacks/<name>`
-//! (a folder or a zip beside `options.txt`) over the world; Horizon's own packs go to
+//! Shader packs: the one picked on Options > Skyline Settings > Shader Packs, or
+//! `SKYLINE_SHADER_PACK=<name>` (development; it wins over the pick), runs `shaderpacks/<name>`
+//! (a folder or a zip beside `options.txt`) over the world; Skyline's own packs go to
 //! `game/native_shaders.rs`. The programs of the current dimension's folder are loaded when the
 //! dimension changes (spec 1.2).
 
@@ -36,7 +36,7 @@ impl Game<'_> {
     /// inputs to the pack's uniforms.
     pub(super) fn shader_pack_inputs(&mut self, camera: glam::DVec3, partial: f32) -> PackInputs {
         static DEV_PACK: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
-        let dev = DEV_PACK.get_or_init(|| std::env::var("HORIZON_SHADER_PACK").ok());
+        let dev = DEV_PACK.get_or_init(|| std::env::var("SKYLINE_SHADER_PACK").ok());
         let picked = dev.as_deref().unwrap_or(&self.settings.horizon.shader_pack);
         if self.native_shaders.picked != picked {
             // Another pack, or none: drop what ran.
@@ -57,7 +57,7 @@ impl Game<'_> {
         };
         let path = Self::shader_packs_dir().join(&name);
         if horizon_shader_api::package::is_pack(&path) {
-            // One of Horizon's own packs (game/native_shaders.rs).
+            // One of Skyline's own packs (game/native_shaders.rs).
             self.tick_native_shader_pack(&path);
         } else if let Some(renderer) = &mut self.renderer
             && renderer.shader_pack_dimension() != Some(dimension)
@@ -269,7 +269,7 @@ impl Game<'_> {
     }
 
     /// Marks vertices `start..end` (one entity) as hidden from the camera, for an entity
-    /// Horizon's culling would drop but a pack's shadow pass still draws (`EntitySpan::hide`).
+    /// Skyline's culling would drop but a pack's shadow pass still draws (`EntitySpan::hide`).
     pub(super) fn hide_spans_from(&self, start: usize, end: usize) -> bool {
         EntitySpan::hide(&mut self.entity_spans.borrow_mut(), start, end)
     }

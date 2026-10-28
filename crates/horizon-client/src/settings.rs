@@ -1,5 +1,5 @@
 //! Player settings persisted in `options.txt` with vanilla's keys and value
-//! encodings (Options.processOptions); lines Horizon does not know are kept.
+//! encodings (Options.processOptions); lines Skyline does not know are kept.
 //! The option screens live in `options_ui`.
 use crate::keybinds::KeyBinds;
 use crate::options_file::{OptionsFile, V};
@@ -173,13 +173,13 @@ pub struct Settings {
     pub toggle_use: bool,
     /// Taps of the sprint key counted as double taps (sprintWindow).
     pub sprint_window: i32,
-    /// Horizon's own graphics settings (`horizon-graphics.txt`, not options.txt).
+    /// Skyline's own graphics settings (`skyline-graphics.txt`, not options.txt).
     pub horizon: crate::graphics::Graphics,
-    /// Controller settings (`horizon-controller.txt`, Horizon's own).
+    /// Controller settings (`skyline-controller.txt`, Skyline's own).
     pub controller: crate::gamepad::PadSettings,
-    /// Horizon's optional extras (`horizon-extras.txt`), all off by default.
+    /// Skyline's optional extras (`skyline-extras.txt`), all off by default.
     pub extras: crate::extras::Extras,
-    /// The Horizon mods turned on (`horizon-mods.txt`), all off by default.
+    /// The Skyline mods turned on (`skyline-mods.txt`), all off by default.
     pub mods: crate::mod_list::ModList,
     /// The packs in `shaderpacks/`, listed when the Shader Packs page opens; the pick is
     /// `horizon.shader_pack`.
@@ -548,8 +548,8 @@ impl Settings {
         }
         f
     }
-    /// These settings with one `options.txt` value changed (`horizon-ctl
-    /// options-set`, as `OptionsFile::set_text` reads it). Horizon's own
+    /// These settings with one `options.txt` value changed (`skyline-ctl
+    /// options-set`, as `OptionsFile::set_text` reads it). Skyline's own
     /// files (graphics, controller, extras, the mod list) aren't in
     /// `options.txt`, so they stay as they are.
     pub fn with_option(&self, key: &str, value: &str) -> Result<Self, String> {
@@ -692,7 +692,7 @@ pub enum Opt {
     HighContrastBlockOutlines,
     ForceUnicode,
     JapaneseGlyphs,
-    /// Horizon's controller settings (`horizon-controller.txt`).
+    /// Skyline's controller settings (`skyline-controller.txt`).
     PadEnabled,
     PadVibration,
     PadAdaptiveTriggers,

@@ -1,6 +1,6 @@
 //! The real controllers (the `controllers` feature): gilrs' pads, and the DualSense's own output
 //! over HID: its rumble, adaptive triggers, lights and HD haptics. A build without the feature (the
-//! server build) has the stub in pad.rs instead, and only `horizon-ctl pad`'s virtual pad.
+//! server build) has the stub in pad.rs instead, and only `skyline-ctl pad`'s virtual pad.
 use super::{
     super::{Game, Screen},
     Pads,
@@ -74,7 +74,7 @@ impl Pads {
             }
             Err(gilrs::Error::NotImplemented(_)) => None,
             Err(e) => {
-                log::warn!("Horizon: controllers are unavailable: {e}");
+                log::warn!("Skyline: controllers are unavailable: {e}");
                 None
             }
         };
@@ -291,7 +291,7 @@ impl Game<'_> {
     }
 
     /// Open the pad's haptics once its output is open over USB (its audio device is there
-    /// only then); close them when it goes. Opt-in with `HORIZON_DUALSENSE_HAPTICS=1` until
+    /// only then); close them when it goes. Opt-in with `SKYLINE_DUALSENSE_HAPTICS=1` until
     /// they are proven on a pad (docs/controllers.md); never for games without sound (tests).
     fn pad_haptics(&mut self) {
         let usb = self.pad.devices.output.as_ref().and_then(|o| o.open())
@@ -301,8 +301,8 @@ impl Game<'_> {
             self.pad.devices.haptics_tried = false;
         } else if !self.pad.devices.haptics_tried {
             self.pad.devices.haptics_tried = true;
-            if std::env::var_os("HORIZON_DUALSENSE_HAPTICS").is_some_and(|v| v == "1")
-                && std::env::var_os("HORIZON_NO_AUDIO").is_none()
+            if std::env::var_os("SKYLINE_DUALSENSE_HAPTICS").is_some_and(|v| v == "1")
+                && std::env::var_os("SKYLINE_NO_AUDIO").is_none()
             {
                 self.pad.devices.haptics = horizon_dualsense::haptics::Haptics::open();
             }
@@ -380,7 +380,7 @@ impl Game<'_> {
                 let end = Instant::now() + Duration::from_millis(u64::from(pulse.millis) + 50);
                 self.pad.devices.rumbles.push((effect, end));
             }
-            Err(e) => log::debug!("Horizon: controller vibration: {e}"),
+            Err(e) => log::debug!("Skyline: controller vibration: {e}"),
         }
     }
 

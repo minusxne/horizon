@@ -1052,7 +1052,7 @@ impl Hub {
         }));
     }
 
-    /// ServerClockManager.createFullSyncPacket: every clock. Horizon keeps the
+    /// ServerClockManager.createFullSyncPacket: every clock. Skyline keeps the
     /// overworld clock (the day time); the End's clock runs with the game
     /// time. Clocks do not advance without the advance_time rule.
     fn time_packet(&self, world: &World, rate: f32) -> C {
@@ -1259,7 +1259,7 @@ impl Hub {
         if g.left_reason.is_empty() {
             g.left_reason = reason.to_owned();
         }
-        if std::env::var_os("HORIZON_NET_DEBUG").is_some() {
+        if std::env::var_os("SKYLINE_NET_DEBUG").is_some() {
             log::info!("[lan] {} left: {reason}", g.name);
         }
         if !g.placed {
@@ -2309,7 +2309,7 @@ impl Hub {
             return;
         }
         // TickRateManager.runsNormally: not frozen (a frozen game's steps
-        // are not counted either; Horizon's hub does not see them).
+        // are not counted either; Skyline's hub does not see them).
         if !frozen {
             g.received_moves += 1;
             let mut packets = g.received_moves - g.known_moves;
@@ -2718,7 +2718,7 @@ impl Hub {
     }
 }
 
-/// A packet Horizon sends as raw bytes (no fields worth a type).
+/// A packet Skyline sends as raw bytes (no fields worth a type).
 /// multiplayer.disconnect.invalid_player_movement.
 /// Mth.wrapDegrees.
 fn wrap_degrees(degrees: f32) -> f32 {

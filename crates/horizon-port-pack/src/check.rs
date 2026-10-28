@@ -1,5 +1,5 @@
 //! One mod jar on its own, as the launcher's mod browser installs it: what
-//! of it Horizon runs, said before install (Works, Partly, Doesn't run),
+//! of it Skyline runs, said before install (Works, Partly, Doesn't run),
 //! from the jar itself. The jar is carried over ([`crate::carry`]) into a
 //! folder content mod, and its classes are read ([`crate::classes`]) for
 //! what the carry can't take: block entities, entities, Mixins, behaviour.
@@ -127,7 +127,7 @@ pub fn check(jar_path: &Path, out: &Path) -> Result<Check, String> {
         Ok(check)
     };
     if old_layout(&names) {
-        check.summary = "Made for Minecraft 1.20 or older: Horizon ports mods made for 1.21 \
+        check.summary = "Made for Minecraft 1.20 or older: Skyline ports mods made for 1.21 \
                          and later."
             .into();
         return done(check);
@@ -197,8 +197,8 @@ pub fn check(jar_path: &Path, out: &Path) -> Result<Check, String> {
     if !report.recipes_kept.is_empty() {
         skipped.push(plural(
             report.recipes_kept.len(),
-            "recipe of a type Horizon doesn't have",
-            "recipes of types Horizon doesn't have",
+            "recipe of a type Skyline doesn't have",
+            "recipes of types Skyline doesn't have",
         ));
     }
     if !report.unreadable.is_empty() {
@@ -247,7 +247,7 @@ pub fn check(jar_path: &Path, out: &Path) -> Result<Check, String> {
     let behaviour = check.code.behaviour();
     (check.verdict, check.summary) = if content == 0 {
         let what = if behaviour || check.code.classes > 0 {
-            "everything it does is Java code, which Horizon doesn't run"
+            "everything it does is Java code, which Skyline doesn't run"
         } else {
             "it has no blocks, items, recipes or worldgen"
         };

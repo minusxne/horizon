@@ -90,7 +90,7 @@ fn pause_buttons(
 }
 
 /// The icon row: report bugs, feedback, friends, player reporting.
-/// `FRIENDS_ICON` (vanilla's `CommonButtons.friends`) opens Horizon's
+/// `FRIENDS_ICON` (vanilla's `CommonButtons.friends`) opens Skyline's
 /// Play with Friends; the others stay inactive.
 const FRIENDS_ICON: usize = 2;
 fn pause_icons(w: f32, h: f32, links: bool) -> [(f32, f32, &'static str); 4] {

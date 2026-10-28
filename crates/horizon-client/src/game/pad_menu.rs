@@ -1,4 +1,4 @@
-//! A controller in menus, screens and inventories (Horizon's own;
+//! A controller in menus, screens and inventories (Skyline's own;
 //! docs/controllers.md). Two ways to drive them, picked in the controller
 //! options:
 //!
@@ -447,7 +447,7 @@ impl Game<'_> {
                 self.pad_step(event_loop, button);
                 self.pad.menu.repeat = Some((button, Instant::now(), false));
             }
-            // Bumpers switch tabs (creative, Horizon's options sections, ...).
+            // Bumpers switch tabs (creative, Skyline's options sections, ...).
             Button::LeftBumper | Button::RightBumper => {
                 self.pad_tab(event_loop, button == Button::RightBumper);
             }
@@ -861,11 +861,11 @@ impl Game<'_> {
             || self.station_typing()
     }
 
-    /// Open the on-screen keyboard over the focused field: Horizon's, or
+    /// Open the on-screen keyboard over the focused field: Skyline's, or
     /// Steam's on a Steam Deck (`steam://open/keyboard`, which types into
     /// the window like a real keyboard).
     fn pad_open_keyboard(&mut self) {
-        // Without xdg-open (macOS, Windows), Horizon's keyboard instead.
+        // Without xdg-open (macOS, Windows), Skyline's keyboard instead.
         if gamepad::steam_keyboard(self.settings.controller.keyboard)
             && std::process::Command::new("xdg-open")
                 .arg("steam://open/keyboard")
@@ -947,7 +947,7 @@ impl Game<'_> {
                 None => self.options_key(key.expect("a key"), None),
             };
             if let Err(e) = result {
-                log::warn!("Horizon: on-screen keyboard: {e}");
+                log::warn!("Skyline: on-screen keyboard: {e}");
             }
         } else if self.title.is_some() {
             match key {

@@ -259,7 +259,7 @@ impl Game<'_> {
         self.ui.chat.rescale(&self.gui.atlas);
         self.creative_screen.forget_items();
     }
-    /// Settings that Horizon applies beyond render distance, volume and GUI scale.
+    /// Settings that Skyline applies beyond render distance, volume and GUI scale.
     pub(super) fn apply_ui_settings(&mut self) {
         let s = &self.settings;
         if let Some(r) = self.renderer.as_mut() {

@@ -87,7 +87,7 @@ pub enum Screen {
         name: String,
         lines: std::cell::Cell<usize>,
     },
-    /// Join a friend's world with its invite code (Horizon's own, behind the
+    /// Join a friend's world with its invite code (Skyline's own, behind the
     /// title screen's Friends button).
     Friend {
         code: String,
@@ -1569,7 +1569,7 @@ mod tests {
 
     #[test]
     fn icon_arrows_join_and_move_servers() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-arrows-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-mp-arrows-{}", std::process::id()));
         let saves = dir.join("saves");
         std::fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
@@ -1625,7 +1625,7 @@ mod tests {
 
     #[test]
     fn delete_asks_before_removing_the_server() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-delete-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-mp-delete-{}", std::process::id()));
         let saves = dir.join("saves");
         std::fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
@@ -1691,7 +1691,7 @@ mod tests {
 
     #[test]
     fn edit_cycles_and_saves_the_server_resource_pack_setting() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-packs-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-mp-packs-{}", std::process::id()));
         let saves = dir.join("saves");
         std::fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);

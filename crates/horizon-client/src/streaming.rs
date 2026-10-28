@@ -1408,7 +1408,7 @@ impl Streaming {
                 Ok(Done::Saved(protos)) => self.receive_saved(protos),
                 Ok(other) => self.deferred.push(other),
                 Err(_) => {
-                    log::warn!("Horizon: chunk generation did not finish before saving");
+                    log::warn!("Skyline: chunk generation did not finish before saving");
                     break;
                 }
             }

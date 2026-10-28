@@ -1003,7 +1003,7 @@ pub struct ParticleEngine {
     starters: Vec<Starter>,
     /// Local sounds requested by particles (dripstone drips): (event, position, volume, pitch).
     pub sounds: Vec<(&'static str, [f64; 3], f32, f32)>,
-    /// How many of each type were made, for `horizon-ctl status`.
+    /// How many of each type were made, for `skyline-ctl status`.
     made: std::collections::BTreeMap<&'static str, u64>,
     /// The item particles' sprites (`BreakingItemParticle`'s slime ball, snowball
     /// and cobweb models, resolved for the ground), one per model layer.

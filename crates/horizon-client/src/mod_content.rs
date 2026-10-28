@@ -1247,11 +1247,11 @@ pub fn resource_root(base: &Path, mods: &[ContentMod], cache: &Path) -> Result<P
     if fs::read(out.join(STAMP)).is_ok_and(|s| s == stamp.as_bytes()) {
         // A reused root warns as the build did.
         let warnings = fs::read_to_string(out.join(WARNINGS)).unwrap_or_default();
-        warnings.lines().for_each(|w| log::warn!("Horizon: {w}"));
+        warnings.lines().for_each(|w| log::warn!("Skyline: {w}"));
         return Ok(out);
     }
     for warning in build(base, mods, &out)? {
-        log::warn!("Horizon: {warning}");
+        log::warn!("Skyline: {warning}");
     }
     fs::write(out.join(STAMP), stamp)?;
     Ok(out)
@@ -1285,7 +1285,7 @@ fn stamp(base: &Path, mods: &[ContentMod]) -> Result<String> {
     parts.push(meta(&std::env::current_exe()?)?);
     let base = std::path::absolute(base)?;
     parts.push(
-        String::from_utf8_lossy(&fs::read(base.join("horizon-resources.json"))?).into_owned(),
+        String::from_utf8_lossy(&fs::read(base.join("skyline-resources.json"))?).into_owned(),
     );
     for name in JSON_TABLES.iter().chain(&NBT_TABLES).chain(&TAG_BUNDLES) {
         if base.join(name).exists() {

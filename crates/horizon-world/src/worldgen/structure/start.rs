@@ -695,7 +695,7 @@ impl Piece {
             Self::Legacy(p) => p.type_name(),
         }
     }
-    /// `StructurePiece.createTag`; None for a type Horizon cannot save yet.
+    /// `StructurePiece.createTag`; None for a type Skyline cannot save yet.
     pub fn save(&self) -> Option<crate::nbt::Compound> {
         match self {
             Self::Pool(p) => Some(p.save()),

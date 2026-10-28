@@ -32,9 +32,9 @@ fn one_line(doc: &str) -> String {
 pub fn markdown() -> String {
     let mut out = format!(
         "# Shader API reference ({API})\n\n\
-         Generated from `crates/horizon-shader-api` (`HORIZON_WRITE_DOCS=1 cargo test -p horizon-shader-api --test reference`\n\
+         Generated from `crates/horizon-shader-api` (`SKYLINE_WRITE_DOCS=1 cargo test -p horizon-shader-api --test reference`\n\
          rewrites it; the test fails when it drifts). The API's design and pack format: [shaders.md](shaders.md).\n\n\
-         A stage is a function your WGSL defines, with the signature below; Horizon puts the prelude (these structs, the\n\
+         A stage is a function your WGSL defines, with the signature below; Skyline puts the prelude (these structs, the\n\
          resources and helpers) before your files and calls the function from its own pass. Your files declare no\n\
          bindings and no entry points, and no names starting with `horizon_`.\n\n\
          ## Stages\n\n\

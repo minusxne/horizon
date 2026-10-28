@@ -905,7 +905,7 @@ fn mob_equipment(
     out: &mut Vec<(u8, Option<horizon_protocol::item::Stack>)>,
 ) {
     let e = &m.extra;
-    // A horse's armour, a llama's carpet, a harness: Horizon keeps the body
+    // A horse's armour, a llama's carpet, a harness: Skyline keeps the body
     // slot's item (6) in `head`.
     let body = horizon_client::mobs::drops::head_is_body(m.species());
     let slots = [
@@ -954,7 +954,7 @@ pub const HELP: &[&str] = &[
 ];
 
 impl Game<'_> {
-    /// `horizon-ctl lan ...`.
+    /// `skyline-ctl lan ...`.
     pub(super) fn lan_control(&mut self, words: &[&str]) -> Result<Option<serde_json::Value>> {
         use serde_json::json;
         if words[0] != "lan" {
@@ -995,7 +995,7 @@ impl Game<'_> {
         }
     }
 
-    /// `horizon-ctl lan status`.
+    /// `skyline-ctl lan status`.
     fn lan_status(&self) -> serde_json::Value {
         use serde_json::json;
         match &self.lan {

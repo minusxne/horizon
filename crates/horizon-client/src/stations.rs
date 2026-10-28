@@ -903,7 +903,7 @@ mod tests {
     #[test]
     fn prepared_vanilla_data() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("items.json").exists() {
             return;

@@ -36,9 +36,9 @@ pub const HELP: &[&str] = &[
     "friends status                 the code, how friends reach this host, the guests",
 ];
 
-/// `HORIZON_STUN_SERVERS`, else `friendsStun` in horizon.txt, else the defaults.
+/// `SKYLINE_STUN_SERVERS`, else `friendsStun` in skyline.txt, else the defaults.
 fn stun_servers() -> Vec<String> {
-    if std::env::var_os("HORIZON_STUN_SERVERS").is_some() {
+    if std::env::var_os("SKYLINE_STUN_SERVERS").is_some() {
         return stun::servers_from_env();
     }
     let dir = std::env::current_dir().unwrap_or_default();
@@ -79,16 +79,16 @@ impl Game<'_> {
             game: GAME_VERSION.to_owned(),
             relay: horizon_client::net::friends_relay_setting(),
             path: PathMode::from_env(),
-            port: std::env::var("HORIZON_FRIENDS_PORT")
+            port: std::env::var("SKYLINE_FRIENDS_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(DEFAULT_PORT),
             reach: reach::Options {
-                // HORIZON_FRIENDS_UPNP=0 leaves the router alone.
-                map_port: env_flag("HORIZON_FRIENDS_UPNP", true),
+                // SKYLINE_FRIENDS_UPNP=0 leaves the router alone.
+                map_port: env_flag("SKYLINE_FRIENDS_UPNP", true),
                 stun: stun_servers(),
                 // Both ends on one machine (tests).
-                loopback: env_flag("HORIZON_FRIENDS_LOOPBACK", false),
+                loopback: env_flag("SKYLINE_FRIENDS_LOOPBACK", false),
             },
         }) {
             Ok(h) => h,
@@ -261,7 +261,7 @@ impl Game<'_> {
         }
     }
 
-    /// `horizon-ctl friends ...`.
+    /// `skyline-ctl friends ...`.
     pub(super) fn friends_control(&mut self, words: &[&str]) -> Result<Option<serde_json::Value>> {
         use serde_json::json;
         if words[0] != "friends" {

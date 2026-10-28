@@ -445,7 +445,7 @@ mod tests {
     #[test]
     fn a_curseforge_zip_takes_names_from_its_mod_list() {
         use std::io::Write;
-        let dir = std::env::temp_dir().join(format!("horizon-cf-zip-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-cf-zip-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("pack.zip");
         let mut zip = zip::ZipWriter::new(fs::File::create(&path).unwrap());

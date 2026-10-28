@@ -1,6 +1,6 @@
-//! `horizon-ctl mcp`: the Model Context Protocol over stdin and stdout
+//! `skyline-ctl mcp`: the Model Context Protocol over stdin and stdout
 //! (JSON-RPC 2.0, one message per line, like the launcher's `mcp`), so AI
-//! agents can play Horizon. Each tool is a horizon-ctl command from the
+//! agents can play Skyline. Each tool is a skyline-ctl command from the
 //! shared table, run through the same `Session` as the CLI.
 use crate::{Session, commands};
 use serde_json::{Value, json};
@@ -13,7 +13,7 @@ fn tools() -> Vec<Value> {
         .iter()
         .filter(|c| c.mcp)
         .map(|c| {
-            let mut description = format!("{}. Usage: horizon-ctl {}", capital(c.summary), c.usage);
+            let mut description = format!("{}. Usage: skyline-ctl {}", capital(c.summary), c.usage);
             if !c.details.is_empty() {
                 description.push_str(". ");
                 description.push_str(c.details);
@@ -74,7 +74,7 @@ impl Session {
             );
         };
         if cmd.name == "screenshot" {
-            let path = std::env::temp_dir().join(format!("horizon-ctl-{}.png", std::process::id()));
+            let path = std::env::temp_dir().join(format!("skyline-ctl-{}.png", std::process::id()));
             let result = self
                 .run(&["screenshot".to_owned(), path.display().to_string()])
                 .and_then(|reply| {
@@ -136,8 +136,8 @@ impl Session {
             "initialize" => Ok(json!({
                 "protocolVersion": params.get("protocolVersion").and_then(Value::as_str).unwrap_or(PROTOCOL),
                 "capabilities": { "tools": {} },
-                "serverInfo": { "name": "horizon-ctl", "version": horizon_core::release::VERSION },
-                "instructions": "Play Horizon, a Rust reimplementation of Minecraft Java Edition. Start with launch (it finds the game installed by the Horizon launcher and opens or creates a world), then read the world with state, inventory, screen, entities and find_block, and act with goto, look_at_block, break, place, interact, click_slot and click_button. Actions block until they finish and report what happened. Coordinates are block coordinates; yaw 0 faces south (+Z).",
+                "serverInfo": { "name": "skyline-ctl", "version": horizon_core::release::VERSION },
+                "instructions": "Play Skyline, a Rust reimplementation of Minecraft Java Edition. Start with launch (it finds the game installed by the Skyline launcher and opens or creates a world), then read the world with state, inventory, screen, entities and find_block, and act with goto, look_at_block, break, place, interact, click_slot and click_button. Actions block until they finish and report what happened. Coordinates are block coordinates; yaw 0 faces south (+Z).",
             })),
             "ping" => Ok(json!({})),
             "tools/list" => Ok(json!({ "tools": tools() })),
@@ -232,7 +232,7 @@ mod tests {
 
     #[test]
     fn protocol_basics() {
-        let mut s = Session::new(std::env::temp_dir().join("horizon-ctl-mcp-test.sock"), None);
+        let mut s = Session::new(std::env::temp_dir().join("skyline-ctl-mcp-test.sock"), None);
         let init = s
             .handle("initialize", &json!({ "protocolVersion": "2025-03-26" }))
             .unwrap();

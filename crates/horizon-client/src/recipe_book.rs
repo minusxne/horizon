@@ -880,7 +880,7 @@ mod tests {
     }
     #[test]
     fn the_index_knows_each_recipes_toast_station_and_result() {
-        let root = std::env::temp_dir().join(format!("horizon-toast-index-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("skyline-toast-index-{}", std::process::id()));
         let dir = root.join("data/minecraft/recipe");
         std::fs::create_dir_all(&dir).unwrap();
         for (name, json) in [

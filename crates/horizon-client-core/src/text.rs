@@ -280,7 +280,7 @@ impl Text {
         }
     }
     /// A translation argument: vanilla passes numbers as numbers, which
-    /// Horizon formats into unstyled literals.
+    /// Skyline formats into unstyled literals.
     fn argument(&self) -> Value {
         let c = self.component();
         match c

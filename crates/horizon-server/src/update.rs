@@ -1,4 +1,4 @@
-//! Updates and rollbacks (docs/server.md, section 7) for a `horizon-server` installed by install.sh or
+//! Updates and rollbacks (docs/server.md, section 7) for a `skyline-server` installed by install.sh or
 //! install.ps1: each release in `<dir>/releases/<tag>`, `<dir>/current` pointing at the one in use, and
 //! `<dir>/previous` naming the one before it. An update downloads the newest stable release from GitHub, checks it
 //! against the SHA-256 in the release's signed SHA256SUMS (docs/security.md), unpacks it beside the others and
@@ -60,7 +60,7 @@ impl Install {
     /// The install, or why there is none to update.
     pub fn required() -> Result<Self, String> {
         Self::find().ok_or_else(|| {
-            "this horizon-server wasn't installed by install.sh or install.ps1 (no releases/ and current \
+            "this skyline-server wasn't installed by install.sh or install.ps1 (no releases/ and current \
              around it): update it the way you installed it"
                 .into()
         })
@@ -91,8 +91,8 @@ impl Install {
     /// Points `current` at the release `tag`, and remembers the one it pointed at as `previous`.
     pub fn switch(&self, tag: &str) -> Result<(), String> {
         let target = self.release(tag);
-        if !target.join(exe("horizon-server")).is_file() {
-            return Err(format!("{} holds no horizon-server", target.display()));
+        if !target.join(exe("skyline-server")).is_file() {
+            return Err(format!("{} holds no skyline-server", target.display()));
         }
         if let Some(old) = self.current().filter(|old| old != tag) {
             std::fs::write(self.root.join("previous"), format!("{old}\n"))
@@ -236,7 +236,7 @@ fn fetch(url: &str) -> Result<Vec<u8>, String> {
     let mut body = Vec::new();
     ureq::get(url)
         .set("Accept", "application/vnd.github+json")
-        .set("User-Agent", "horizon-server")
+        .set("User-Agent", "skyline-server")
         .call()
         .map_err(|e| match e {
             ureq::Error::Status(404, _) => "404".to_string(),
@@ -267,7 +267,7 @@ pub fn release(tag: Option<&str>) -> Result<Release, String> {
 /// The archive for this computer in a release's JSON, with the SHA-256 the release's SHA256SUMS
 /// gives for it, once its signature checks with one of `keys` (docs/security.md). A release from
 /// before signing gets the SHA-256 pinned for it (legacy-releases.txt); any other release that
-/// isn't signed, or not by Horizon's key, is refused.
+/// isn't signed, or not by Skyline's key, is refused.
 fn pick(
     release: &Value,
     fetch: impl Fn(&str) -> Result<Vec<u8>, String>,
@@ -328,7 +328,7 @@ fn pick(
     })
 }
 
-/// Where a release tag stands among Horizon's releases (docs/versioning.md). Releases before 0.2 were
+/// Where a release tag stands among Skyline's releases (docs/versioning.md). Releases before 0.2 were
 /// tagged `vYYYY.MM.DD[.N]` (any `v` and numbers: `Dated`), compared number by number; from 0.2 they are
 /// `vMAJOR.MINOR.PATCH[-PRE]` (`Semver`), and every one of those is newer than every dated one, so
 /// v0.2.0 follows v2026.10.19.15. A pre-release (`v0.3.0-rc.1`) comes before its release, as in semver.
@@ -408,7 +408,7 @@ pub fn download(install: &Install, release: &Release) -> Result<PathBuf, String>
     let part = folder.join(format!("{}.part", release.asset));
     let result = (|| {
         let mut reader = ureq::get(&release.url)
-            .set("User-Agent", "horizon-server")
+            .set("User-Agent", "skyline-server")
             .call()
             .map_err(|e| format!("downloading {}: {e}", release.asset))?
             .into_reader();
@@ -445,7 +445,7 @@ pub fn download(install: &Install, release: &Release) -> Result<PathBuf, String>
     result.map(|()| path)
 }
 
-/// Unpacks a release archive into `<root>/releases/<tag>`, with its `.local/horizon-client` linked to the
+/// Unpacks a release archive into `<root>/releases/<tag>`, with its `.local/skyline` linked to the
 /// install's prepared game files (which updates keep), as the installers do. It doesn't switch to it.
 pub fn unpack(install: &Install, archive: &Path, tag: &str) -> Result<PathBuf, String> {
     if tag.is_empty() || tag.contains(['/', '\\']) || tag.starts_with('.') {
@@ -493,15 +493,15 @@ pub fn unpack(install: &Install, archive: &Path, tag: &str) -> Result<PathBuf, S
                 archive.display()
             ));
         }
-        let source = find_program(&scratch, &exe("horizon-server"))
+        let source = find_program(&scratch, &exe("skyline-server"))
             .and_then(|p| p.parent().map(Path::to_path_buf))
-            .ok_or_else(|| format!("{} holds no horizon-server", archive.display()))?;
+            .ok_or_else(|| format!("{} holds no skyline-server", archive.display()))?;
         #[cfg(unix)]
         for name in [
-            "horizon-server",
-            "horizon-engine",
-            "horizon-client",
-            "horizon-prepare",
+            "skyline-server",
+            "skyline-engine",
+            "skyline",
+            "skyline-prepare",
         ] {
             use std::os::unix::fs::PermissionsExt;
             let path = source.join(name);
@@ -517,7 +517,7 @@ pub fn unpack(install: &Install, archive: &Path, tag: &str) -> Result<PathBuf, S
         std::fs::create_dir_all(&game_files).map_err(|e| e.to_string())?;
         let local = target.join(".local");
         std::fs::create_dir_all(&local).map_err(|e| e.to_string())?;
-        let link = local.join("horizon-client");
+        let link = local.join("skyline");
         if link.symlink_metadata().is_err() {
             point(&link, &game_files).map_err(|e| format!("{}: {e}", link.display()))?;
         }
@@ -608,7 +608,7 @@ pub fn command(dir: &Path, args: &[String]) -> Result<(), String> {
             if check {
                 if newer(&release.tag, &current) {
                     println!(
-                        "Horizon {} is out; this server runs {current}. `horizon-server update` installs it.",
+                        "Skyline {} is out; this server runs {current}. `skyline-server update` installs it.",
                         release.tag
                     );
                 } else {
@@ -623,7 +623,7 @@ pub fn command(dir: &Path, args: &[String]) -> Result<(), String> {
                 println!("Already on the newest release ({current}).");
                 return Ok(());
             }
-            println!("Downloading Horizon {} ({})...", release.tag, release.asset);
+            println!("Downloading Skyline {} ({})...", release.tag, release.asset);
             let archive = download(&install, &release)?;
             (release.tag, archive, true)
         }
@@ -679,7 +679,7 @@ fn switch_to(dir: &Path, install: &Install, tag: &str, timeout: Duration) -> Res
         )
         .map_err(|e| {
             if e == "no such endpoint" {
-                "the running server is older than updates: stop it, then run `horizon-server update` again".into()
+                "the running server is older than updates: stop it, then run `skyline-server update` again".into()
             } else {
                 e
             }
@@ -719,7 +719,7 @@ fn switch_to(dir: &Path, install: &Install, tag: &str, timeout: Duration) -> Res
         if Instant::now() > deadline {
             println!();
             return Err(
-                "no word from the server about the update; `horizon-server logs` shows where it is"
+                "no word from the server about the update; `skyline-server logs` shows where it is"
                     .into(),
             );
         }
@@ -761,9 +761,9 @@ fn switch_stopped(dir: &Path, install: &Install, tag: &str) -> Result<(), String
         return Err(format!("stayed on {from}: {e}"));
     }
     println!(
-        "Switched from {from} to {tag}.{backed_up}{} `horizon-server rollback` goes back to {from}.",
+        "Switched from {from} to {tag}.{backed_up}{} `skyline-server rollback` goes back to {from}.",
         if server {
-            " The server is stopped: `horizon-server start` runs the new version."
+            " The server is stopped: `skyline-server start` runs the new version."
         } else {
             ""
         }
@@ -784,7 +784,7 @@ mod tests {
     #[cfg(unix)]
     fn scratch(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!(
-            "horizon-server-update-{name}-{}",
+            "skyline-server-update-{name}-{}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&dir);
@@ -800,7 +800,7 @@ mod tests {
         for tag in tags {
             let release = root.join("releases").join(tag);
             std::fs::create_dir_all(&release).unwrap();
-            std::fs::write(release.join("horizon-server"), tag).unwrap();
+            std::fs::write(release.join("skyline-server"), tag).unwrap();
         }
         std::os::unix::fs::symlink(root.join("releases").join(tags[0]), root.join("current"))
             .unwrap();
@@ -964,7 +964,7 @@ mod tests {
         let exe = install.root.join("current/horizon-server");
         assert_eq!(Install::around(&exe), Some(install.clone()));
         assert_eq!(
-            Install::around(&install.release("v2").join("horizon-server")),
+            Install::around(&install.release("v2").join("skyline-server")),
             Some(install.clone())
         );
         assert_eq!(install.current().as_deref(), Some("v1"));
@@ -989,7 +989,7 @@ mod tests {
             install
                 .switch("v3")
                 .unwrap_err()
-                .contains("no horizon-server")
+                .contains("no skyline-server")
         );
         assert_eq!(install.current().as_deref(), Some("v1"));
         std::fs::remove_dir_all(&install.root).unwrap();
@@ -1055,8 +1055,8 @@ mod tests {
         let source = scratch("unpack-source");
         let inner = source.join("horizon-v2");
         std::fs::create_dir_all(&inner).unwrap();
-        std::fs::write(inner.join("horizon-server"), "v2").unwrap();
-        std::fs::write(inner.join("horizon-engine"), "engine").unwrap();
+        std::fs::write(inner.join("skyline-server"), "v2").unwrap();
+        std::fs::write(inner.join("skyline-engine"), "engine").unwrap();
         let archive = source.join("horizon-server-linux-x86_64.tar.gz");
         let status = std::process::Command::new("tar")
             .arg("-czf")
@@ -1070,19 +1070,19 @@ mod tests {
         let release = unpack(&install, &archive, "v2").unwrap();
         assert_eq!(release, install.release("v2"));
         assert_eq!(
-            std::fs::read_to_string(release.join("horizon-engine")).unwrap(),
+            std::fs::read_to_string(release.join("skyline-engine")).unwrap(),
             "engine"
         );
         {
             use std::os::unix::fs::PermissionsExt;
-            let mode = std::fs::metadata(release.join("horizon-engine"))
+            let mode = std::fs::metadata(release.join("skyline-engine"))
                 .unwrap()
                 .permissions()
                 .mode();
             assert_eq!(mode & 0o111, 0o111);
         }
         assert_eq!(
-            std::fs::canonicalize(release.join(".local/horizon-client")).unwrap(),
+            std::fs::canonicalize(release.join(".local/skyline")).unwrap(),
             std::fs::canonicalize(install.root.join("game-files/horizon-client")).unwrap()
         );
         // Not switched yet; nothing left behind; the release in use can't be unpacked over.
@@ -1101,7 +1101,7 @@ mod tests {
         assert!(
             unpack(&install, &empty, "v3")
                 .unwrap_err()
-                .contains("holds no horizon-server")
+                .contains("holds no skyline-server")
         );
         assert!(!install.release("v3").exists());
         std::fs::remove_dir_all(&install.root).unwrap();

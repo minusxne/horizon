@@ -92,7 +92,7 @@ pub struct Session {
     pub counters: Arc<Mutex<Option<Arc<Counters>>>>,
     /// The cookies this server stored on us (`ClientboundStoreCookiePacket`).
     pub cookies: Cookies,
-    /// HORIZON_NET_DEBUG=1 logs every packet sent from the game thread.
+    /// SKYLINE_NET_DEBUG=1 logs every packet sent from the game thread.
     debug: bool,
 }
 impl Session {
@@ -184,7 +184,7 @@ impl Session {
                 });
             })
             .ok();
-        let debug = std::env::var_os("HORIZON_NET_DEBUG").is_some();
+        let debug = std::env::var_os("SKYLINE_NET_DEBUG").is_some();
         Self {
             events,
             writer,
@@ -296,8 +296,8 @@ pub fn shown_address(address: &str) -> String {
     }
 }
 
-/// The relay the player set (`friendsRelay` in horizon.txt, beside
-/// options.txt), else `HORIZON_RELAY_URL`. None by default.
+/// The relay the player set (`friendsRelay` in skyline.txt, beside
+/// options.txt), else `SKYLINE_RELAY_URL`. None by default.
 pub fn friends_relay_setting() -> Option<String> {
     let dir = std::env::current_dir().ok()?;
     crate::ui_theme::preference(&dir, "friendsRelay")
@@ -344,7 +344,7 @@ fn status(send: &Sender<Event>, text: &str) {
 }
 
 /// Shown when an online-mode server asks a client without an account to authenticate.
-pub const NOT_SIGNED_IN: &str = "This server is in online mode. Sign in with your Microsoft account in the Horizon launcher to join it.";
+pub const NOT_SIGNED_IN: &str = "This server is in online mode. Sign in with your Microsoft account in the Skyline launcher to join it.";
 
 /// A translation, or the key itself (Language.getOrDefault).
 fn tr(lang: &Language, key: &str) -> String {
@@ -687,7 +687,7 @@ fn receive_brand(payload: &cfg::CustomPayload, send: &Sender<Event>) {
 /// The minecraft:brand payload: a string naming the client.
 fn brand() -> Vec<u8> {
     let mut w = horizon_protocol::buf::Writer::new();
-    w.string("horizon");
+    w.string("skyline");
     w.data
 }
 

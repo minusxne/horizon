@@ -335,7 +335,7 @@ mod tests {
         fn new() -> Self {
             static NEXT: AtomicUsize = AtomicUsize::new(0);
             let path = std::env::temp_dir().join(format!(
-                "horizon-overlay-cache-{}-{}",
+                "skyline-overlay-cache-{}-{}",
                 std::process::id(),
                 NEXT.fetch_add(1, Ordering::Relaxed)
             ));
@@ -876,10 +876,10 @@ mod tests {
     #[ignore = "requires prepared resources and real pack paths in environment"]
     fn benchmark_real_resource_root() {
         use std::{hint::black_box, time::Instant};
-        let vanilla = PathBuf::from(std::env::var("HORIZON_OVERLAY_BENCH_VANILLA").unwrap());
-        assert!(vanilla.join("horizon-resources.json").is_file());
+        let vanilla = PathBuf::from(std::env::var("SKYLINE_OVERLAY_BENCH_VANILLA").unwrap());
+        assert!(vanilla.join("skyline-resources.json").is_file());
         let paths: Vec<PathBuf> =
-            serde_json::from_str(&std::env::var("HORIZON_OVERLAY_BENCH_PACKS").unwrap()).unwrap();
+            serde_json::from_str(&std::env::var("SKYLINE_OVERLAY_BENCH_PACKS").unwrap()).unwrap();
         // The original resource_root selection/cache-key path, with its original builder.
         fn original(vanilla: &Path, packs: &[Pack], cache: &Path) -> PathBuf {
             let key = packs

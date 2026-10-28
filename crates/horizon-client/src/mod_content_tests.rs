@@ -51,8 +51,8 @@ fn tags_merge_without_repeats() {
 fn prepared() -> Option<PathBuf> {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     [
-        manifest.join("../../.local/horizon-client/26.3"),
-        manifest.join("../../../../.local/horizon-client/26.3"),
+        manifest.join("../../.local/skyline/26.3"),
+        manifest.join("../../../../.local/skyline/26.3"),
     ]
     .into_iter()
     .find(|root| root.join("gameplay-facts.json").exists())
@@ -119,12 +119,12 @@ fn content_root_loads_with_every_table() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-content-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-content-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = ruby_mod(&scratch.join("ruby"));
     // The base as a relative path (cargo runs tests in the crate's folder):
     // the overlay's links still resolve.
-    let relative = Path::new("../../.local/horizon-client/26.3");
+    let relative = Path::new("../../.local/skyline/26.3");
     let root = resource_root(relative, std::slice::from_ref(&m), &scratch.join("cache")).unwrap();
     assert_ne!(root, base);
 
@@ -286,7 +286,7 @@ fn refuses_unknown_templates_and_vanilla_ids() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-refuse-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-refuse-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let mut m = ruby_mod(&scratch.join("ruby"));
     m.content.blocks[0].template = "minecraft:not_a_block".into();
@@ -300,7 +300,7 @@ fn refuses_more_states_than_a_world_holds() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-states-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-states-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let mut m = ruby_mod(&scratch.join("ruby"));
     // Redstone wire has 1296 states: 810 copies pass 2^20 with any game.
@@ -326,7 +326,7 @@ fn builds_past_sixteen_bit_states() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-wide-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-wide-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let mut m = ruby_mod(&scratch.join("ruby"));
     // 40 redstone wires: 51,840 states, past 65,536 with vanilla's 35,723.
@@ -419,7 +419,7 @@ fn shared_behaviour_document_matches_independent_loaders() {
 #[ignore = "full content root: CI and pr_ready run it"]
 fn independent_reloads_read_changed_behaviour_json_and_report_invalid_files() {
     let Some(base) = prepared() else { return };
-    let scratch = std::env::temp_dir().join(format!("horizon-json-reloads-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-json-reloads-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     fs::create_dir_all(&scratch).unwrap();
     // Keep the remaining resource tree intact without copying a huge prepared client.
@@ -543,7 +543,7 @@ fn content_root_is_reused_until_a_mod_changes() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-reuse-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-reuse-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = ruby_mod(&scratch.join("ruby"));
     let cache = scratch.join("cache");
@@ -580,7 +580,7 @@ fn content_root_carries_a_structure_mod() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-worldgen-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-worldgen-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let dir = scratch.join("huts");
     let files = [
@@ -723,7 +723,7 @@ fn listed_namespaces_join_the_root() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-ns-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-ns-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let toml = manifest("towers", "\"kaisyn\"");
     let m = folder_mod(
@@ -762,7 +762,7 @@ fn listed_namespaces_join_the_root() {
 /// or both list it) are refused together, naming both.
 #[test]
 fn mods_sharing_a_namespace_are_refused() {
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-clash-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-clash-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let towers = folder_mod(
         &scratch.join("towers"),
@@ -837,7 +837,7 @@ fn a_replacing_mod_tag_reaches_the_root() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = std::env::temp_dir().join(format!("horizon-mod-replace-{}", std::process::id()));
+    let scratch = std::env::temp_dir().join(format!("skyline-mod-replace-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     let file = "data/minecraft/tags/worldgen/biome/has_structure/village_plains.json";
     let adds = folder_mod(

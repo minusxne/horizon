@@ -1,8 +1,8 @@
-//! Horizon's official zoom, formerly the built-in extra: hold the key (Z
+//! Skyline's official zoom, formerly the built-in extra: hold the key (Z
 //! by default) to zoom in, and turn the mouse wheel while holding it to zoom
 //! further in or out. Its settings page has the extra's four options: the
 //! game lists the key there first and keeps the player's choice
-//! (`horizon-mods.txt`); the rest is kept in the mod's storage (`level`,
+//! (`skyline-mods.txt`); the rest is kept in the mod's storage (`level`,
 //! `smooth`, `sensitivity`),
 //! where the game writes a player's old extra settings when it installs the
 //! mod for them.

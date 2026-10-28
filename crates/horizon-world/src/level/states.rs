@@ -315,7 +315,7 @@ impl StateTable {
     ) -> Option<BlockStateId> {
         self.with_text(state, key, direction_name(value))
     }
-    /// Vanilla `setValue` callers always pass legal values; when Horizon's port
+    /// Vanilla `setValue` callers always pass legal values; when Skyline's port
     /// would compute an illegal one the state is returned unchanged.
     pub fn set_text(&self, state: BlockStateId, key: PropKey, text: &str) -> BlockStateId {
         self.with_text(state, key, text).unwrap_or(state)

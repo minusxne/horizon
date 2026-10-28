@@ -500,7 +500,7 @@ pub struct Behaviours {
 }
 
 impl Behaviours {
-    /// Load from a prepared client resource directory (`.local/horizon-client/<version>`).
+    /// Load from a prepared client resource directory (`.local/skyline/<version>`).
     pub fn load(registry: &BlockRegistry, resources_dir: &Path) -> io::Result<Self> {
         data::load(registry, resources_dir)
     }
@@ -523,7 +523,7 @@ impl Behaviours {
     }
 
     /// Keep a snapshot of the resolved tables in `dir` (a game folder's
-    /// `.horizon-cache`), so later launches of the same build restore it instead
+    /// `.skyline-cache`), so later launches of the same build restore it instead
     /// of resolving the resources again. Without it, [`Self::load`] never caches.
     pub fn set_cache_dir(dir: std::path::PathBuf) {
         data::set_cache_dir(dir);

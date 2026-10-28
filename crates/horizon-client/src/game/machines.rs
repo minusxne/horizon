@@ -1,6 +1,6 @@
 //! Item-moving blocks: `HopperBlockEntity` (push, pull, item entities,
 //! transfer cooldowns), `DispenserBlock` / `DropperBlock.dispenseFrom` with
-//! the vanilla dispense behaviours Horizon has entities for, and container
+//! the vanilla dispense behaviours Skyline has entities for, and container
 //! comparator signals (`AbstractContainerMenu.getRedstoneSignalFromContainer`).
 use super::Game;
 
@@ -413,7 +413,7 @@ pub(super) fn container_signal(
 }
 
 /// `ChiseledBookShelfBlock.getAnalogOutputSignal` and
-/// `ShelfBlock.getAnalogOutputSignal`, from the block entity Horizon keeps as
+/// `ShelfBlock.getAnalogOutputSignal`, from the block entity Skyline keeps as
 /// it was loaded; `None` for any other block. `direction` points from the
 /// block to the comparator.
 pub(super) fn shelf_signal(

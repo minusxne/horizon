@@ -718,7 +718,7 @@ fn build_with_gameplay<G: GameplayStateSource>(
         .copied()
         .ne(FluidKind::ALL.iter().map(|k| k.name()))
     {
-        return Err(fail("fluid registry order differs from Horizon's"));
+        return Err(fail("fluid registry order differs from Skyline's"));
     }
 
     // Tags.

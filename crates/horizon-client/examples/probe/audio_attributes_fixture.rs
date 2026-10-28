@@ -1,4 +1,4 @@
-//! Audio environment attributes from Horizon's `MusicTables` and
+//! Audio environment attributes from Skyline's `MusicTables` and
 //! `AmbientTables` for `tools/test_audio_attributes_parity.py`:
 //! `audio_attributes_fixture ROOT INPUT OUTPUT`.
 use horizon_client::ambience::AmbientTables;

@@ -140,7 +140,7 @@ public final class VanillaWorldOracle {
         }
         registry.put("states", states); registry.put("defaults", defaults);
         write(registry, base.resolve("block-registry.nbt"), 3, false);
-        System.out.println("HORIZON_WORLD_GENERATED states=" + states.size());
+        System.out.println("SKYLINE_WORLD_GENERATED states=" + states.size());
     }
 
     private static void verify(Path base) throws Exception {
@@ -206,7 +206,7 @@ public final class VanillaWorldOracle {
         }
         PalettedContainer<BlockState> mutated = BLOCK_CODEC.parse(NbtOps.INSTANCE, read(base.resolve("rust/runtime-mutated.nbt"), 3, false)).getOrThrow();
         for (int i = 0; i < 4096; i++) check(mutated.get(i & 15, i >> 8, (i >> 4) & 15) == Block.BLOCK_STATE_REGISTRY.byId(expectedStates[i]), "mutated resident block state differs");
-        System.out.printf("HORIZON_WORLD_RESULT {\"nbt_pairs\":%d,\"palettes\":%d,\"palette_values\":%d,\"region_chunks\":%d,\"registry_states\":%d,\"resident_values\":8192}%n", nbt, palettes, blocks, regions, Block.BLOCK_STATE_REGISTRY.size());
+        System.out.printf("SKYLINE_WORLD_RESULT {\"nbt_pairs\":%d,\"palettes\":%d,\"palette_values\":%d,\"region_chunks\":%d,\"registry_states\":%d,\"resident_values\":8192}%n", nbt, palettes, blocks, regions, Block.BLOCK_STATE_REGISTRY.size());
     }
 
     public static void main(String[] args) throws Exception {

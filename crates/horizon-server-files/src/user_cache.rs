@@ -222,7 +222,7 @@ mod tests {
 
     fn cache(text: &str) -> (UserCache, Vec<String>) {
         let dir = std::env::temp_dir().join(format!(
-            "horizon-usercache-{}-{}",
+            "skyline-usercache-{}-{}",
             std::process::id(),
             text.len()
         ));

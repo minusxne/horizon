@@ -61,7 +61,7 @@ fn main() -> Result<(), Error> {
             }
         }
         let mut region: [ProtoChunk; 9] = region.try_into().map_err(|_| "region size")?;
-        let stats = if std::env::var_os("HORIZON_TERRAIN_ONLY").is_some() {
+        let stats = if std::env::var_os("SKYLINE_TERRAIN_ONLY").is_some() {
             Default::default()
         } else {
             worker.decorate(&mut region)?

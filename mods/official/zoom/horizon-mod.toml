@@ -1,8 +1,8 @@
 id = "zoom"
 name = "Zoom"
 version = "1.0.0"
-description = "Hold a key to zoom in; the mouse wheel changes the zoom while you hold it. Horizon's own, formerly an extra."
-authors = ["Horizon"]
+description = "Hold a key to zoom in; the mouse wheel changes the zoom while you hold it. Skyline's own, formerly an extra."
+authors = ["Skyline"]
 api = "0.1"
 side = "client"
 capabilities = ["render", "input", "ui", "storage"]

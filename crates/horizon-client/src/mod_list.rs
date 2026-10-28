@@ -1,5 +1,5 @@
-//! Which of the installed Horizon mods are on (`docs/mods.md`), kept in
-//! `horizon-mods.txt` beside `options.txt` as `mod.<id>:true` lines. Every
+//! Which of the installed Skyline mods are on (`docs/mods.md`), kept in
+//! `skyline-mods.txt` beside `options.txt` as `mod.<id>:true` lines. Every
 //! mod is off until the player turns it on in Options > Mods.
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -7,7 +7,7 @@ use std::{
     path::Path,
 };
 
-pub const FILE: &str = "horizon-mods.txt";
+pub const FILE: &str = "skyline-mods.txt";
 /// The folder holding `.hmod` files, beside `options.txt`.
 pub const DIR: &str = "horizon-mods";
 

@@ -452,7 +452,7 @@ mod tests {
     /// (None without the resources).
     fn root() -> std::path::PathBuf {
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION)
     }
 
@@ -541,7 +541,7 @@ mod tests {
 
         // Original minimal resources keep this regression runnable without vanilla data.
         let root =
-            std::env::temp_dir().join(format!("horizon-bat-animation-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-bat-animation-{}", std::process::id()));
         fs::create_dir(&root).unwrap();
         fs::write(root.join("entity-types.json"), r#"{"minecraft:bat": {}}"#).unwrap();
         fs::write(

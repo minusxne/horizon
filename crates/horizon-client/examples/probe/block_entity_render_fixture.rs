@@ -168,7 +168,7 @@ pub fn main() -> Result<()> {
             continue;
         }
         if block == "minecraft:beacon" {
-            // BeaconRenderer: the beam sections from the case, as Horizon's beacon keeps them.
+            // BeaconRenderer: the beam sections from the case, as Skyline's beacon keeps them.
             let int = |v: &Value| v.as_i64().unwrap_or(0);
             let pos = [
                 int(&case["pos"][0]),

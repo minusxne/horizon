@@ -934,7 +934,7 @@ mod fire_environment_tests {
     #[test]
     fn ordinary_items_burn_but_native_netherite_resists_lava() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("items.json").exists() {
             return;

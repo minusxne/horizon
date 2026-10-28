@@ -1,9 +1,9 @@
 //! Vanilla 26.3 entity NBT (`Entity.saveWithoutId` and the subclasses'
-//! `addAdditionalSaveData`) for the entities Horizon simulates: mobs, item
+//! `addAdditionalSaveData`) for the entities Skyline simulates: mobs, item
 //! entities, experience orbs, arrows and falling blocks. Encoding starts from
 //! the compound the entity was loaded with, when there is one, so fields
-//! Horizon does not model (variants, attributes, equipment, custom names)
-//! survive a Horizon save.
+//! Skyline does not model (variants, attributes, equipment, custom names)
+//! survive a Skyline save.
 use crate::{
     arrows::Pickup,
     entities::{ArmorStand, Cushion, ExperienceOrb, ItemEntity, ItemFrame, Painting},
@@ -287,7 +287,7 @@ pub fn mob_to_nbt(m: &Mob, uuid: [i32; 4], raw: Option<&Tag>) -> Tag {
         );
     }
     match id {
-        // Fox.addAdditionalSaveData; Horizon models only the type.
+        // Fox.addAdditionalSaveData; Skyline models only the type.
         "minecraft:fox" => {
             let kind = if m.extra.variant == 1 { "snow" } else { "red" };
             map.insert("Type".into(), string(kind));
@@ -383,7 +383,7 @@ pub fn mob_to_nbt(m: &Mob, uuid: [i32; 4], raw: Option<&Tag>) -> Tag {
         | "minecraft:trader_llama" => {
             map.insert("Tame".into(), Tag::Byte(i8::from(m.extra.tame)));
             map.insert("Temper".into(), Tag::Int(i32::from(m.extra.variant3)));
-            // AbstractHorse.addAdditionalSaveData; Horizon models neither.
+            // AbstractHorse.addAdditionalSaveData; Skyline models neither.
             for key in ["EatingHaystack", "Bred"] {
                 map.entry(key.into()).or_insert(Tag::Byte(0));
             }
@@ -1189,7 +1189,7 @@ pub fn mob_from_nbt(tag: &Tag, types: &HashMap<String, Arc<MobType>>, id: u32) -
         if sitting {
             m.extra.egg_time = -1 - 400;
         }
-        // Camels are always tame (`Camel.register` in Horizon).
+        // Camels are always tame (`Camel.register` in Skyline).
         m.extra.tame = true;
     }
     if crate::mobs::nautilus::is_nautilus(m.species()) {
@@ -1373,7 +1373,7 @@ pub fn item_entity_from_nbt(tag: &Tag, id: u32, bob_offset: f32) -> Option<ItemE
         previous: position,
         velocity: motion(tag),
         on_ground: flag(tag, "OnGround"),
-        // Age -32768 marks items that never despawn; Horizon counts upwards.
+        // Age -32768 marks items that never despawn; Skyline counts upwards.
         age: number(tag.get("Age")).unwrap_or(0).max(0) as u32,
         pickup_delay: number(tag.get("PickupDelay")).unwrap_or(0).clamp(0, 32767) as u32,
         bob_offset,
@@ -2185,7 +2185,7 @@ mod tests {
     use super::*;
     use crate::items::ItemStack;
 
-    /// The item, the spawn delay and the fields Horizon doesn't model come
+    /// The item, the spawn delay and the fields Skyline doesn't model come
     /// back; a compound without an item is no spawner.
     #[test]
     fn ominous_item_spawner_round_trip() {
@@ -2546,7 +2546,7 @@ pub fn load_bucket_data(m: &mut Mob, stack: &crate::items::ItemStack) {
         if let Some(v) = number(data.get("AgeLocked")) {
             m.extra.age_locked = v != 0;
         }
-        // Keep old Horizon buckets readable; the modern component below takes precedence.
+        // Keep old Skyline buckets readable; the modern component below takes precedence.
         if let Some(v) = number(data.get("Variant")) {
             m.extra.variant = v as u8;
         }
@@ -2621,7 +2621,7 @@ mod axolotl_nbt_tests {
     #[test]
     fn bucket_cooldown_and_brain_memories_survive_and_expired_cooldown_is_removed() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("items.json").exists() {
             return;
@@ -2767,7 +2767,7 @@ mod axolotl_nbt_tests {
         load_bucket_data(&mut restored, &legacy);
         assert_eq!(
             restored.extra.variant, 2,
-            "component wins over old Horizon data"
+            "component wins over old Skyline data"
         );
 
         crate::mobs::animal_brain::set_hunting_cooldown(&mut m, 0);
@@ -2795,7 +2795,7 @@ mod sheep_nbt_tests {
     #[test]
     fn a_sheep_keeps_its_dyed_and_sheared_wool() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("items.json").exists() {
             return;
@@ -2827,7 +2827,7 @@ mod sheep_nbt_tests {
     #[test]
     fn farm_animals_keep_their_variant_and_sound_variant() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("items.json").exists() {
             return;
@@ -2895,7 +2895,7 @@ mod sheep_nbt_tests {
     #[test]
     fn foxes_rabbits_and_goats_keep_their_kind() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("items.json").exists() {
             return;

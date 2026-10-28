@@ -1,11 +1,11 @@
 # Server API
 
-What a host, a panel or a bot can do with a Horizon server: the `horizon-server` commands, `server.toml` and the
+What a host, a panel or a bot can do with a Skyline server: the `skyline-server` commands, `server.toml` and the
 control API. How to host: [hosting.md](../hosting.md); the design: [server.md](../server.md).
 
 ## Overview
 
-`horizon-server` sets up a server folder, runs the game as a dedicated server under a supervisor (restarts on a crash,
+`skyline-server` sets up a server folder, runs the game as a dedicated server under a supervisor (restarts on a crash,
 backups on a schedule, updates with a rollback), and lets other programs manage it through a local HTTP API with a
 token. The web panel uses that API.
 
@@ -17,14 +17,14 @@ token. The web panel uses that API.
 
 ## Guide
 
-1. `horizon-server init` in an empty folder, then `horizon-server start` ([hosting.md](../hosting.md)).
-2. From a script: `horizon-server status --json`, `horizon-server cmd say hi`, `horizon-server backup`.
+1. `skyline-server init` in an empty folder, then `skyline-server start` ([hosting.md](../hosting.md)).
+2. From a script: `skyline-server status --json`, `skyline-server cmd say hi`, `skyline-server backup`.
 3. From a program: read `.horizon/api.json` (address and token), then `GET /api/v1/status` with
    `Authorization: Bearer <token>`.
 
 ## Reference
 
-[server-reference.md](server-reference.md), generated from `horizon-server`'s source: the help text, every
+[server-reference.md](server-reference.md), generated from `skyline-server`'s source: the help text, every
 `server.toml` key with its default and the `server.properties` key it writes, and every endpoint.
 
 ## Examples

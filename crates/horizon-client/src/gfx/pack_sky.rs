@@ -1,5 +1,5 @@
 //! The vanilla sky's geometry for a shader pack's `gbuffers_skybasic` (spec 2.3): the sky disc,
-//! the sunset fan, the stars and the void disc, as Horizon's own sky draws them (terrain.wgsl,
+//! the sunset fan, the stars and the void disc, as Skyline's own sky draws them (terrain.wgsl,
 //! stars.rs), built once into a vertex buffer. The frame's colours and rotations sit in a small
 //! uniform (set 1) that the vertex inputs read. `gbuffers_skytextured` draws the frame's sun and
 //! moon quads, textured from the shared atlas.

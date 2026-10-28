@@ -16,7 +16,7 @@ use horizon_core::{geometry::Vec3, random::RandomSource};
 const CROSSBOW: &str = "minecraft:crossbow";
 const FIREWORK_ROCKET: &str = "minecraft:firework_rocket";
 
-/// `ProjectileWeaponItem.ARROW_ONLY`, for the arrows Horizon shoots.
+/// `ProjectileWeaponItem.ARROW_ONLY`, for the arrows Skyline shoots.
 fn is_arrow(stack: &ItemStack) -> bool {
     &*stack.item == "minecraft:arrow"
 }

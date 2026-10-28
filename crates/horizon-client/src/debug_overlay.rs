@@ -84,7 +84,7 @@ impl Displayer {
     }
 }
 
-/// Horizon's own lines: the shader pack's GPU time, then its costliest passes (`passes`: each
+/// Skyline's own lines: the shader pack's GPU time, then its costliest passes (`passes`: each
 /// pass's median milliseconds, in the order they run).
 pub fn shader_pass_lines(passes: &[(String, f32)]) -> Vec<String> {
     const SHOWN: usize = 8;

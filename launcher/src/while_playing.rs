@@ -22,7 +22,7 @@ impl Aside {
 
 impl Launcher {
     /// The game started: get out of its way as the player asked. Read from `settings.json`, so
-    /// `horizon-launcher settings while-playing …` counts at once.
+    /// `skyline-launcher settings while-playing …` counts at once.
     pub(super) fn step_aside(&mut self, cx: &mut Context<Self>) {
         self.settings.while_playing = Settings::load().while_playing;
         let how = self.settings.while_playing.here();

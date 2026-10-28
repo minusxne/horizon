@@ -12,7 +12,7 @@ pub fn default_file(millis: i64) -> String {
     file(millis, false)
 }
 
-/// The file with `eula` set: what the owner's agreement writes (horizon-server init).
+/// The file with `eula` set: what the owner's agreement writes (skyline-server init).
 pub fn file(millis: i64, agreed: bool) -> String {
     let mut p = Properties::default();
     p.put("eula", agreed.to_string());

@@ -1,4 +1,4 @@
-//! `getSituationalMusic`/`getMusicVolume` through Horizon's `Situation` for
+//! `getSituationalMusic`/`getMusicVolume` through Skyline's `Situation` for
 //! `tools/test_situational_music_parity.py`:
 //! `situational_music_fixture ROOT INPUT OUTPUT`.
 use horizon_client::music::{BackgroundMusic, Music, MusicTables, Situation};

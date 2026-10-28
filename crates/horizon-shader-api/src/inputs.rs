@@ -183,7 +183,7 @@ pub const MATERIAL_INPUT: Struct = Struct {
 pub const SURFACE: Struct = Struct {
     name: "Surface",
     doc: "What `material` returns. Vanilla's own is `albedo * tint * vec4(lightmap, 1.0)`; \
-          Horizon then applies the alpha test (cutout and translucent) and fog.",
+          Skyline then applies the alpha test (cutout and translucent) and fog.",
     fields: fields! {
         color: "vec4<f32>" = "The lit colour, 0..1, with its alpha.",
     },

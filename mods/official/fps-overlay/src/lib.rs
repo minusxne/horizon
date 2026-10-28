@@ -1,4 +1,4 @@
-//! Horizon's official FPS counter, formerly the built-in extra: the game's
+//! Skyline's official FPS counter, formerly the built-in extra: the game's
 //! frame counter (frames in the last second, the slowest frame and the 1%
 //! low of the last 5 seconds) in a box in a corner, drawn as the extra drew
 //! it. Its settings page has the extra's two options; they are kept in the

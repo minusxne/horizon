@@ -1,7 +1,7 @@
 # The registry index and `.hpack`
 
-Horizon's registry lists what is made for Horizon and reviewed: mods (`.hmod`), modpacks (`.hpack`), resource packs
-and Horizon shader packs (`.hshader`, [shaders.md](../shaders.md)). Submissions are pull requests in
+Skyline's registry lists what is made for Skyline and reviewed: mods (`.hmod`), modpacks (`.hpack`), resource packs
+and Skyline shader packs (`.hshader`, [shaders.md](../shaders.md)). Submissions are pull requests in
 [horizon-rust/horizon-mods](https://github.com/horizon-rust/horizon-mods); merging one publishes it. The launcher and the
 website read one file, `index.json`, which that repository's CI builds. The Rust types and every check below are
 `horizon_mods::index` and `horizon_mods::modpack` (feature `index`); the sample is
@@ -17,7 +17,7 @@ Level: preview ([stability.md](stability.md)). Schema 1.
   "generated": "2026-10-24T18:00:00Z",
   "projects": [{
     "id": "coords_hud", "kind": "mod", "name": "Coordinates HUD", "summary": "One line.",
-    "description": "Markdown.", "authors": ["Horizon"], "owners": ["ludovic111"],
+    "description": "Markdown.", "authors": ["Skyline"], "owners": ["ludovic111"],
     "license": "MIT", "source": "https://github.com/...", "icon": "https://...png", "key": "RWT...", "downloads": 1234,
     "versions": [{
       "version": "0.1.0", "published": "2026-10-24", "changelog": "",
@@ -32,9 +32,9 @@ Level: preview ([stability.md](stability.md)). Schema 1.
 
 | Field | Meaning |
 | --- | --- |
-| `schema` | 1. A reader refuses a higher number with "update Horizon" rather than misread it. |
+| `schema` | 1. A reader refuses a higher number with "update Skyline" rather than misread it. |
 | `projects[].id` | `[a-z0-9_]{1,64}`, unique; a mod's is its manifest's `id`. |
-| `kind` | `mod`, `modpack`, `resourcepack`, `shader` (Horizon's own shader packs, not Iris or OptiFine packs). Other kinds (data packs, worlds, themes) may come without a new schema: a reader keeps a kind it doesn't know and doesn't offer it. |
+| `kind` | `mod`, `modpack`, `resourcepack`, `shader` (Skyline's own shader packs, not Iris or OptiFine packs). Other kinds (data packs, worlds, themes) may come without a new schema: a reader keeps a kind it doesn't know and doesn't offer it. |
 | `summary`, `description` | One line for lists; Markdown for the project's page. |
 | `owners` | GitHub logins allowed to publish updates. |
 | `license`, `source` | An SPDX expression and an `https://` address of the source code: both required. |
@@ -64,7 +64,7 @@ changing what one means, makes schema 2.
    content's fence ([mods.md](../mods.md#content-mods-api-02)); a modpack's manifest (id, version, format, game,
    mods); a resource pack's `pack.mcmeta`; a shader pack's `horizon_shader_api::check` and manifest (id, version,
    shader API).
-4. A kind this build can't install is refused with "this Horizon can't install a … yet".
+4. A kind this build can't install is refused with "this Skyline can't install a … yet".
 
 The game still checks a mod's component imports against its capabilities when it starts it, as for any mod.
 
@@ -79,18 +79,18 @@ id = "cozy"                 # [a-z0-9_]{1,64}: the profile's folder
 name = "Cozy"
 version = "1.0.0"
 description = "Coordinates and a calm render distance."
-authors = ["Horizon"]
+authors = ["Skyline"]
 game = "26.3"
 
 [[mods]]
 id = "coords_hud"
 version = "0.1.0"
 sha256 = "e1135345692f6dd8fd4c51920151944b82333e17049c9bb7d756f27b8deefc53"
-on = true                   # optional, default true: turned on in the profile's horizon-mods.txt
+on = true                   # optional, default true: turned on in the profile's skyline-mods.txt
 ```
 
-Unknown keys are refused. `overrides/` may hold only `options.txt`, `horizon-graphics.txt`, `horizon-extras.txt`,
-`resourcepacks/<name>.zip` and `horizon-mods/.horizon-mod-data/<a listed mod>/...` (a mod's own saved settings,
+Unknown keys are refused. `overrides/` may hold only `options.txt`, `skyline-graphics.txt`, `skyline-extras.txt`,
+`resourcepacks/<name>.zip` and `skyline-mods/.horizon-mod-data/<a listed mod>/...` (a mod's own saved settings,
 capability `storage`), each at most 64 MiB and 256 MiB in all; anything else refuses the pack. The launcher copies
 them into the profile's game folder.
 
@@ -107,7 +107,7 @@ kind = "mod"                     # mod | modpack | resourcepack | shader
 name = "Coordinates HUD"
 summary = "One line, at most 160 characters."
 description = """Markdown."""    # optional
-authors = ["Horizon"]
+authors = ["Skyline"]
 owners = ["ludovic111"]          # GitHub logins who may publish updates
 license = "MIT"
 source = "https://github.com/..."
@@ -149,7 +149,7 @@ How the repository runs (its workflows are in `.github/workflows/`):
 
 - **A pull request** (`check.yml`) runs `registry review`, downloads each new file from the `staging` prerelease, runs
   `registry check` on it and builds the index it would publish; the report is the run's summary. The tool is
-  `cargo-horizon-mod` from Horizon at the commit in the repository variable `HORIZON_REV`. The form's pull requests
+  `cargo-horizon-mod` from Skyline at the commit in the repository variable `SKYLINE_REV`. The form's pull requests
   are opened with the token of the account in the variable `REGISTRY_BOT`; for those, the author is the login in the
   body's `<!-- submitted-by: … -->` line.
 - **Merging** needs the `check` run and a CODEOWNER's review. `publish.yml` then makes each new version a release

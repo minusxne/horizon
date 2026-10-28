@@ -326,7 +326,7 @@ impl Game<'_> {
                 entry.accept_textures = setting;
             }
             if let Err(e) = servers::save(&file, &list) {
-                log::warn!("Horizon: could not save {}: {e}", file.display());
+                log::warn!("Skyline: could not save {}: {e}", file.display());
             }
         }
         Ok(())
@@ -373,7 +373,7 @@ impl Game<'_> {
             match download::Queue::open(dir) {
                 Ok(queue) => state.queue = Some(queue),
                 Err(e) => {
-                    log::error!("Horizon: failed to open the download queue: {e}");
+                    log::error!("Skyline: failed to open the download queue: {e}");
                     // Every request failed, as the notifier would hear it.
                     let (progress, events) = std::sync::mpsc::channel();
                     for _ in &requests {
@@ -411,7 +411,7 @@ impl Game<'_> {
             .map(|(id, path)| packs::server_pack(*id, path))
             .collect();
         let Some(server) = server else {
-            log::warn!("Horizon: invalid pack metadata in a server pack, ignoring all");
+            log::warn!("Skyline: invalid pack metadata in a server pack, ignoring all");
             self.finish_pack_reload(false);
             return;
         };
@@ -452,7 +452,7 @@ impl Game<'_> {
         match handle {
             Ok(handle) => self.server_packs.reload = Some(PackReload { progress, handle }),
             Err(e) => {
-                log::error!("Horizon: could not start the pack reload worker: {e}");
+                log::error!("Skyline: could not start the pack reload worker: {e}");
                 self.finish_pack_reload(false);
             }
         }
@@ -476,7 +476,7 @@ impl Game<'_> {
         {
             Ok(()) => true,
             Err(e) => {
-                log::warn!("Horizon: server resource pack reload failed: {e}");
+                log::warn!("Skyline: server resource pack reload failed: {e}");
                 false
             }
         };

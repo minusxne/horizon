@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Packages the macOS launcher: Horizon.app (the binary, Info.plist, the icon), signed, then the
-# two release assets, horizon-launcher-macos-arm64.zip (what the launcher updates itself from;
-# older launchers find the binary inside it) and horizon-launcher-macos-arm64.dmg (the installer:
+# Packages the macOS launcher: Skyline.app (the binary, Info.plist, the icon), signed, then the
+# two release assets, skyline-launcher-macos-arm64.zip (what the launcher updates itself from;
+# older launchers find the binary inside it) and skyline-launcher-macos-arm64.dmg (the installer:
 # the app and an Applications link over a background, to drag one onto the other).
 #
 #   packaging/macos/package.sh BINARY VERSION OUTDIR
@@ -17,13 +17,13 @@ here=$(cd "$(dirname "$0")" && pwd)
 binary=$1
 version=$2
 out=$(mkdir -p "$3" && cd "$3" && pwd)
-app=$out/Horizon.app
+app=$out/Skyline.app
 
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$binary" "$app/Contents/MacOS/horizon-launcher"
 chmod 755 "$app/Contents/MacOS/horizon-launcher"
-cp "$here/../icons/horizon.icns" "$app/Contents/Resources/horizon.icns"
+cp "$here/../icons/skyline.icns" "$app/Contents/Resources/skyline.icns"
 sed "s/@VERSION@/$version/g" "$here/Info.plist" > "$app/Contents/Info.plist"
 printf 'APPL????' > "$app/Contents/PkgInfo"
 plutil -lint "$app/Contents/Info.plist"
@@ -45,11 +45,11 @@ notarize=$([[ "$identity" != "-" && -n "${MACOS_NOTARY_PROFILE:-}" ]] && echo ye
 
 rm -f "$out/horizon-launcher-macos-arm64.zip" "$out/horizon-launcher-macos-arm64.dmg"
 # No resource forks or extended attributes: they would land as ._ files inside the bundle.
-(cd "$out" && ditto -c -k --norsrc --noextattr --noqtn --keepParent Horizon.app horizon-launcher-macos-arm64.zip)
+(cd "$out" && ditto -c -k --norsrc --noextattr --noqtn --keepParent Skyline.app skyline-launcher-macos-arm64.zip)
 
 cat > "$out/dmg.json" <<JSON
 {
-  "title": "Horizon",
+  "title": "Skyline",
   "icon-size": 128,
   "background": "$here/background.png",
   "window": { "position": { "x": 200, "y": 160 }, "size": { "width": 660, "height": 420 } },
@@ -60,7 +60,7 @@ cat > "$out/dmg.json" <<JSON
   ]
 }
 JSON
-"${DMGBUILD:-dmgbuild}" -s "$out/dmg.json" Horizon "$out/horizon-launcher-macos-arm64.dmg"
+"${DMGBUILD:-dmgbuild}" -s "$out/dmg.json" Skyline "$out/horizon-launcher-macos-arm64.dmg"
 rm "$out/dmg.json"
 dmg=$out/horizon-launcher-macos-arm64.dmg
 if [[ "$identity" != "-" ]]; then

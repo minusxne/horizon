@@ -210,7 +210,7 @@ impl Opt {
             Opt::HighContrastBlockOutlines => "options.accessibility.high_contrast_block_outline",
             Opt::ForceUnicode => "options.forceUnicodeFont",
             Opt::JapaneseGlyphs => "options.japaneseGlyphVariants",
-            // Horizon's own options: vanilla has no keys for them, so they read
+            // Skyline's own options: vanilla has no keys for them, so they read
             // the namespace the client bundles (assets/horizon/lang).
             Opt::PadEnabled => "horizon.options.controller",
             Opt::PadVibration => "horizon.options.vibration",
@@ -561,7 +561,7 @@ impl Opt {
             }),
             Opt::PadKeyboard => Text::literal(match s.controller.keyboard {
                 gamepad::TextKeyboard::Auto => "Auto",
-                gamepad::TextKeyboard::Horizon => "Horizon",
+                gamepad::TextKeyboard::Horizon => "Skyline",
                 gamepad::TextKeyboard::Steam => "Steam",
             }),
             _ => Text::empty(),
@@ -834,18 +834,18 @@ pub enum Page {
     Font,
     Packs,
     Mods,
-    /// Horizon's shader packs, either kind (`shader_pack_list`).
+    /// Skyline's shader packs, either kind (`shader_pack_list`).
     ShaderPacks,
-    /// Horizon's graphics settings (`graphics_ui`).
+    /// Skyline's graphics settings (`graphics_ui`).
     Graphics,
     GraphicsAdvanced,
-    /// Horizon's controller settings and button binds.
+    /// Skyline's controller settings and button binds.
     Controller,
     PadBinds,
     Extras,
     /// CreditsAndAttributionScreen.
     Credits,
-    /// Horizon Settings: every page Horizon adds, as a mod's settings
+    /// Skyline Settings: every page Skyline adds, as a mod's settings
     /// screen hangs off vanilla's Options.
     Horizon,
     /// AI Agent: agent control on or off, whether an agent is connected, the connection details.
@@ -1060,24 +1060,24 @@ fn option_widget(s: &Settings, opt: Opt, x: f32, y: f32, w: f32) -> Widget {
         Kind::Cycle => button(x, y, w, opt.label(s), Act::Cycle(opt)),
     }
 }
-/// What a button opening one of Horizon's pages says on hover.
+/// What a button opening one of Skyline's pages says on hover.
 fn horizon_page_tooltip(page: Page) -> Option<&'static str> {
     Some(match page {
-        Page::Horizon => "Horizon's own settings: graphics, controllers, extras and mods.",
+        Page::Horizon => "Skyline's own settings: graphics, controllers, extras and mods.",
         Page::Graphics => "Graphics, simply: each setting says what it costs.",
         Page::GraphicsAdvanced => {
-            "Every graphics setting, Horizon's included, with what each costs."
+            "Every graphics setting, Skyline's included, with what each costs."
         }
         Page::Controller => "Controllers: their buttons, sticks, vibration and menu navigation.",
         Page::Extras => {
             "Optional additions, all off by default: the game stays vanilla until you turn one on."
         }
-        Page::Agent => "Let your own AI agent play: horizon-ctl and MCP clients on this computer.",
+        Page::Agent => "Let your own AI agent play: skyline-ctl and MCP clients on this computer.",
         Page::ShaderPacks => {
-            "Shader packs from the shaderpacks folder: Horizon's own and those in the shaders/ format. One runs at a time."
+            "Shader packs from the shaderpacks folder: Skyline's own and those in the shaders/ format. One runs at a time."
         }
         Page::Mods => {
-            "Mods made for Horizon, from the horizon-mods folder. Each runs in a sandbox and stays off until you turn it on."
+            "Mods made for Skyline, from the horizon-mods folder. Each runs in a sandbox and stays off until you turn it on."
         }
         _ => return None,
     })
@@ -1097,7 +1097,7 @@ fn pairs(opts: &[Opt]) -> Vec<Row> {
         .collect()
 }
 impl OptionsUi {
-    /// A switch of `horizon-extras.txt` as the Extras page draws it: "Caption: On".
+    /// A switch of `skyline-extras.txt` as the Extras page draws it: "Caption: On".
     fn extra_button(&self, s: &Settings, item: crate::extras::Item) -> Widget {
         let label = format!("{}: {}", item.caption(), item.value(&s.extras));
         button(0.0, 0.0, 150.0, Text::literal(label), Act::Extra(item))
@@ -1171,9 +1171,9 @@ impl OptionsUi {
             Page::Graphics | Page::GraphicsAdvanced => "options.videoTitle",
             Page::Controller => "Controller Settings",
             Page::PadBinds => "Controller Binds",
-            Page::Extras => "Horizon Extras",
+            Page::Extras => "Skyline Extras",
             Page::Credits => "credits_and_attribution.screen.title",
-            Page::Horizon => "Horizon Settings",
+            Page::Horizon => "Skyline Settings",
             Page::Agent => "AI Agent",
         }
     }
@@ -1324,13 +1324,13 @@ impl OptionsUi {
                 rows
             }
             Page::Video => {
-                // Horizon's graphics screens, Simple and Advanced.
+                // Skyline's graphics screens, Simple and Advanced.
                 let mut rows = vec![Row::Buttons(
                     button(
                         0.0,
                         0.0,
                         150.0,
-                        Text::literal("Horizon Graphics..."),
+                        Text::literal("Skyline Graphics..."),
                         Act::Push(Page::Graphics),
                     ),
                     Some(button(
@@ -1384,7 +1384,7 @@ impl OptionsUi {
                 rows.extend(pairs(&others));
                 rows.extend(pairs(&[Opt::ShowSubtitles]));
                 // SoundOptionsScreen: Music Frequency starts the next row (with
-                // Music Toast, not in Horizon yet).
+                // Music Toast, not in Skyline yet).
                 rows.extend(pairs(&[Opt::MusicFrequency]));
                 rows
             }
@@ -1410,7 +1410,7 @@ impl OptionsUi {
                     Opt::ToggleSprint,
                     Opt::AutoJump,
                 ]));
-                // Horizon's controller page, after vanilla's rows.
+                // Skyline's controller page, after vanilla's rows.
                 rows.push(Row::Buttons(
                     button(
                         0.0,
@@ -1537,7 +1537,7 @@ impl OptionsUi {
                     .enumerate()
                     .map(|(i, pack)| {
                         let kind = match pack.kind {
-                            crate::shader_pack_list::Kind::Horizon => " (Horizon)",
+                            crate::shader_pack_list::Kind::Horizon => " (Skyline)",
                             crate::shader_pack_list::Kind::Classic => "",
                         };
                         let label = Text::literal(format!("{}{kind}: ", pack.title))
@@ -1595,10 +1595,10 @@ impl OptionsUi {
                     ("options.chat", Some(Page::Chat)),
                     ("options.resourcepack", Some(Page::Packs)),
                     ("options.accessibility", Some(Page::Accessibility)),
-                    // Vanilla's Telemetry Data and Credits slots: Horizon's
+                    // Vanilla's Telemetry Data and Credits slots: Skyline's
                     // settings and its mods, as a mod adds its button here.
                     // Credits & Attribution (WinScreen's credits) follows them.
-                    ("Horizon Settings...", Some(Page::Horizon)),
+                    ("Skyline Settings...", Some(Page::Horizon)),
                     ("Mods...", Some(Page::Mods)),
                     ("options.credits_and_attribution", Some(Page::Credits)),
                 ];
@@ -1639,7 +1639,7 @@ impl OptionsUi {
                     tr("credits_and_attribution.button.credits"),
                     Act::Credits,
                 ));
-                // ConfirmLinkScreen to minecraft.net: Horizon opens no links.
+                // ConfirmLinkScreen to minecraft.net: Skyline opens no links.
                 for (i, key) in [
                     "credits_and_attribution.button.attribution",
                     "credits_and_attribution.button.licenses",
@@ -2183,7 +2183,7 @@ impl OptionsUi {
                     && !opt.available()
                 {
                     tooltip = Some(atlas.font.split(
-                        &Text::literal("This feature is not yet available in Horizon."),
+                        &Text::literal("This feature is not yet available in Skyline."),
                         170.0,
                     ));
                 }
@@ -3180,10 +3180,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires prepared language data in HORIZON_TEST_RESOURCES; run alone"]
+    #[ignore = "requires prepared language data in SKYLINE_TEST_RESOURCES; run alone"]
     fn classic_hover_draws_the_selected_options_wrapped_tooltip() {
         let root = std::path::PathBuf::from(
-            std::env::var_os("HORIZON_TEST_RESOURCES").expect("HORIZON_TEST_RESOURCES"),
+            std::env::var_os("SKYLINE_TEST_RESOURCES").expect("SKYLINE_TEST_RESOURCES"),
         );
         lang::set(lang::Language::load(&[&root], "en_us"));
         let atlas = atlas();
@@ -4143,7 +4143,7 @@ mod tests {
                 })
                 .collect()
         };
-        // Vanilla's Options buttons, Horizon's two in the Telemetry and Credits slots, then
+        // Vanilla's Options buttons, Skyline's two in the Telemetry and Credits slots, then
         // Credits & Attribution (WinScreen's credits).
         let main = pushes(&mut ui);
         assert_eq!(
@@ -4187,7 +4187,7 @@ mod tests {
             .collect();
         assert!(acts.contains(&&Act::Extra(crate::extras::Item::AgentControl)));
         assert!(acts.contains(&&Act::CopyAgentDetails));
-        // Vanilla's own pages keep the Horizon pages they had.
+        // Vanilla's own pages keep the Skyline pages they had.
         ui.stack = vec![Page::Main, Page::Video];
         let video = pushes(&mut ui);
         for page in [Page::Graphics, Page::GraphicsAdvanced] {

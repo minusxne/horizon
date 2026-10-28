@@ -1,6 +1,6 @@
 # API stability and versioning
 
-The rules every Horizon API follows ([the APIs](README.md)): how each one is versioned, what the stability levels
+The rules every Skyline API follows ([the APIs](README.md)): how each one is versioned, what the stability levels
 promise, how something is deprecated and removed, and the tests that keep old mods, scripts and tools working.
 
 ## Versions
@@ -17,7 +17,7 @@ promise, how something is deprecated and removed, and the tests that keep old mo
 | API | The version | A user names the line they need |
 | --- | --- | --- |
 | Mods | the WIT package (`horizon:mods@0.1.0`) | `api = "0.1"` in `horizon-mod.toml` |
-| Agent control | the control protocol's version (planned: a `hello` reply and MCP `serverInfo`) | `horizon-ctl --api 1` (planned) |
+| Agent control | the control protocol's version (planned: a `hello` reply and MCP `serverInfo`) | `skyline-ctl --api 1` (planned) |
 | Server control API | the path (`/api/v1/`) | the path |
 | `server.toml` | the file's keys; a key is never renamed in place | nothing: old files keep loading |
 | Launcher commands | the command names and their `--json` output | nothing |
@@ -36,14 +36,14 @@ don't import it); faster, or fixing behaviour to what the reference already says
 
 ### Mod API levels
 
-A new WIT function doesn't break older mods, but a mod that calls it can't run on a Horizon from before it. So every
+A new WIT function doesn't break older mods, but a mod that calls it can't run on a Skyline from before it. So every
 function the game offers mods has an **API level**, the one it arrived at (`crates/horizon-mods/src/api_level.rs`):
-level 0 is the contract of Horizon 0.2.67 to 0.2.69, level 1 adds `render.set-minimap` and server mods' `players`, level 2 `game.raycast`, level 3 `command.run-quiet`, level 4 server mods' `world`, level 5 `recipes` (`items`, `all`, `known`), level 6 `browser` (`set-items`, `poll`, `set-recipes`) and `recipes.place` and `recipes.give`, level 7 `render.set-far-terrain`. A mod needs the level of
+level 0 is the contract of Skyline 0.2.67 to 0.2.69, level 1 adds `render.set-minimap` and server mods' `players`, level 2 `game.raycast`, level 3 `command.run-quiet`, level 4 server mods' `world`, level 5 `recipes` (`items`, `all`, `known`), level 6 `browser` (`set-items`, `poll`, `set-recipes`) and `recipes.place` and `recipes.give`, level 7 `render.set-far-terrain`. A mod needs the level of
 the newest function it imports (a component imports only the functions it calls). The level is read from the file,
 never declared:
 
-- the game refuses a mod that needs a function it doesn't have, with "made for a newer Horizon (it uses
-  render.set-minimap): update Horizon to run it", instead of a linking error;
+- the game refuses a mod that needs a function it doesn't have, with "made for a newer Skyline (it uses
+  render.set-minimap): update Skyline to run it", instead of a linking error;
 - the registry's CI writes each mod version's level into the index (`api_level`), and installers take the newest
   version the running game can run.
 
@@ -65,7 +65,7 @@ Every part of an API has one level, shown in its reference and its surface page.
   mod, a host's script, an agent's tool) used it for a whole line and nothing broke. The maintainers' orchestrator
   proposes the promotion with the evidence (the compatibility tests, the complete docs, that line of use) and Ludovic
   approves it.
-- **Horizon-only by design.** An API is stable only for what Horizon itself does; a vanilla concept it exposes (a block
+- **Skyline-only by design.** An API is stable only for what Skyline itself does; a vanilla concept it exposes (a block
   id, a command, a `server.properties` key) changes when vanilla changes it, with a version port
   ([version-ports.md](../version-ports.md)), and the changelog says so.
 
@@ -76,7 +76,7 @@ Every part of an API has one level, shown in its reference and its surface page.
 2. The reference shows it as deprecated, and the surface page's changelog says what replaces it and when it goes.
 3. Using it logs one warning per mod, session or client, naming the replacement; it keeps working.
 4. It is removed only after the window, and only at the next line (preview) or major (stable).
-5. A line or major that is no longer served is refused with a clear message (`needs API 0.1; this Horizon serves 0.3
+5. A line or major that is no longer served is refused with a clear message (`needs API 0.1; this Skyline serves 0.3
    and 0.4`), never loaded half-way.
 
 ## Compatibility tests
@@ -112,14 +112,14 @@ Deprecations and breaking changes are in bold. The release notes of the game rel
 | Script mods (Lua run by an interpreter mod, [mods.md](mods.md#ways-in)) | not started | |
 | `cargo horizon-mod` (`new`, `build`, `run`), `horizon-mod-sdk` | preview | 0.1.0 |
 | Shader API | not started | |
-| `horizon-ctl` commands and MCP tools | preview | none yet (unversioned) |
-| The game's own control-socket commands outside `horizon-ctl`'s table (test hooks) | experimental | |
-| `horizon-server` commands, `server.toml` | stable | `horizon-server --version` |
+| `skyline-ctl` commands and MCP tools | preview | none yet (unversioned) |
+| The game's own control-socket commands outside `skyline-ctl`'s table (test hooks) | experimental | |
+| `skyline-server` commands, `server.toml` | stable | `skyline-server --version` |
 | Server control API | stable | `/api/v1` |
-| `horizon-launcher` commands and MCP tools | preview | none yet (unversioned) |
+| `skyline-launcher` commands and MCP tools | preview | none yet (unversioned) |
 | Benchmark report | stable | `"version": 1` |
 | Telemetry batch and consent | stable | `"schema": 1`, consent `2` |
-| `horizon-graphics.txt`, `horizon-extras.txt`, `horizon-mods.txt` | preview | none |
+| `skyline-graphics.txt`, `skyline-extras.txt`, `skyline-mods.txt` | preview | none |
 | `SHA256SUMS` and `SHA256SUMS.sig` | stable | |
 
 ### The experimental mod APIs' choices

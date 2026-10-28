@@ -1,7 +1,7 @@
 //! The stages' WGSL against the Rust definitions: the preludes compile, the
 //! frame's WGSL layout is the uploaded struct's, and
 //! docs/api/shaders-reference.md is up to date. Rewrite the reference with
-//! `HORIZON_WRITE_DOCS=1 cargo test -p horizon-shader-api --test reference`.
+//! `SKYLINE_WRITE_DOCS=1 cargo test -p horizon-shader-api --test reference`.
 use horizon_shader_api::{Frame, Pack, StageKind, compose, reference};
 use std::path::Path;
 
@@ -106,7 +106,7 @@ fn the_sample_pack_s_stages_compile() {
 fn the_reference_is_up_to_date() {
     let path = root().join(DOC);
     let want = reference::markdown();
-    if std::env::var_os("HORIZON_WRITE_DOCS").is_some() {
+    if std::env::var_os("SKYLINE_WRITE_DOCS").is_some() {
         std::fs::write(&path, &want).unwrap();
     }
     let have = std::fs::read_to_string(&path)
@@ -114,6 +114,6 @@ fn the_reference_is_up_to_date() {
         .replace("\r\n", "\n");
     assert!(
         have == want,
-        "{DOC} is out of date: HORIZON_WRITE_DOCS=1 cargo test -p horizon-shader-api --test reference"
+        "{DOC} is out of date: SKYLINE_WRITE_DOCS=1 cargo test -p horizon-shader-api --test reference"
     );
 }

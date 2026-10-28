@@ -506,7 +506,7 @@ impl Lan {
             .name("horizon-local-conn".into())
             .spawn(move || {
                 if let Err(e) = conn::serve_local(server, shared)
-                    && std::env::var_os("HORIZON_NET_DEBUG").is_some()
+                    && std::env::var_os("SKYLINE_NET_DEBUG").is_some()
                 {
                     log::warn!("[lan] local: {e}");
                 }
@@ -551,7 +551,7 @@ fn accept_loop(listener: TcpListener, shared: Arc<Shared>, stop: &AtomicBool) {
 fn handle(stream: TcpStream, addr: SocketAddr, shared: Arc<Shared>) {
     let _ = stream.set_nonblocking(false);
     if let Err(e) = conn::serve(stream, addr, shared)
-        && std::env::var_os("HORIZON_NET_DEBUG").is_some()
+        && std::env::var_os("SKYLINE_NET_DEBUG").is_some()
     {
         log::warn!("[lan] {addr}: {e}");
     }

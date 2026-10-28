@@ -1,4 +1,4 @@
-//! Replays `tools/test_music_parity.py` scripts through Horizon's
+//! Replays `tools/test_music_parity.py` scripts through Skyline's
 //! `MusicManager` over its `SoundEngine`: `music_fixture ROOT INPUT OUTPUT`.
 use crate::audio_common as common;
 use common::{Fake, describe, f, flush};

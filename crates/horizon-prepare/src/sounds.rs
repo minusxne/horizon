@@ -1,6 +1,6 @@
 //! The pinned version's sounds, title panorama, Unifont glyphs and built-in resource packs
 //! from the player's own launcher install, each object checked against the asset index's SHA-1, copied into
-//! `.local/horizon-client/<version>/assets` where the game reads them (tools/fetch_sounds.py and
+//! `.local/skyline/<version>/assets` where the game reads them (tools/fetch_sounds.py and
 //! the tools/lab.py functions it called). Nothing is downloaded.
 
 use crate::artifacts::{self, Lock};
@@ -51,7 +51,7 @@ fn launcher_assets(
     let checksum = crate::hex(&<sha1::Sha1 as sha1::Digest>::digest(&bytes));
     if checksum != sha1 && !lock.asset_index_accepted(&checksum) {
         log(&format!(
-            "{} is an asset index Horizon does not know yet (sha1 {checksum}); Mojang may have \
+            "{} is an asset index Skyline does not know yet (sha1 {checksum}); Mojang may have \
              republished it. Using it: every file is still checked against its own SHA-1.",
             index.display()
         ));
@@ -73,8 +73,8 @@ fn is_sound(name: &str) -> bool {
 }
 
 /// Copies the pinned version's asset index and sounds from the official launcher's game
-/// directory (`minecraft`, else HORIZON_MINECRAFT_DIR, else the launcher's own) into `root`'s
-/// `.local/horizon-client/<version>`; returns that folder. Files already there with the right
+/// directory (`minecraft`, else SKYLINE_MINECRAFT_DIR, else the launcher's own) into `root`'s
+/// `.local/skyline/<version>`; returns that folder. Files already there with the right
 /// SHA-1 are kept.
 pub fn sounds(root: &Path, minecraft: Option<&Path>, log: Log) -> Result<PathBuf, String> {
     copy_assets(
@@ -162,7 +162,7 @@ pub(crate) fn optional_imports(mut assets: Result<&mut Assets, &str>, log: Log) 
         };
         if let Err(error) = result {
             log(&format!(
-                "{failure} not imported: {error}; run horizon-prepare {command} later"
+                "{failure} not imported: {error}; run skyline-prepare {command} later"
             ));
         }
     }
@@ -242,7 +242,7 @@ impl Assets {
         let lock = Lock::read(root)?;
         let files = artifacts::game_files(minecraft, &lock.version);
         let manifest = artifacts::import_manifest(&lock, &files)?;
-        let target = root.join(".local/horizon-client").join(&lock.version);
+        let target = root.join(".local/skyline").join(&lock.version);
         let (store, index, bytes) = launcher_assets(
             &lock,
             &manifest,
@@ -392,7 +392,7 @@ mod tests {
     const FIRST_PACK: usize = 6;
     const FIRST_FACE: usize = 8;
 
-    /// A Horizon folder and an official launcher directory holding version `9.9` with
+    /// A Skyline folder and an official launcher directory holding version `9.9` with
     /// sounds, a language file, Unifont, the built-in packs and the full title panorama in its
     /// asset store.
     struct Fixture {
@@ -418,7 +418,7 @@ mod tests {
             extras: &[(&'static str, &'static [u8])],
         ) -> Fixture {
             let dir = std::env::temp_dir().join(format!(
-                "horizon-prepare-sounds-{name}-{}",
+                "skyline-prepare-sounds-{name}-{}",
                 std::process::id()
             ));
             let _ = fs::remove_dir_all(&dir);
@@ -517,7 +517,7 @@ mod tests {
             lines.borrow_mut().push(l.to_string())
         })
         .unwrap();
-        assert_eq!(target, f.root.join(".local/horizon-client/9.9"));
+        assert_eq!(target, f.root.join(".local/skyline/9.9"));
         for (name, data) in &f.objects[..3] {
             assert_eq!(&fs::read(target.join("assets").join(name)).unwrap(), data);
         }
@@ -573,7 +573,7 @@ mod tests {
         let pinned = fs::read_to_string(&lock).unwrap();
         let sound = f
             .root
-            .join(".local/horizon-client/9.9/assets/minecraft/sounds/dig/stone1.ogg");
+            .join(".local/skyline/9.9/assets/minecraft/sounds/dig/stone1.ogg");
         for known in [true, false] {
             let accepted = if known { checksum.as_str() } else { "0" };
             fs::write(
@@ -612,7 +612,7 @@ mod tests {
         assert!(error.starts_with("Corrupt asset object"), "{error}");
         assert!(!f
             .root
-            .join(".local/horizon-client/9.9/assets/minecraft/sounds/ambient/cave1.ogg")
+            .join(".local/skyline/9.9/assets/minecraft/sounds/ambient/cave1.ogg")
             .exists());
         fs::remove_file(f.object(1)).unwrap();
         assert!(f.run().unwrap_err().starts_with("Missing asset object"));
@@ -621,7 +621,7 @@ mod tests {
     #[test]
     fn panorama_replaces_jar_placeholders_and_repairs_repeated_preparations() {
         let f = Fixture::new("panorama");
-        let target = f.root.join(".local/horizon-client/9.9");
+        let target = f.root.join(".local/skyline/9.9");
         for _ in 0..2 {
             // Full preparation extracts the JAR before importing the asset store.
             for (name, _) in &f.objects[FIRST_FACE..] {
@@ -647,7 +647,7 @@ mod tests {
         fs::write(f.object(FIRST_FACE), b"corrupt panorama").unwrap();
         let path = f
             .root
-            .join(".local/horizon-client/9.9/assets")
+            .join(".local/skyline/9.9/assets")
             .join(f.objects[FIRST_FACE].0);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(&path, b"placeholder").unwrap();
@@ -669,7 +669,7 @@ mod tests {
             error,
             format!("{} is missing from the asset index", PANORAMA[6])
         );
-        assert!(!f.root.join(".local/horizon-client/9.9/assets").exists());
+        assert!(!f.root.join(".local/skyline/9.9/assets").exists());
     }
 
     #[test]
@@ -682,7 +682,7 @@ mod tests {
                 &artifacts::game_files(Some(&f.minecraft), "9.9"),
             )
             .unwrap();
-            let target = f.root.join(".local/horizon-client/9.9/assets");
+            let target = f.root.join(".local/skyline/9.9/assets");
             for name in PANORAMA {
                 let path = target.join(name);
                 fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -703,7 +703,7 @@ mod tests {
             let lines = lines.into_inner();
             assert_eq!(
                 lines[0],
-                format!("Title panorama not imported: {error}; run horizon-prepare panorama later")
+                format!("Title panorama not imported: {error}; run skyline-prepare panorama later")
             );
             // The fonts and packs come on their own when only a panorama face is missing.
             match missing {
@@ -714,19 +714,19 @@ mod tests {
                         "Built-in pack assets ready: 2 files, 0.0 MB",
                         // This store has no `pack.mcmeta`, so the languages report it.
                         "Languages not imported: pack.mcmeta is missing from the asset index; \
-                         run horizon-prepare languages later"
+                         run skyline-prepare languages later"
                     ]
                 ),
                 _ => {
                     assert!(lines[1].starts_with("Unifont glyphs not imported: "));
                     assert!(
                         lines[2].starts_with("Programmer Art and High Contrast not imported: ")
-                            && lines[2].ends_with("; run horizon-prepare packs later"),
+                            && lines[2].ends_with("; run skyline-prepare packs later"),
                         "{lines:?}"
                     );
                     assert!(
                         lines[3].starts_with("Languages not imported: ")
-                            && lines[3].ends_with("; run horizon-prepare languages later"),
+                            && lines[3].ends_with("; run skyline-prepare languages later"),
                         "{lines:?}"
                     );
                 }
@@ -743,7 +743,7 @@ mod tests {
     #[test]
     fn fonts_replace_the_jar_include_and_add_unifont() {
         let f = Fixture::new("fonts");
-        let target = f.root.join(".local/horizon-client/9.9");
+        let target = f.root.join(".local/skyline/9.9");
         let include = target.join("assets").join(UNIFONT[0]);
         fs::create_dir_all(include.parent().unwrap()).unwrap();
         fs::write(&include, b"{\"providers\": []}").unwrap();
@@ -765,7 +765,7 @@ mod tests {
     #[test]
     fn packs_add_programmer_art_and_high_contrast_where_the_pack_list_finds_them() {
         let f = Fixture::new("packs");
-        let target = f.root.join(".local/horizon-client/9.9");
+        let target = f.root.join(".local/skyline/9.9");
         let lines = std::cell::RefCell::new(Vec::new());
         let done = packs(&f.root, Some(&f.minecraft), &|l| {
             lines.borrow_mut().push(l.to_string())
@@ -795,7 +795,7 @@ mod tests {
             "minecraft/sounds.json is missing from the asset index"
         );
         fs::remove_file(&index).unwrap();
-        fs::remove_file(f.root.join(".local/horizon-client/9.9/asset-index.json")).unwrap();
+        fs::remove_file(f.root.join(".local/skyline/9.9/asset-index.json")).unwrap();
         let error = f.run().unwrap_err();
         assert!(
             error.starts_with("Missing ") && error.contains("play 9.9 once"),
@@ -806,7 +806,7 @@ mod tests {
     #[test]
     fn late_corruption_discards_all_staged_replacements() {
         let f = Fixture::new("late-corruption");
-        let target = f.root.join(".local/horizon-client/9.9/assets");
+        let target = f.root.join(".local/skyline/9.9/assets");
         for name in PANORAMA {
             let path = target.join(name);
             fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -868,7 +868,7 @@ mod tests {
             ],
         );
         optional_assets(&f.root, Some(&f.minecraft), &|_| {});
-        let target = f.root.join(".local/horizon-client/9.9");
+        let target = f.root.join(".local/skyline/9.9");
         let jar = f.root.join("client.jar");
         let mut zip = zip::ZipWriter::new(fs::File::create(&jar).unwrap());
         for (name, data) in [

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn selected_jdk_reaches_external_preparers() {
-    const CHILD: &str = "HORIZON_LAUNCHER_JAVA_TEST";
+    const CHILD: &str = "SKYLINE_LAUNCHER_JAVA_TEST";
     if let Some(root) = std::env::var_os(CHILD) {
         let root = PathBuf::from(root);
         let home = java(25, true, &[], &root.join("missing.json"), &|_| {}).unwrap();
@@ -30,7 +30,7 @@ fn selected_jdk_reaches_external_preparers() {
         return;
     }
 
-    let root = std::env::temp_dir().join(format!("horizon-launcher-java-{}", std::process::id()));
+    let root = std::env::temp_dir().join(format!("skyline-launcher-java-{}", std::process::id()));
     fs::create_dir_all(&root).unwrap();
     let executable =
         |bin: &Path, name: &str| bin.join(format!("{name}{}", std::env::consts::EXE_SUFFIX));

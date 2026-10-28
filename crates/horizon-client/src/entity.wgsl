@@ -20,7 +20,7 @@ struct Globals {
     crumbling_sprite: vec4<f32>,
     // Selection outline parameters (read by terrain.wgsl).
     outline_params: vec4<f32>,
-    // Horizon Extras' dynamic lights: camera-relative position and level (dynamic_light.rs).
+    // Skyline Extras' dynamic lights: camera-relative position and level (dynamic_light.rs).
     dynamic_lights: array<vec4<f32>, 16>,
 }
 @group(0) @binding(0) var<uniform> globals: Globals;
@@ -73,7 +73,7 @@ fn overlay_texel(overlay: u32) -> vec4<f32> {
     if overlay >= 16u && overlay < 32u { return vec4(1.0, 1.0, 1.0, WHITE_OVERLAY_ALPHA[overlay - 16u]); }
     return vec4(1.0);
 }
-// Horizon Extras' dynamic lights (dynamic_light.rs): the block light, in the vertex's units
+// Skyline Extras' dynamic lights (dynamic_light.rs): the block light, in the vertex's units
 // (16 per level), a vertex at camera-relative `pos` gets from the frame's light sources, one
 // level less per block. time.z of them are set: none when the extra is off, so no loop runs.
 fn dynamic_block_light(pos: vec3<f32>) -> f32 {

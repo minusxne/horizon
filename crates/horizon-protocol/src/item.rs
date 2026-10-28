@@ -58,7 +58,7 @@ pub struct WrittenBook {
 }
 
 /// The value of one patched data component. Components whose stream codec
-/// Horizon does not implement make the whole stack (and packet) undecodable.
+/// Skyline does not implement make the whole stack (and packet) undecodable.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Component {
     Int(i32),
@@ -112,7 +112,7 @@ pub enum Component {
         material: i32,
         pattern: i32,
     },
-    /// A component Horizon reads past without interpreting it: its encoded
+    /// A component Skyline reads past without interpreting it: its encoded
     /// bytes, written back as they came.
     Raw(Vec<u8>),
 }
@@ -593,7 +593,7 @@ impl Codec<Stack> for Template {
 }
 
 /// HashedStack: what the client believes a slot holds. Component values are
-/// sent as hashes; Horizon sends patches without hashes, so a server whose
+/// sent as hashes; Skyline sends patches without hashes, so a server whose
 /// stack carries components resynchronises that slot (as it does for any
 /// mismatched prediction).
 #[derive(Clone, Debug, PartialEq)]

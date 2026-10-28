@@ -12,7 +12,7 @@ use std::{
 /// How long a mapping is asked for; it is renewed at half-time.
 pub const LEASE: Duration = Duration::from_secs(3600);
 const PMP_PORT: u16 = 5351;
-const DESCRIPTION: &str = "Horizon (play with friends)";
+const DESCRIPTION: &str = "Skyline (play with friends)";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Method {

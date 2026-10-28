@@ -1,6 +1,6 @@
-//! The launcher's view of Horizon's design tokens (`crates/horizon-theme`, described in
+//! The launcher's view of Skyline's design tokens (`crates/horizon-theme`, described in
 //! `docs/design-system.md`): the blocky look it shares with the website ("Blocks"), stone-dark or
-//! lavender-light with Horizon's violet, Pixelify Sans for headings and controls, Geist and Geist
+//! lavender-light with Skyline's violet, Pixelify Sans for headings and controls, Geist and Geist
 //! Mono for text (all bundled, SIL Open Font License).
 use gpui::{rgb, Hsla, WindowAppearance};
 use horizon_launcher::backend::Appearance;
@@ -76,10 +76,10 @@ fn c(hex: u32) -> Hsla {
 }
 
 /// Whether the launcher is pinned dark (`Some(true)`) or light, or follows the system (`None`):
-/// `HORIZON_LAUNCHER_APPEARANCE=light` or `dark` (for screenshots and tests), else the player's
+/// `SKYLINE_LAUNCHER_APPEARANCE=light` or `dark` (for screenshots and tests), else the player's
 /// choice in Settings.
 pub fn pinned_dark(choice: Appearance) -> Option<bool> {
-    match std::env::var("HORIZON_LAUNCHER_APPEARANCE").as_deref() {
+    match std::env::var("SKYLINE_LAUNCHER_APPEARANCE").as_deref() {
         Ok("light") => Some(false),
         Ok("dark") => Some(true),
         _ => match choice {

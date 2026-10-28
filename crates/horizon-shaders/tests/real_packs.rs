@@ -1,4 +1,4 @@
-//! Reads real packs as black boxes: `HORIZON_TEST_SHADER_PACKS=<folder> cargo test -p
+//! Reads real packs as black boxes: `SKYLINE_TEST_SHADER_PACKS=<folder> cargo test -p
 //! horizon-shaders --release -- --ignored --nocapture`. The folder (and its subfolders) holds
 //! pack zips or folders, which are never committed; this prints what was read and how long it took.
 
@@ -13,9 +13,9 @@ use horizon_shaders::{
 };
 
 #[test]
-#[ignore = "needs HORIZON_TEST_SHADER_PACKS"]
+#[ignore = "needs SKYLINE_TEST_SHADER_PACKS"]
 fn real_packs_read() {
-    let dir = std::env::var_os("HORIZON_TEST_SHADER_PACKS").expect("HORIZON_TEST_SHADER_PACKS");
+    let dir = std::env::var_os("SKYLINE_TEST_SHADER_PACKS").expect("SKYLINE_TEST_SHADER_PACKS");
     let dir = Path::new(&dir);
     let mut found = discover(dir);
     for sub in std::fs::read_dir(dir).unwrap().flatten() {

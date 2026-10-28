@@ -1,12 +1,12 @@
-//! Java mods (Fabric, NeoForge, Forge) from the browser (docs/mod-browser.md). Horizon doesn't
+//! Java mods (Fabric, NeoForge, Forge) from the browser (docs/mod-browser.md). Skyline doesn't
 //! run their code; it ports what they carry (blocks, items, recipes, loot, tags, worldgen) with
 //! `horizon-port-pack`. Before a mod is offered for install its jar is downloaded (checked as
 //! every download is), carried over and its classes read (`horizon_port_pack::check`): the
 //! verdict (Works, Partly, Doesn't run) and the lists of what ports and what doesn't come from
 //! that, and are kept per file so a jar is checked once.
 //!
-//! Installing copies the carried-over folder mod into `horizon-mods/<mod id>/` beside
-//! `options.txt` and turns it on in `horizon-mods.txt`, where the game's Options > Mods reads it.
+//! Installing copies the carried-over folder mod into `skyline-mods/<mod id>/` beside
+//! `options.txt` and turns it on in `skyline-mods.txt`, where the game's Options > Mods reads it.
 use super::{installed::Entry, pick, FileRef, Kind, Project, Source, Support, Version};
 use horizon_port_pack::check::{self, Check, Verdict};
 use std::fs;
@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 const CHECKS: &str = "mod-browser/checks-1";
 /// The game's mod folder and on-list, beside `options.txt` (`horizon_client::mod_list`).
 pub const MODS_DIR: &str = "horizon-mods";
-const MODS_LIST: &str = "horizon-mods.txt";
+const MODS_LIST: &str = "skyline-mods.txt";
 /// How deep required mods are followed.
 const MAX_DEPTH: usize = 3;
 
@@ -101,7 +101,7 @@ pub fn check_project(
         .ok_or_else(|| match versions.iter().find_map(|v| v.blocked.clone()) {
             Some(why) => format!("{} can't be downloaded from here: {why}", project.title),
             None => format!(
-                "{} has no Fabric, NeoForge or Forge version Horizon can port.",
+                "{} has no Fabric, NeoForge or Forge version Skyline can port.",
                 project.title
             ),
         })?;
@@ -110,7 +110,7 @@ pub fn check_project(
     Ok((version, check))
 }
 
-/// Whether mod `id` is on in `horizon-mods.txt`.
+/// Whether mod `id` is on in `skyline-mods.txt`.
 pub fn is_enabled(home: &Path, id: &str) -> bool {
     let key = format!("mod.{id}");
     fs::read_to_string(home.join(MODS_LIST))
@@ -120,7 +120,7 @@ pub fn is_enabled(home: &Path, id: &str) -> bool {
         .any(|(k, v)| k.trim() == key && v.trim() == "true")
 }
 
-/// Turns mod `id` on (or off) in `horizon-mods.txt`, keeping the other lines.
+/// Turns mod `id` on (or off) in `skyline-mods.txt`, keeping the other lines.
 pub fn set_enabled(home: &Path, id: &str, on: bool) -> Result<(), String> {
     let path = home.join(MODS_LIST);
     let text = fs::read_to_string(&path).unwrap_or_default();
@@ -154,7 +154,7 @@ fn copy_dir(from: &Path, to: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// Installs the Java mod `project`: checked, carried over into `horizon-mods/<id>/` and turned
+/// Installs the Java mod `project`: checked, carried over into `skyline-mods/<id>/` and turned
 /// on, with the mods it requires that port too. A required mod with nothing to port (a library)
 /// is listed in what was skipped. Returns the entries installed, the asked-for one last.
 pub fn install(
@@ -205,7 +205,7 @@ impl Job<'_> {
         })?;
         if check.verdict == Verdict::No {
             return Err(format!(
-                "{} doesn't run in Horizon: {}",
+                "{} doesn't run in Skyline: {}",
                 project.title, check.summary
             ));
         }
@@ -256,7 +256,7 @@ impl Job<'_> {
         if let Some(old) = &old {
             let _ = fs::remove_dir_all(home.join(&old.file));
             if old.file != relative {
-                let _ = set_enabled(home, old.file.trim_start_matches("horizon-mods/"), false);
+                let _ = set_enabled(home, old.file.trim_start_matches("skyline-mods/"), false);
             }
         }
         fs::rename(&part, &target).map_err(|e| format!("{}: {e}", target.display()))?;
@@ -288,7 +288,7 @@ impl Job<'_> {
 
 /// Removes an installed mod's folder and turns it off.
 pub fn remove(home: &Path, entry: &Entry) -> Result<(), String> {
-    let Some(id) = entry.file.strip_prefix("horizon-mods/") else {
+    let Some(id) = entry.file.strip_prefix("skyline-mods/") else {
         return Err(format!("{} isn't in {MODS_DIR}/.", entry.file));
     };
     match fs::remove_dir_all(home.join(&entry.file)) {
@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     fn the_on_list_keeps_other_lines() {
-        let home = std::env::temp_dir().join(format!("horizon-java-mods-{}", std::process::id()));
+        let home = std::env::temp_dir().join(format!("skyline-java-mods-{}", std::process::id()));
         let _ = fs::remove_dir_all(&home);
         fs::create_dir_all(&home).unwrap();
         fs::write(

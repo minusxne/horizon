@@ -2,7 +2,7 @@
 //! the world, the player, the inventory and the open screen as JSON, and act
 //! like a player (walk, look, break, place, use, click buttons). Actions that
 //! take time run as a task advanced every frame and reply when they finish or
-//! time out, so `horizon-ctl break 10 64 3` returns what the block dropped.
+//! time out, so `skyline-ctl break 10 64 3` returns what the block dropped.
 use super::{Game, Screen};
 use horizon_client::{
     Result,

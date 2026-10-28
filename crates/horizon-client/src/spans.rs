@@ -1,5 +1,5 @@
 //! Named timings within a frame, for finding what makes a frame slow:
-//! `HORIZON_SPIKES=MS` prints the spans of every frame whose CPU time
+//! `SKYLINE_SPIKES=MS` prints the spans of every frame whose CPU time
 //! exceeds MS milliseconds, and of every server tick (dedicated or
 //! integrated) longer than MS. Each span keeps its wall time and the
 //! thread's CPU time inside it, so a span that waited (for a lock, the GPU

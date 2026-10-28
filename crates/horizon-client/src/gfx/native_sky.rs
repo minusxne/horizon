@@ -1,4 +1,4 @@
-//! The sky stage of Horizon's own shader packs (docs/shaders.md): the pack's `sky` function,
+//! The sky stage of Skyline's own shader packs (docs/shaders.md): the pack's `sky` function,
 //! called for each pixel of the sky disc with vanilla's colour along its view ray. The
 //! pipeline's shader is the pack's stage (`CheckedStage::source`) followed by a copy of the
 //! renderer's sky (terrain.wgsl's `Globals`, `linear_fog` and sky section) whose names all
@@ -40,7 +40,7 @@ fn vanilla_sky() -> String {
 /// The sky shader for the pack's sky stage `source`.
 fn shader_source(source: &str) -> String {
     format!(
-        "{source}\n// Horizon's sky (terrain.wgsl)\n{}{PACK_ENTRY}",
+        "{source}\n// Skyline's sky (terrain.wgsl)\n{}{PACK_ENTRY}",
         vanilla_sky()
     )
 }

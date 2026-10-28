@@ -103,10 +103,10 @@ fn invalid(message: &str) -> io::Error {
 impl Assets {
     pub fn load(root: &Path) -> Result<Self> {
         let manifest: Value = serde_json::from_reader(BufReader::new(File::open(
-            root.join("horizon-resources.json"),
+            root.join("skyline-resources.json"),
         )?))?;
         if manifest["data_version"].as_i64() != Some(i64::from(DATA_VERSION)) {
-            return Err(invalid("resources do not match Horizon's pinned data version").into());
+            return Err(invalid("resources do not match Skyline's pinned data version").into());
         }
         let (registry, flags) =
             BlockRegistry::from_facts_json_with_flags(File::open(root.join("facts.json"))?)?;
@@ -243,8 +243,8 @@ mod tests {
 
     #[test]
     fn always_edible_and_consume_effects_loaded() {
-        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client/26.3");
+        let root =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3");
         if !root.join("items.json").exists() {
             return;
         }

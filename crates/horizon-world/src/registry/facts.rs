@@ -120,8 +120,8 @@ mod tests {
     /// The streamed registry is the one the JSON and NBT trees built.
     #[test]
     fn matches_the_tree_built_registry() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client/26.3/facts.json");
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3/facts.json");
         let Ok(bytes) = std::fs::read(&path) else {
             eprintln!("skipped: no prepared facts.json");
             return;

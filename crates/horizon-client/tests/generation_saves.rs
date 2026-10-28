@@ -25,7 +25,7 @@ use std::{
 
 fn resources() -> Option<std::path::PathBuf> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../.local/horizon-client")
+        .join("../../.local/skyline")
         .join(horizon_core::VANILLA_VERSION);
     root.join("items.json").exists().then_some(root)
 }
@@ -259,7 +259,7 @@ fn saved_proto_chunks_restore_exactly() {
         "minecraft:the_nether",
     )
     .unwrap();
-    let dir = std::env::temp_dir().join(format!("horizon-proto-saves-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("skyline-proto-saves-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let save = Arc::new(SaveDir::new(dir.clone()));
     let generator = Persistent {
@@ -339,7 +339,7 @@ fn saved_proto_block_entities_keep_their_id() {
         "minecraft:overworld",
     )
     .unwrap();
-    let dir = std::env::temp_dir().join(format!("horizon-proto-ids-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("skyline-proto-ids-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let save = Arc::new(SaveDir::new(dir.clone()));
     let generator = Persistent {

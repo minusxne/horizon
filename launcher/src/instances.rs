@@ -1,8 +1,8 @@
 //! Instances: separate game folders, each with its own worlds, options and packs.
 //!
 //! Nothing that exists moves. The game's home (`backend::game_home`) stays the default instance,
-//! "Horizon", with its saves and options where they are. Imported modpacks (`ports/<pack>/home/`)
-//! and registry modpacks (`horizon-packs/<id>/home/`) are instances too, played from their own
+//! "Skyline", with its saves and options where they are. Imported modpacks (`ports/<pack>/home/`)
+//! and registry modpacks (`skyline-packs/<id>/home/`) are instances too, played from their own
 //! folders as before. New instances get `instances/<slug>/` in the game's home. What the player
 //! chooses about an instance (its name, icon, group) is kept in `instances.json` in the
 //! launcher's data folder, so renaming one never moves a folder.
@@ -31,7 +31,7 @@ pub enum Kind {
     Own,
     /// An imported Java modpack (modpacks.rs).
     Port,
-    /// A modpack from Horizon's registry.
+    /// A modpack from Skyline's registry.
     Pack,
 }
 
@@ -88,7 +88,7 @@ pub struct Meta {
     pub icon: Option<Icon>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
-    /// The Horizon version this instance plays, kept when newer ones are installed. None: the
+    /// The Skyline version this instance plays, kept when newer ones are installed. None: the
     /// launcher's own version, which follows updates.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
@@ -140,7 +140,7 @@ pub struct Instance {
     pub home: PathBuf,
     pub icon: Option<Icon>,
     pub group: Option<String>,
-    /// Its pinned Horizon version, if any (`Meta::version`).
+    /// Its pinned Skyline version, if any (`Meta::version`).
     pub version: Option<String>,
     pub played: Duration,
     pub last_played: Option<SystemTime>,
@@ -155,7 +155,7 @@ impl Instance {
         match (requested, &self.version) {
             (None, Some(pinned)) => backend::resolve_version(Some(pinned)).map_err(|_| {
                 format!(
-                    "{} plays {pinned}, which is not installed: install it, or horizon-launcher \
+                    "{} plays {pinned}, which is not installed: install it, or skyline-launcher \
                      instance version \"{}\" latest",
                     self.name, self.name
                 )
@@ -165,17 +165,25 @@ impl Instance {
     }
 }
 
-/// The instances, by the default game home and the launcher's data folder: Horizon first, then
+/// The instances, by the default game home and the launcher's data folder: Skyline first, then
 /// by group and name.
 pub fn list() -> Vec<Instance> {
-    list_in(&backend::game_home(), &backend::data_dir())
+    let found = list_in(&backend::game_home(), &backend::data_dir());
+    // Once per run: game folders from before the rename get Skyline's file names.
+    static MIGRATED: std::sync::Once = std::sync::Once::new();
+    MIGRATED.call_once(|| {
+        for i in &found {
+            horizon_core::rebrand::migrate_game_dir(&i.home);
+        }
+    });
+    found
 }
 
 fn list_in(game_home: &Path, data: &Path) -> Vec<Instance> {
     let store = Store::load(data);
     let mut found = vec![(
         DEFAULT.to_string(),
-        "Horizon".to_string(),
+        "Skyline".to_string(),
         Kind::Default,
         game_home.to_path_buf(),
         game_home.to_path_buf(),
@@ -202,7 +210,7 @@ fn list_in(game_home: &Path, data: &Path) -> Vec<Instance> {
             home,
         ));
     }
-    for p in registry_pack::list_in(&game_home.join("horizon-packs")) {
+    for p in registry_pack::list_in(&game_home.join("skyline-packs")) {
         let home = registry_pack::home(&p.work);
         found.push((format!("pack:{}", p.id), p.name, Kind::Pack, p.work, home));
     }
@@ -244,10 +252,10 @@ fn find_in(all: &[Instance], query: &str) -> Result<Instance, String> {
         .or_else(|| all.iter().find(|i| i.name.eq_ignore_ascii_case(q)))
         .or_else(|| all.iter().find(|i| bare(&i.id) == q))
         .cloned()
-        .ok_or_else(|| format!("No instance {q}: horizon-launcher instance list shows them"))
+        .ok_or_else(|| format!("No instance {q}: skyline-launcher instance list shows them"))
 }
 
-/// The instance Play starts: the one picked in the launcher, else Horizon.
+/// The instance Play starts: the one picked in the launcher, else Skyline.
 pub fn selected() -> Instance {
     let all = list();
     backend::Settings::load()
@@ -269,18 +277,18 @@ pub fn select(query: &str) -> Result<Instance, String> {
 const NOT_COPIED: &[&str] = &[
     OWN,
     "ports",
-    "horizon-packs",
+    "skyline-packs",
     "logs",
     "crash-reports",
     "sessions",
     "telemetry",
     "mod-browser",
-    ".horizon-cache",
+    ".skyline-cache",
 ];
 
 /// Files of the player, not of one instance, that a new instance starts with: the keys and video
 /// settings, and the offline name (so the player stays the same player in its worlds).
-const PLAYER_FILES: &[&str] = &["options.txt", "horizon-player.txt"];
+const PLAYER_FILES: &[&str] = &["options.txt", "skyline-player.txt"];
 
 /// Creates an instance named `name`: empty but for the player's options and offline name, or a
 /// copy of `from`'s game folder (its worlds, options and packs). Nothing of `from` changes.
@@ -465,7 +473,7 @@ pub fn apply(cmd: &mut Command, instance: &Instance) -> Result<(), String> {
             fs::create_dir_all(&instance.home)
                 .map_err(|e| format!("{}: {e}", instance.home.display()))?;
             cmd.current_dir(&instance.home)
-                .env("HORIZON_HOME", &instance.home);
+                .env("SKYLINE_HOME", &instance.home);
         }
         Kind::Port | Kind::Pack => modpacks::apply_profile(cmd, &instance.work)?,
     }

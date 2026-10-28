@@ -1,7 +1,7 @@
 //! Copies of the renderer's own WGSL that run beside a shader pack's code in one module (the
-//! sky and material stages of Horizon's packs, docs/shaders.md): every name such a copy
+//! sky and material stages of Skyline's packs, docs/shaders.md): every name such a copy
 //! declares takes a prefix starting with `horizon_`, which the pack check refuses in a pack,
-//! so no pack name can meet one of Horizon's.
+//! so no pack name can meet one of Skyline's.
 
 /// terrain.wgsl, which the copies are taken from.
 pub const TERRAIN: &str = include_str!("../terrain.wgsl");

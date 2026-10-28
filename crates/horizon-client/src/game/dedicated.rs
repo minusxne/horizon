@@ -158,7 +158,7 @@ pub(super) fn preflight(options: &mut Options) -> Result<bool> {
     for w in &props.warnings {
         log("WARN", w);
     }
-    // Horizon's own commands are the owner's choice, off as on vanilla.
+    // Skyline's own commands are the owner's choice, off as on vanilla.
     if props
         .raw
         .get(horizon_client::command::vanilla::PREGEN_PROPERTY)
@@ -322,7 +322,7 @@ impl Game<'_> {
     /// DedicatedServerProperties.createDimensions for a world that doesn't
     /// exist yet: `level-type`'s preset, a flat world's `generator-settings`
     /// and `generate-structures`, written before the world opens so that
-    /// streaming reads them. Horizon generates the normal and flat presets.
+    /// streaming reads them. Skyline generates the normal and flat presets.
     fn write_world_gen(&self, dir: &std::path::Path, props: &ServerProperties) -> Result<()> {
         let level_type = &props.level_type;
         let preset = parse_identifier(level_type)
@@ -343,7 +343,7 @@ impl Game<'_> {
                 "Worker-Main-1",
                 "WARN",
                 &format!(
-                    "Horizon doesn't generate the {preset} world preset yet: using minecraft:normal"
+                    "Skyline doesn't generate the {preset} world preset yet: using minecraft:normal"
                 ),
             );
         }
@@ -407,7 +407,7 @@ struct ServerState {
     stop: bool,
     autosave: bool,
     empty_ticks: i32,
-    /// When the last passes of the loop ended, for the tick rate horizon-server shows.
+    /// When the last passes of the loop ended, for the tick rate skyline-server shows.
     ticks: std::collections::VecDeque<Instant>,
     paused: bool,
     /// `broadcast-console-to-ops`.
@@ -1405,7 +1405,7 @@ mod tests {
     const LOGIN: &str = "Player[/127.0.0.1:0] logged in with entity id 2 at (0.5, 115.0, 0.5)";
     const WARNING: &str = "Authentication warning";
     const READY: &str = "horizon-console-log-ready\n";
-    const CHILD_HOME: &str = "HORIZON_TEST_CONSOLE_LOG_HOME";
+    const CHILD_HOME: &str = "SKYLINE_TEST_CONSOLE_LOG_HOME";
 
     fn assert_log_lines(text: &str) {
         let expected = [
@@ -1451,7 +1451,7 @@ mod tests {
                 .unwrap()
                 .as_nanos();
             let home = std::env::temp_dir().join(format!(
-                "horizon-console-log-test-{}-{unique}",
+                "skyline-console-log-test-{}-{unique}",
                 std::process::id()
             ));
             fs::create_dir(&home).unwrap();

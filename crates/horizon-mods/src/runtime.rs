@@ -523,7 +523,7 @@ impl Mods {
                 }
             }
             if let (Status::Failed(reason), Some(m)) = (&entry.status, &entry.manifest) {
-                log::warn!("Horizon: mod {} did not start: {reason}", m.id);
+                log::warn!("Skyline: mod {} did not start: {reason}", m.id);
             }
             mods.entries.push(entry);
         }
@@ -596,7 +596,7 @@ impl Mods {
             .map(|(name, _)| name.to_string())
             .collect();
         m.check_imports(imports.iter().map(String::as_str))?;
-        // A function this Horizon doesn't have: say so, not wasmtime's linking error.
+        // A function this Skyline doesn't have: say so, not wasmtime's linking error.
         let functions = crate::api_level::imports(wasm)?;
         let (level, function) = crate::api_level::needed(functions.iter().map(String::as_str));
         if let Some(why) = crate::api_level::too_new(level, function) {
@@ -656,7 +656,7 @@ impl Mods {
         let free = |c: &str| {
             let free = !reserved(c) && !taken.iter().any(|t| t == c);
             if !free {
-                log::warn!("Horizon: mod {} cannot take /{c}: already a command", m.id);
+                log::warn!("Skyline: mod {} cannot take /{c}: already a command", m.id);
             }
             free
         };
@@ -667,7 +667,7 @@ impl Mods {
                 for c in &mut r.commands {
                     if let Err(e) = check_arguments(&c.arguments) {
                         log::warn!(
-                            "Horizon: mod {}'s /{}: {e}; it takes free text",
+                            "Skyline: mod {}'s /{}: {e}; it takes free text",
                             m.id,
                             c.name
                         );
@@ -786,7 +786,7 @@ impl Mods {
             Ok(r) => Some(r),
             Err(e) => {
                 let reason = reason(&e);
-                log::warn!("Horizon: mod {} stopped: {reason}", run.store.data().id);
+                log::warn!("Skyline: mod {} stopped: {reason}", run.store.data().id);
                 let name = run.store.data().name.clone();
                 self.out.push(Output::Stopped {
                     name,
@@ -1283,12 +1283,12 @@ impl Mods {
             let id = entry.manifest.as_ref().map_or("?", |m| m.id.as_str());
             match started {
                 Ok(run) => {
-                    log::info!("Horizon: mod {id} reloaded");
+                    log::info!("Skyline: mod {id} reloaded");
                     entry.run = run;
                     entry.status = Status::Running;
                 }
                 Err(e) => {
-                    log::warn!("Horizon: mod {id} did not reload: {e}");
+                    log::warn!("Skyline: mod {id} did not reload: {e}");
                     entry.status = Status::Failed(e);
                 }
             }

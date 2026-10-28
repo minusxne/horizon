@@ -1,9 +1,9 @@
-//! Prepares Horizon's resources from the player's own Minecraft Java Edition: imports the pinned
+//! Prepares Skyline's resources from the player's own Minecraft Java Edition: imports the pinned
 //! client jar, libraries and version JSON from their official launcher install and the server
 //! jar they downloaded (each checked against research-lock.json), copies the game's assets and
 //! data, and runs the vanilla exporters (mods/horizon/src/test/java/dev/horizonlab/parity), which
-//! call Mojang's own code and so stay Java. The result, `.local/horizon-client/<version>` with its
-//! `horizon-resources.json` manifest, is what the game's `--resources` and the launcher read.
+//! call Mojang's own code and so stay Java. The result, `.local/skyline/<version>` with its
+//! `skyline-resources.json` manifest, is what the game's `--resources` and the launcher read.
 //!
 //! This is the Rust port of the Python preparer (tools/prepare_native_client.py and the helpers
 //! it imported); its files are byte for byte the ones the script wrote (tools/compare_prepare.py
@@ -46,7 +46,7 @@ pub const OUTPUT_VERSION: u32 = 1;
 
 /// Digest of this crate's sources (build.rs): the launcher prepares a version in-process when
 /// that version ships these same sources, and runs the version's own binary otherwise.
-pub const SOURCES_SHA256: &str = env!("HORIZON_PREPARE_SOURCES_SHA256");
+pub const SOURCES_SHA256: &str = env!("SKYLINE_PREPARE_SOURCES_SHA256");
 
 /// `SOURCES_SHA256` of the sources in `crate_dir` (a version folder's crates/horizon-prepare),
 /// computed as build.rs computes it; None when the folder has none.
@@ -82,10 +82,10 @@ pub struct Options {
     pub root: PathBuf,
     /// Import the pinned game files from the player's own copy first (`--prepare`).
     pub import: bool,
-    /// The official launcher's game directory (`--minecraft-dir`, else HORIZON_MINECRAFT_DIR,
+    /// The official launcher's game directory (`--minecraft-dir`, else SKYLINE_MINECRAFT_DIR,
     /// else the launcher's own).
     pub minecraft_dir: Option<PathBuf>,
-    /// The pinned server jar the player downloaded (`--server-jar`, else HORIZON_SERVER_JAR).
+    /// The pinned server jar the player downloaded (`--server-jar`, else SKYLINE_SERVER_JAR).
     pub server_jar: Option<PathBuf>,
     /// The Java runtime to try after JAVA_HOME and the PATH (the launcher's pick, e.g. Minecraft's
     /// own Java it downloaded from Mojang).
@@ -372,7 +372,7 @@ impl Run<'_> {
         if !matches!(
             main,
             "VanillaCommandParseOracle" | "VanillaCreativeTabsExporter"
-        ) && std::env::var_os("HORIZON_PREPARE_ISOLATED").is_none()
+        ) && std::env::var_os("SKYLINE_PREPARE_ISOLATED").is_none()
         {
             let mut workers = self.workers.borrow_mut();
             if workers[side].is_none() {
@@ -417,12 +417,12 @@ impl Run<'_> {
     }
 }
 
-/// Prepares the resources; returns their folder (`.local/horizon-client/<version>`).
+/// Prepares the resources; returns their folder (`.local/skyline/<version>`).
 pub fn prepare(options: &Options, log: Log) -> Result<PathBuf, String> {
     prepare_impl(options, log, false)
 }
 
-/// Release build tool: compile and link-check only Horizon's original exporter classes.
+/// Release build tool: compile and link-check only Skyline's original exporter classes.
 pub fn compile_exporters(options: &Options, log: Log) -> Result<PathBuf, String> {
     prepare_impl(options, log, true)
 }
@@ -460,9 +460,9 @@ fn prepare_impl(options: &Options, log: Log, compile_only: bool) -> Result<PathB
         }
     };
     let local = root.join(".local");
-    let resources = local.join("horizon-client").join(&lock.version);
+    let resources = local.join("skyline").join(&lock.version);
     mkdir(&resources)?;
-    let manifest_path = resources.join("horizon-resources.json");
+    let manifest_path = resources.join("skyline-resources.json");
     let oracle = root.join(PARITY).join("VanillaHeightmapOracle.java");
     let origin = Value::Object(vec![
         ("minecraft".into(), Value::Str(lock.version.clone())),
@@ -505,7 +505,7 @@ fn prepare_impl(options: &Options, log: Log, compile_only: bool) -> Result<PathB
     }
     steps(&run, &lock, &oracle, options.minecraft_dir.as_deref())?;
     log(&format!(
-        "Prepared Horizon native-client resources: {}",
+        "Prepared Skyline native-client resources: {}",
         resources.display()
     ));
     Ok(resources)
@@ -953,7 +953,7 @@ fn steps(
         ("resource_files".into(), Value::Int(count.to_string())),
     ]);
     write_json(
-        &root.join("horizon-resources.json"),
+        &root.join("skyline-resources.json"),
         &Value::Object(manifest),
     )
 }
@@ -1229,7 +1229,7 @@ mod tests {
     #[test]
     fn datagen_reports_are_installed_beside_resources_and_missing_reports_need_repair() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-prepare-reports-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-prepare-reports-{}", std::process::id()));
         let root = dir.join("resources");
         let reports = dir.join("reports");
         mkdir(&root).unwrap();

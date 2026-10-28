@@ -51,7 +51,7 @@ pub(in crate::game) struct CommandExtras {
     pub waypoints: Option<Vec<Target>>,
     /// Entities whose waypoint transmit range changed since they last ticked.
     pub waypoint_dirty: Vec<Target>,
-    /// Attribute maps of living entities whose attributes Horizon does not
+    /// Attribute maps of living entities whose attributes Skyline does not
     /// model (an armor stand's, a mob's beyond its modelled three).
     pub attributes: HashMap<Target, horizon_world::attributes::entity::EntityAttributes>,
     /// The `CommandResultCallback` results of the outermost source, when a
@@ -529,7 +529,7 @@ impl Game<'_> {
 
     // ---- /test ----------------------------------------------------------
 
-    /// `TestCommand`. Horizon has no game test instances or test runner: every
+    /// `TestCommand`. Skyline has no game test instances or test runner: every
     /// finder comes back empty, as in a world without test instance blocks.
     pub(super) fn cmd_test(&mut self, id: &str, ctx: &Context) -> R<i32> {
         match id {
@@ -678,7 +678,7 @@ impl Game<'_> {
 
     // ---- /fetchprofile --------------------------------------------------
 
-    /// `FetchProfileCommand`: Horizon resolves no profiles over the network,
+    /// `FetchProfileCommand`: Skyline resolves no profiles over the network,
     /// so name and id lookups fail like an unreachable profile service; an
     /// entity with a profile (the player) prints its resolved profile.
     pub(super) fn cmd_fetchprofile(&mut self, ctx: &Context) -> R<i32> {
@@ -944,7 +944,7 @@ impl Game<'_> {
         }
     }
 
-    /// `/jfr start|stop` (JfrCommand). Horizon has no JVM flight recorder:
+    /// `/jfr start|stop` (JfrCommand). Skyline has no JVM flight recorder:
     /// the recording is its own tick timing, dumped as JSON.
     pub(super) fn cmd_jfr(&mut self, ctx: &Context) -> R<i32> {
         if ctx.literals.iter().any(|l| l == "start") {
@@ -987,7 +987,7 @@ impl Game<'_> {
         Ok(1)
     }
 
-    /// `VersionCommand.dumpVersion`'s lines: Horizon reports the version it
+    /// `VersionCommand.dumpVersion`'s lines: Skyline reports the version it
     /// implements.
     pub(in crate::game) fn version_lines(&self) -> Vec<Text> {
         let protocol = horizon_protocol::PROTOCOL_VERSION;

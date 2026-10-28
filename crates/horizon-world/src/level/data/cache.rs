@@ -27,7 +27,7 @@ const MAX_DECODED_BYTES: usize = 256 * 1024 * 1024;
 static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
 static DIR: OnceLock<PathBuf> = OnceLock::new();
 
-/// Keep snapshots in `dir` (the client passes `<game folder>/.horizon-cache`).
+/// Keep snapshots in `dir` (the client passes `<game folder>/.skyline-cache`).
 /// Without it (tests, tools, servers), `Behaviours::load` always uses the source loader.
 pub(in crate::level) fn set_dir(dir: PathBuf) {
     let _ = DIR.set(dir);
@@ -786,17 +786,17 @@ mod tests {
     }
 
     fn fixture() -> Option<FixtureDir> {
-        let source = std::env::var_os("HORIZON_RESOURCES")
+        let source = std::env::var_os("SKYLINE_RESOURCES")
             .map(PathBuf::from)
             .unwrap_or_else(|| {
-                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/skyline/26.3")
             });
         if !source.join("block-behaviours.json").exists() {
             eprintln!("skipping behaviour cache tests: no client resources");
             return None;
         }
         let dir = std::env::temp_dir().join(format!(
-            "horizon-behaviour-cache-test-{}-{}",
+            "skyline-behaviour-cache-test-{}-{}",
             std::process::id(),
             NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed),
         ));
@@ -872,7 +872,7 @@ mod tests {
             return;
         };
         // The game's cache folder, apart from the resources.
-        let dir = root.0.join("game/.horizon-cache");
+        let dir = root.0.join("game/.skyline-cache");
         let registry = super::super::load_registry(&root.0).unwrap();
         // What `data::load` does once `set_dir` gave it a folder.
         let load_or_build = || {

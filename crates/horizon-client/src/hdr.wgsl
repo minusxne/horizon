@@ -1,4 +1,4 @@
-// Horizon's HDR output pass: the frame, drawn as without HDR in vanilla's gamma
+// Skyline's HDR output pass: the frame, drawn as without HDR in vanilla's gamma
 // space, decoded to linear light at the paper white and written to the swapchain:
 // HDR10 (BT.2020, PQ) or scRGB (1.0 = 80 nits). Bright pixels of light sources that still show the
 // world as it was before the hand and HUD are expanded towards the peak.
@@ -12,7 +12,7 @@ struct Params {
     peak: f32,
     // 1 when this frame drew a world.
     world: f32,
-    // 1 paints expanded pixels magenta (HORIZON_HDR_DEBUG=1).
+    // 1 paints expanded pixels magenta (SKYLINE_HDR_DEBUG=1).
     debug: f32,
     // 1 for an HDR10 swapchain, 0 for scRGB.
     pq: f32,

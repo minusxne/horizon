@@ -1,5 +1,5 @@
-//! The shader packs in the `shaderpacks` folder beside `options.txt`, as Options > Horizon
-//! Settings > Shader Packs lists them: Horizon's own (docs/shaders.md) and those in the
+//! The shader packs in the `shaderpacks` folder beside `options.txt`, as Options > Skyline
+//! Settings > Shader Packs lists them: Skyline's own (docs/shaders.md) and those in the
 //! `shaders/` format, side by side.
 
 use std::path::Path;
@@ -18,12 +18,12 @@ pub enum Kind {
 pub struct Entry {
     /// The folder's or file's name in `shaderpacks`: what the pick saves.
     pub file: String,
-    /// The pack's own name for Horizon's packs, else `file`.
+    /// The pack's own name for Skyline's packs, else `file`.
     pub title: String,
     pub kind: Kind,
 }
 
-/// The packs in `dir`, Horizon's first, each kind by title. A missing folder has none.
+/// The packs in `dir`, Skyline's first, each kind by title. A missing folder has none.
 pub fn scan(dir: &Path) -> Vec<Entry> {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn lists_both_kinds_horizon_first_and_skips_the_rest() {
-        let dir = std::env::temp_dir().join(format!("horizon-shader-list-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("skyline-shader-list-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let d = dir.as_path();

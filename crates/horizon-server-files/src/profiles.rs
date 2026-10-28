@@ -12,10 +12,10 @@ use std::time::Duration;
 /// Mojang's services discovery document.
 pub const DEFAULT_DISCOVERY: &str = "https://discovery.minecraftservices.com/minecraft/client";
 
-/// The discovery document's URL: `HORIZON_API_DISCOVERY` overrides it like
+/// The discovery document's URL: `SKYLINE_API_DISCOVERY` overrides it like
 /// authlib's `-Dminecraft.api.discovery.host`.
 pub fn discovery_url() -> String {
-    std::env::var("HORIZON_API_DISCOVERY")
+    std::env::var("SKYLINE_API_DISCOVERY")
         .ok()
         .filter(|u| !u.is_empty())
         .unwrap_or_else(|| DEFAULT_DISCOVERY.to_owned())
@@ -45,7 +45,7 @@ pub fn resolve(name: &str, online: bool) -> Option<NameAndId> {
 pub fn find_by_name(discovery: &str, name: &str) -> Option<NameAndId> {
     let agent = ureq::AgentBuilder::new()
         .timeout(Duration::from_secs(15))
-        .user_agent(&format!("Horizon/{}", horizon_core::release::VERSION))
+        .user_agent(&format!("Skyline/{}", horizon_core::release::VERSION))
         .build();
     let doc = json::parse(&agent.get(discovery).call().ok()?.into_string().ok()?, true).ok()?;
     let url = endpoint(&doc, "profiles", "getByName")?.replace("{name}", &name.to_lowercase());
@@ -61,7 +61,7 @@ pub fn fetch_profile_key_keys(discovery: &str) -> Result<Vec<RsaPublicKey>, &'st
     const FAILED: &str = "Failed to request Minecraft Services public key";
     let agent = ureq::AgentBuilder::new()
         .timeout(Duration::from_secs(15))
-        .user_agent(&format!("Horizon/{}", horizon_core::release::VERSION))
+        .user_agent(&format!("Skyline/{}", horizon_core::release::VERSION))
         .build();
     let get = |url: &str| agent.get(url).call().ok()?.into_string().ok();
     let doc = get(discovery)

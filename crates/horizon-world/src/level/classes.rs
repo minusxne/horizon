@@ -1,4 +1,4 @@
-//! Vanilla block classes recognised by Horizon's behaviour port.
+//! Vanilla block classes recognised by Skyline's behaviour port.
 //!
 //! Each block's exported class chain (most derived first) is matched against
 //! this list: `class` is the most derived recognised class (it selects the
@@ -291,7 +291,7 @@ classes! {
     CryingObsidian = "CryingObsidianBlock",
 }
 
-/// Java interfaces Horizon's port consults through `instanceof`.
+/// Java interfaces Skyline's port consults through `instanceof`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Interface {

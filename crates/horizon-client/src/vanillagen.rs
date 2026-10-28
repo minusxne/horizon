@@ -153,13 +153,13 @@ impl VanillaTerrain {
         let unsupported = generator.unsupported_features();
         if !unsupported.is_empty() {
             log::warn!(
-                "Horizon: {} placed features cannot run and will be skipped",
+                "Skyline: {} placed features cannot run and will be skipped",
                 unsupported.len()
             );
             if !dir.join("blocks/block-properties.nbt").exists() {
                 log::warn!(
-                    "Horizon: the worldgen bundle lacks the block behavior exports (worldgen/blocks/*.nbt); \
-                     prepare again (the launcher, or horizon-prepare --prepare) to add them"
+                    "Skyline: the worldgen bundle lacks the block behavior exports (worldgen/blocks/*.nbt); \
+                     prepare again (the launcher, or skyline-prepare --prepare) to add them"
                 );
             }
         }
@@ -417,7 +417,7 @@ pub fn shared_data(
     }
     let started = std::time::Instant::now();
     let data = GeneratorData::load(dir, registry)?;
-    log::info!("Horizon: worldgen data loaded in {:?}", started.elapsed());
+    log::info!("Skyline: worldgen data loaded in {:?}", started.elapsed());
     cache.push((dir.to_owned(), data.clone()));
     Ok(data)
 }
@@ -460,7 +460,7 @@ impl ChunkGenerator for VanillaTerrain {
         match worker.generate_proto(ChunkPos::new(x, z)) {
             Ok(chunk) => Box::new(VanillaProto::Ready(Box::new(chunk))),
             Err(e) => {
-                log::warn!("Horizon: generating chunk {x} {z} failed: {e}");
+                log::warn!("Skyline: generating chunk {x} {z} failed: {e}");
                 Box::new(VanillaProto::Failed(x, z))
             }
         }
@@ -491,7 +491,7 @@ impl ChunkGenerator for VanillaTerrain {
                 Err(_) => unreachable!(),
             };
             if let Err(e) = worker.decorate(&mut array) {
-                log::warn!("Horizon: decorating chunk failed: {e}");
+                log::warn!("Skyline: decorating chunk failed: {e}");
             }
             for (slot, chunk) in region.iter_mut().zip(array) {
                 *slot = Box::new(VanillaProto::Ready(Box::new(chunk)));
@@ -628,7 +628,7 @@ impl ChunkGenerator for VanillaTerrain {
         let (block_entities, rolled_loot) =
             crate::structure_blocks::block_entities(&chunk, self.loot.as_deref());
         out.block_entities = block_entities;
-        // The block entities Horizon does not model (decorated pots with their
+        // The block entities Skyline does not model (decorated pots with their
         // sherds and loot table, brushable blocks) stay as placed, like a
         // loaded chunk's.
         let mut unmodelled: Vec<Tag> = chunk

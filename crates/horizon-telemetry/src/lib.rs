@@ -35,7 +35,7 @@ pub const SCHEMA: u32 = 1;
 pub const CONSENT_VERSION: u32 = 2;
 
 /// Where items are sent: nowhere in the offline snapshot. Nothing is ever uploaded, no ping
-/// either, whatever the player's switches or `HORIZON_TELEMETRY_URL` say.
+/// either, whatever the player's switches or `SKYLINE_TELEMETRY_URL` say.
 pub fn endpoint() -> Option<String> {
     None
 }
@@ -89,7 +89,7 @@ pub(crate) mod test_home {
     /// An empty folder of its own under the system's temporary folder.
     pub fn new(name: &str) -> PathBuf {
         let dir =
-            std::env::temp_dir().join(format!("horizon-telemetry-{name}-{}", super::random_hex(6)));
+            std::env::temp_dir().join(format!("skyline-telemetry-{name}-{}", super::random_hex(6)));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }

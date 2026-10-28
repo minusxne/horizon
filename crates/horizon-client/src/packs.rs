@@ -939,7 +939,7 @@ mod tests {
     }
     #[test]
     fn overlay_layers_packs_over_vanilla() {
-        let base = std::env::temp_dir().join(format!("horizon-packs-{}", std::process::id()));
+        let base = std::env::temp_dir().join(format!("skyline-packs-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();
@@ -1002,7 +1002,7 @@ mod tests {
     #[test]
     fn built_in_and_folder_packs_give_their_pack_png() {
         use std::io::Write as _;
-        let base = std::env::temp_dir().join(format!("horizon-pack-icons-{}", std::process::id()));
+        let base = std::env::temp_dir().join(format!("skyline-pack-icons-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let meta = br#"{"pack":{"description":"d","pack_format":97}}"#;
         let built_in = base.join("vanilla/assets/minecraft/resourcepacks");
@@ -1047,7 +1047,7 @@ mod tests {
             {"min_format":97,"max_format":[97,5],"directory":"also"},
             {"formats":50,"directory":"no"}]}}"#);
         assert_eq!(overlays_of(&meta), ["new", "also"]);
-        let base = std::env::temp_dir().join(format!("horizon-packs-ov-{}", std::process::id()));
+        let base = std::env::temp_dir().join(format!("skyline-packs-ov-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();

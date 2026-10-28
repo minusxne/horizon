@@ -3,14 +3,14 @@
 //! [`canonical`] is `loadAdditional` followed by `saveWithFullMetadata` for each of
 //! the 47 `BlockEntityType`s: it reads the fields the type reads (with vanilla's
 //! defaults and clamps), drops everything else and writes the fields `saveAdditional`
-//! writes (including its omit-when-empty rules). Nested codec values that Horizon does
+//! writes (including its omit-when-empty rules). Nested codec values that Skyline does
 //! not simulate (spawner entity data, vibration listeners, trial spawner configuration,
 //! vault data, sculk cursors, sign and banner components, profiles) are carried as
 //! loaded. The common `BaseContainerBlockEntity` fields (`CustomName`, `lock`) and the
 //! `RandomizableContainer` loot table fields are handled for every container type.
 //!
-//! [`overlay`] merges a block entity Horizon models (and re-encodes from its own,
-//! partial state) with the NBT it was loaded from, so fields Horizon does not model
+//! [`overlay`] merges a block entity Skyline models (and re-encodes from its own,
+//! partial state) with the NBT it was loaded from, so fields Skyline does not model
 //! survive and only what the game changed is replaced.
 use horizon_world::nbt::{Compound, Tag};
 
@@ -767,10 +767,10 @@ fn is_record(item: &Compound) -> bool {
 }
 
 /// Three-way merge of a block entity: `original` is the NBT it was loaded from,
-/// `loaded` what Horizon encodes right after decoding it, and `current` what Horizon
+/// `loaded` what Skyline encodes right after decoding it, and `current` what Skyline
 /// encodes now. Whatever the game left unchanged since loading keeps its original
-/// form (including the detail Horizon does not model, such as styled text), what it
-/// changed takes the current value, and keys Horizon never models stay.
+/// form (including the detail Skyline does not model, such as styled text), what it
+/// changed takes the current value, and keys Skyline never models stay.
 pub fn overlay(original: &Tag, loaded: &Tag, current: &Tag) -> Tag {
     if current == loaded {
         return original.clone();

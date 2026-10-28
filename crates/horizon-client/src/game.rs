@@ -301,9 +301,9 @@ struct Options {
     dimension: Option<String>,
     /// Options.pauseOnLostFocus off (F3+P), for scripted testing.
     no_pause: bool,
-    /// Control socket path (`--control`), for `horizon-ctl`.
+    /// Control socket path (`--control`), for `skyline-ctl`.
     control: Option<PathBuf>,
-    /// `HORIZON_SPIKES=MS`: print the timed spans of frames slower than MS.
+    /// `SKYLINE_SPIKES=MS`: print the timed spans of frames slower than MS.
     spikes: Option<f32>,
     /// Render into a texture instead of the window (`--offscreen`), so a
     /// GPU the display cannot present from can still be benchmarked.
@@ -313,7 +313,7 @@ struct Options {
     window_size: [u32; 2],
     /// Multiplayer: `--server HOST[:PORT]` joins at start; `--name` is the offline player name.
     server: Option<String>,
-    /// `--name`, `HORIZON_PLAYER_NAME` or the signed-in account's name; else
+    /// `--name`, `SKYLINE_PLAYER_NAME` or the signed-in account's name; else
     /// [`Options::player_name`] uses the kept offline name.
     player_name: Option<String>,
     /// `--dedicated`: run as a dedicated server; vanilla's server arguments
@@ -325,7 +325,7 @@ struct Options {
     dev_mods: Vec<PathBuf>,
     /// Single player runs on an integrated server thread (game/integrated.rs),
     /// as vanilla's does: the default. `--in-frame` (or `--no-server-thread`,
-    /// or `HORIZON_SERVER_THREAD=0`) runs the world in the frame instead.
+    /// or `SKYLINE_SERVER_THREAD=0`) runs the world in the frame instead.
     server_thread: bool,
     /// What this Game executes; independent of its current server connection.
     execution_role: execution_role::ExecutionRole,
@@ -346,11 +346,15 @@ impl Options {
             .parent()
             .ok_or("missing executable directory")?
             .join("resources");
+        if let Ok(dir) = std::env::current_dir() {
+            horizon_core::rebrand::migrate_resources(&dir);
+            horizon_core::rebrand::migrate_game_dir(&dir);
+        }
         let mut o = Self {
-            resources: if sibling.join("horizon-resources.json").exists() {
+            resources: if sibling.join("skyline-resources.json").exists() {
                 sibling
             } else {
-                std::path::Path::new(".local/horizon-client").join(horizon_core::VANILLA_VERSION)
+                std::path::Path::new(".local/skyline").join(horizon_core::VANILLA_VERSION)
             },
             distance: 12,
             distance_override: None,
@@ -371,26 +375,26 @@ impl Options {
             control: None,
             offscreen: false,
             window_size: [1280, 720],
-            spikes: std::env::var("HORIZON_SPIKES")
+            spikes: std::env::var("SKYLINE_SPIKES")
                 .ok()
                 .and_then(|v| v.parse().ok()),
             server: None,
-            player_name: std::env::var("HORIZON_PLAYER_NAME")
+            player_name: std::env::var("SKYLINE_PLAYER_NAME")
                 .ok()
                 .filter(|n| !n.is_empty()),
             dedicated: None,
             benchmark: None,
             dev_mods: Vec::new(),
-            server_thread: std::env::var("HORIZON_SERVER_THREAD").map_or(true, |v| v != "0"),
+            server_thread: std::env::var("SKYLINE_SERVER_THREAD").map_or(true, |v| v != "0"),
             execution_role: execution_role::ExecutionRole::Client,
         };
-        let mut session_file = std::env::var("HORIZON_SESSION_FILE").ok();
+        let mut session_file = std::env::var("SKYLINE_SESSION_FILE").ok();
         let mut args = std::env::args().skip(1);
         while let Some(arg) = args.next() {
             match arg.as_str() {
                 "--help" | "-h" => {
                     println!(
-                        "Horizon — Minecraft Java Edition {} in Rust\n\n  --resources PATH        Prepared resources (horizon-prepare)\n  --render-distance N     Chunks, 2..64 (default 12)\n  --world NAME            World folder under saves/ (default \"New World\")\n  --seed N                World seed for new worlds (default 0)\n  --width N, --height N   Window size (default 1280 x 720)\n  --creative              Creative mode (default survival)\n  --test-terrain          Simple test terrain instead of vanilla generation\n  --frames N              Exit after N frames (testing)\n  --world-frames N        Exit after N frames drawn in the world (testing)\n  --smoke-report PATH     Write a JSON report on exit\n  --benchmark SCENARIO    Run a benchmark (standard, village, forest, ocean, mountain), write its report to benchmarks/ and quit\n  --control               Accept horizon-ctl commands on a local socket\n  --control-socket PATH   Control socket path (default $XDG_RUNTIME_DIR/horizon-control.sock)\n  --server HOST[:PORT]    Join a multiplayer server (offline mode) at start\n  --quickPlaySingleplayer WORLD  Open this world of saves/ at start, only if it exists (vanilla's)\n  --quickPlayMultiplayer HOST[:PORT]  The same as --server (vanilla's name)\n  --name NAME             Player name for multiplayer (default: generated once, kept in horizon-player.txt)\n  --session-file PATH     Signed-in account from the launcher (read once, then deleted)\n  --dev-mod PATH          A Horizon mod (.hmod or folder) to develop: always on, reloaded when rebuilt\n  --in-frame              Run single player's world in the frame, not on its server thread\n  --pregen                Add Horizon's /pregen command (docs/pregeneration.md)\n\nControls: mouse look, WASD move, Space jump, Left Shift sneak, Left Ctrl sprint,\nleft click break, right click place/use, 1-9/scroll hotbar, E inventory,\nQ drop, F3 debug, Esc pause.",
+                        "Skyline — Minecraft Java Edition {} in Rust\n\n  --resources PATH        Prepared resources (skyline-prepare)\n  --render-distance N     Chunks, 2..64 (default 12)\n  --world NAME            World folder under saves/ (default \"New World\")\n  --seed N                World seed for new worlds (default 0)\n  --width N, --height N   Window size (default 1280 x 720)\n  --creative              Creative mode (default survival)\n  --test-terrain          Simple test terrain instead of vanilla generation\n  --frames N              Exit after N frames (testing)\n  --world-frames N        Exit after N frames drawn in the world (testing)\n  --smoke-report PATH     Write a JSON report on exit\n  --benchmark SCENARIO    Run a benchmark (standard, village, forest, ocean, mountain), write its report to benchmarks/ and quit\n  --control               Accept skyline-ctl commands on a local socket\n  --control-socket PATH   Control socket path (default $XDG_RUNTIME_DIR/skyline-control.sock)\n  --server HOST[:PORT]    Join a multiplayer server (offline mode) at start\n  --quickPlaySingleplayer WORLD  Open this world of saves/ at start, only if it exists (vanilla's)\n  --quickPlayMultiplayer HOST[:PORT]  The same as --server (vanilla's name)\n  --name NAME             Player name for multiplayer (default: generated once, kept in skyline-player.txt)\n  --session-file PATH     Signed-in account from the launcher (read once, then deleted)\n  --dev-mod PATH          A Skyline mod (.hmod or folder) to develop: always on, reloaded when rebuilt\n  --in-frame              Run single player's world in the frame, not on its server thread\n  --pregen                Add Skyline's /pregen command (docs/pregeneration.md)\n\nControls: mouse look, WASD move, Space jump, Left Shift sneak, Left Ctrl sprint,\nleft click break, right click place/use, 1-9/scroll hotbar, E inventory,\nQ drop, F3 debug, Esc pause.",
                         horizon_core::VANILLA_VERSION
                     );
                     return Ok(None);
@@ -407,7 +411,7 @@ impl Options {
                 "--control" => o.control = Some(horizon_client::control::default_path()),
                 "--server-thread" => o.server_thread = true,
                 "--in-frame" | "--no-server-thread" => o.server_thread = false,
-                // Horizon's own commands (/pregen), off by default as on vanilla.
+                // Skyline's own commands (/pregen), off by default as on vanilla.
                 "--pregen" => horizon_client::command::vanilla::set_horizon_commands(true),
                 _ => {
                     let value = args
@@ -495,7 +499,7 @@ impl Options {
                     o.player_name = Some(session.name.clone());
                     horizon_client::auth::set_current(session);
                 }
-                Err(e) => eprintln!("Horizon: not signed in: {e}"),
+                Err(e) => eprintln!("Skyline: not signed in: {e}"),
             }
         }
         Ok(Some(o))
@@ -1504,7 +1508,7 @@ struct Game<'a> {
     renderer: Option<Renderer>,
     /// CPU geometry storage retained across frames, including empty/title frames.
     entity_vertices: Vec<Vertex>,
-    /// Horizon Extras' dynamic lights this frame (`dynamic_lights.rs`), and how brightly each
+    /// Skyline Extras' dynamic lights this frame (`dynamic_lights.rs`), and how brightly each
     /// item glows (built the first time the extra is on).
     dynamic_lights: Vec<[f32; 4]>,
     luminance: Option<horizon_client::dynamic_light::Luminance>,
@@ -1523,7 +1527,7 @@ struct Game<'a> {
     previous: Instant,
     /// FramerateLimitTracker.latestInputTime.
     last_input: Instant,
-    /// Controllers (Horizon's own).
+    /// Controllers (Skyline's own).
     pad: pad::Pads,
     frames: u64,
     /// `item_level` for one frame, game time, day time and dimension.
@@ -1718,7 +1722,7 @@ struct Game<'a> {
     armor_stands: Vec<horizon_client::entities::ArmorStand>,
     /// `Cushion` decoration entities (game/cushions.rs).
     cushions: Vec<horizon_client::entities::Cushion>,
-    /// Entities of types Horizon does not simulate.
+    /// Entities of types Skyline does not simulate.
     others: Vec<commands::OtherEntity>,
     armor_stand_assets: armor_stands::ArmorStandAssets,
     /// `WaypointStyleManager`.
@@ -1812,13 +1816,13 @@ struct Game<'a> {
     pending_bench: Option<(Instant, std::sync::mpsc::Sender<String>)>,
     /// Recent frame times for the performance overlay.
     frame_graph: horizon_client::perf_overlay::FrameGraph,
-    /// Horizon's extras (minimap, auto-reconnect; mods' counters): `game/extras.rs`.
+    /// Skyline's extras (minimap, auto-reconnect; mods' counters): `game/extras.rs`.
     extras: extras::ExtrasState,
-    /// Horizon mods (`game/mods.rs`), none running unless turned on.
+    /// Skyline mods (`game/mods.rs`), none running unless turned on.
     mods: mods::ModsState,
-    /// Horizon's own shader pack, while one is picked (`game/native_shaders.rs`).
+    /// Skyline's own shader pack, while one is picked (`game/native_shaders.rs`).
     native_shaders: native_shaders::NativeShaders,
-    /// Meshed sections waiting for an upload budget (Horizon settings).
+    /// Meshed sections waiting for an upload budget (Skyline settings).
     pending_uploads: Vec<((i32, i32, i32), horizon_client::mesher::SectionMesh)>,
     /// This frame's view frustum, for culling entities and block entities.
     view_frustum: Option<horizon_client::gfx::Frustum>,
@@ -6569,7 +6573,7 @@ impl Game<'_> {
         }
     }
     /// `AbstractContainerScreen` keeps `isQuickCrafting` and the drag it
-    /// belongs to on the screen. Horizon keeps both on `Game` (`inv_clicks`,
+    /// belongs to on the screen. Skyline keeps both on `Game` (`inv_clicks`,
     /// `inv_drag`, `last_inv_click`), so they are dropped when the pointer
     /// changes hands: a screen that opens or closes starts with its own
     /// state, and a press whose release never reached the screen -- the
@@ -7343,7 +7347,7 @@ impl Game<'_> {
                 last == slot && was_right == right && now.duration_since(at).as_millis() < 250
             });
             self.last_inv_click = Some((now, slot, right));
-            // mouseClicked's QUICK_MOVE (and Horizon's at-press QUICK_MOVE
+            // mouseClicked's QUICK_MOVE (and Skyline's at-press QUICK_MOVE
             // of a carried stack, mouseReleased's in vanilla) remember the
             // stack it moves.
             if input == Some(Input::QuickMove) || (self.carried.is_some() && !double) {
@@ -11643,7 +11647,7 @@ impl Game<'_> {
         let mut outline_after_terrain = false;
         // GameRenderer.shouldRenderBlockOutline: not with the HUD hidden (F1), and only for a
         // player who may build. Adventure players only get one with a CAN_BREAK or
-        // CAN_PLACE_ON item and spectators with a menu block; Horizon reads neither the
+        // CAN_PLACE_ON item and spectators with a menu block; Skyline reads neither the
         // components nor opens menus for spectators, so those never show it.
         let outline = if self.screen == Screen::Playing && !self.ui.hide_gui && self.may_build() {
             self.pick()
@@ -11844,7 +11848,7 @@ impl Game<'_> {
             water_fog,
             fog: Some({
                 let mut fog = self.frame_fog(camera, &sky, biome, water_fog);
-                // Horizon's fog setting: no distance fog (fluids keep theirs).
+                // Skyline's fog setting: no distance fog (fluids keep theirs).
                 if !self.settings.horizon.fog
                     && !underwater
                     && self.darkness_fog().is_none()
@@ -12373,7 +12377,7 @@ impl Game<'_> {
     }
     fn update_world(&mut self) {
         if let Err(e) = self.poll_remote() {
-            log::warn!("Horizon: {e}");
+            log::warn!("Skyline: {e}");
         }
         self.prepare_lod();
         if self.lod.is_some() {
@@ -12445,7 +12449,7 @@ impl Game<'_> {
                     .save_later(&modified, self.pack.assets.registry, self.res.biomes())
             })
         {
-            log::warn!("Horizon: failed to save unloaded chunks: {e}");
+            log::warn!("Skyline: failed to save unloaded chunks: {e}");
         }
         let (far_distance, far_reduced) = self.far_terrain_choice();
         if let Some(renderer) = self.renderer.as_mut() {
@@ -12458,7 +12462,7 @@ impl Game<'_> {
                     }
                 });
             } else {
-                // Horizon's chunk-update and upload budgets: the nearest
+                // Skyline's chunk-update and upload budgets: the nearest
                 // sections go first, the rest wait for later frames; a newer
                 // mesh of a waiting section replaces it, and sections of
                 // chunks no longer loaded are dropped.
@@ -12552,12 +12556,12 @@ impl ApplicationHandler for Game<'_> {
         let size = self.options.window_size.map(f64::from);
         self.fullscreen = horizon_client::window::FullscreenState::new(fullscreen);
         let attributes = Window::default_attributes()
-            .with_title("Horizon")
+            .with_title("Skyline")
             .with_window_icon(horizon_client::window::icon());
-        // Wayland names the window by its app id, which the horizon.desktop entry matches.
+        // Wayland names the window by its app id, which the skyline.desktop entry matches.
         #[cfg(target_os = "linux")]
         let attributes = winit::platform::wayland::WindowAttributesExtWayland::with_name(
-            attributes, "horizon", "horizon",
+            attributes, "skyline", "skyline",
         );
         let window = match event_loop.create_window(
             attributes
@@ -13402,7 +13406,7 @@ impl ApplicationHandler for Game<'_> {
                                     format!(", cpu {:.1} ms", (end - start).as_secs_f32() * 1000.0)
                                 });
                             log::info!(
-                                "Horizon: slow frame {cpu:.1} ms{worked} ({steps} ticks): {}",
+                                "Skyline: slow frame {cpu:.1} ms{worked} ({steps} ticks): {}",
                                 horizon_client::spans::describe(&spans)
                             );
                         }
@@ -13466,7 +13470,7 @@ impl ApplicationHandler for Game<'_> {
                         if self.frames == 0 {
                             // The launcher times Play to this line (launcher/src/perf.rs).
                             log::info!(
-                                "Horizon: first frame after {} ms",
+                                "Skyline: first frame after {} ms",
                                 self.started.elapsed().as_millis()
                             );
                         }
@@ -13580,7 +13584,7 @@ impl ApplicationHandler for Game<'_> {
     fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
         self.pad_close_output();
         if let Err(e) = self.save_for_exit() {
-            log::warn!("Horizon: failed to save the world on exit: {e}");
+            log::warn!("Skyline: failed to save the world on exit: {e}");
         }
         self.finish_perf();
     }
@@ -14121,7 +14125,7 @@ impl Game<'_> {
             ));
         }
         self.pending_entry = Some(entry);
-        log::info!("Horizon: world entry waiting for world resources");
+        log::info!("Skyline: world entry waiting for world resources");
         Ok(true)
     }
 
@@ -14195,7 +14199,7 @@ impl Game<'_> {
     fn join_world_rest(&mut self) -> Result<()> {
         if self.rest_loader.is_some() {
             let waited = Instant::now();
-            log::info!("Horizon: waiting for world resources");
+            log::info!("Skyline: waiting for world resources");
             while self.rest_loader.is_some() {
                 self.poll_world_rest()?;
                 if self.rest_loader.is_some() {
@@ -14203,7 +14207,7 @@ impl Game<'_> {
                 }
             }
             log::info!(
-                "Horizon: world resources joined after {} ms",
+                "Skyline: world resources joined after {} ms",
                 waited.elapsed().as_millis()
             );
         }
@@ -14289,10 +14293,10 @@ fn synchronous_startup(options: &Options) -> bool {
         || options.benchmark.is_some()
         || options.control.is_some()
         || !options.execution_role.is_client()
-        || std::env::var_os("HORIZON_DISPENSE_FIXTURE").is_some()
-        || std::env::var_os("HORIZON_SCULK_FIXTURE").is_some()
-        || std::env::var_os("HORIZON_COMMAND_SCRIPT").is_some()
-        || std::env::var_os("HORIZON_NET_REPORT").is_some()
+        || std::env::var_os("SKYLINE_DISPENSE_FIXTURE").is_some()
+        || std::env::var_os("SKYLINE_SCULK_FIXTURE").is_some()
+        || std::env::var_os("SKYLINE_COMMAND_SCRIPT").is_some()
+        || std::env::var_os("SKYLINE_NET_REPORT").is_some()
 }
 
 /// The synchronous launch loads both phases; an ordinary launch returns the
@@ -14319,7 +14323,7 @@ fn load_resources(
         // Minecraft.rollbackResourcePacks: the packs' textures don't fit, start
         // with the game's own resources.
         Err(e) if root != vanilla_root => {
-            log::warn!("Horizon: resource packs failed to load ({e}); using the default resources");
+            log::warn!("Skyline: resource packs failed to load ({e}); using the default resources");
             pack_error = Some(e.to_string());
             root = vanilla_root.to_path_buf();
             None
@@ -14330,7 +14334,7 @@ fn load_resources(
         if menu {
             horizon_client::telemetry::mark_ui_ready();
             log::info!(
-                "Horizon: UI bundle ready after {} ms",
+                "Skyline: UI bundle ready after {} ms",
                 started.elapsed().as_millis()
             );
             publish(ui, &root);
@@ -14348,7 +14352,7 @@ fn load_resources(
         // Minecraft.rollbackResourcePacks: the packs break loading, start
         // with the game's own resources.
         Err(e) if root != vanilla_root => {
-            log::warn!("Horizon: resource packs failed to load ({e}); using the default resources");
+            log::warn!("Skyline: resource packs failed to load ({e}); using the default resources");
             pack_error = Some(e.to_string());
             root = vanilla_root.to_path_buf();
             let assets = Assets::load(vanilla_root)?;
@@ -14357,7 +14361,7 @@ fn load_resources(
         }
         Err(e) => {
             return Err(format!(
-                "{e}\nPrepare resources with the launcher, or: horizon-prepare --prepare"
+                "{e}\nPrepare resources with the launcher, or: skyline-prepare --prepare"
             )
             .into());
         }
@@ -14370,7 +14374,7 @@ fn load_resources(
         if menu {
             horizon_client::telemetry::mark_ui_ready();
             log::info!(
-                "Horizon: UI bundle ready after {} ms",
+                "Skyline: UI bundle ready after {} ms",
                 started.elapsed().as_millis()
             );
             publish(ui, &root);
@@ -14448,7 +14452,7 @@ fn load_resources(
     if menu {
         horizon_client::telemetry::mark_core_ready();
         log::info!(
-            "Horizon: core-ready after {} ms",
+            "Skyline: core-ready after {} ms",
             started.elapsed().as_millis()
         );
     }
@@ -14459,7 +14463,7 @@ fn load_resources(
     let renderer_cpu = menu.then(|| prepare_renderer_textures(&pack));
     if menu {
         log::info!(
-            "Horizon: handoff CPU resources prepared on worker in {} ms",
+            "Skyline: handoff CPU resources prepared on worker in {} ms",
             prepared_at.elapsed().as_millis()
         );
     }
@@ -14488,7 +14492,7 @@ fn load_resources(
                 progress.set(9);
                 horizon_client::telemetry::mark_rest_ready();
                 log::info!(
-                    "Horizon: rest-ready after {} ms",
+                    "Skyline: rest-ready after {} ms",
                     started.elapsed().as_millis()
                 );
                 Ok(())
@@ -14548,7 +14552,7 @@ fn load_world_rest(
     let recipes = Recipes::load(root, &items)?;
     let transformers = horizon_client::block_transform::Transformers::load(root, assets.registry)?;
     log::info!(
-        "Horizon: resources loaded in {:.1}s; {} block states, {} items, {} biomes; {} worker threads",
+        "Skyline: resources loaded in {:.1}s; {} block states, {} items, {} biomes; {} worker threads",
         started.elapsed().as_secs_f32(),
         facts.states.len(),
         items.items.len(),
@@ -14847,9 +14851,9 @@ fn start_game<'a>(
                 scenario,
                 started,
                 app: horizon_bench::App {
-                    name: "horizon-client".into(),
+                    name: "skyline".into(),
                     version: horizon_client::crash::version(),
-                    commit: option_env!("HORIZON_COMMIT").map(str::to_owned),
+                    commit: option_env!("SKYLINE_COMMIT").map(str::to_owned),
                     mods: Vec::new(),
                 },
                 simulation_distance: game.settings.simulation_distance as u32,
@@ -14860,11 +14864,11 @@ fn start_game<'a>(
             },
         );
     }
-    if let Ok(spec) = std::env::var("HORIZON_DISPENSE_FIXTURE") {
+    if let Ok(spec) = std::env::var("SKYLINE_DISPENSE_FIXTURE") {
         game.run_component_harness(integrated::ComponentHarness::Dispenser(spec))?;
         return Ok(None);
     }
-    if let Ok(spec) = std::env::var("HORIZON_SCULK_FIXTURE") {
+    if let Ok(spec) = std::env::var("SKYLINE_SCULK_FIXTURE") {
         game.run_component_harness(integrated::ComponentHarness::Sculk(spec))?;
         return Ok(None);
     }
@@ -14879,14 +14883,14 @@ fn start_game<'a>(
                 game.options.player_name(),
             );
             game.connect_server(&address, &name)?;
-            if let Some(report) = std::env::var_os("HORIZON_NET_REPORT") {
+            if let Some(report) = std::env::var_os("SKYLINE_NET_REPORT") {
                 game.run_net_harness(report.as_ref())?;
                 return Ok(None);
             }
         }
         Some(folder) => {
             let (seed, creative) = (game.options.seed, game.options.creative);
-            if std::env::var_os("HORIZON_COMMAND_SCRIPT").is_some() {
+            if std::env::var_os("SKYLINE_COMMAND_SCRIPT").is_some() {
                 // Headless, but with the same server and memory connection as play.
                 game.open_integrated(&folder, None, Some(seed), creative, None)?;
             } else {
@@ -14915,8 +14919,8 @@ fn start_game<'a>(
             game.title = Some(title);
         }
     }
-    if std::env::var_os("HORIZON_COMMAND_SCRIPT").is_some()
-        && std::env::var_os("HORIZON_COMMAND_OUTPUT").is_some()
+    if std::env::var_os("SKYLINE_COMMAND_SCRIPT").is_some()
+        && std::env::var_os("SKYLINE_COMMAND_OUTPUT").is_some()
     {
         game.wait_command_harness()?;
         return Ok(None);
@@ -14984,12 +14988,12 @@ impl Loading {
             .map(f64::from);
         self.fullscreen = horizon_client::window::FullscreenState::new(fullscreen);
         let attributes = Window::default_attributes()
-            .with_title("Horizon")
+            .with_title("Skyline")
             .with_window_icon(horizon_client::window::icon());
-        // Wayland names the window by its app id, which the horizon.desktop entry matches.
+        // Wayland names the window by its app id, which the skyline.desktop entry matches.
         #[cfg(target_os = "linux")]
         let attributes = winit::platform::wayland::WindowAttributesExtWayland::with_name(
-            attributes, "horizon", "horizon",
+            attributes, "skyline", "skyline",
         );
         let window = match event_loop.create_window(
             attributes
@@ -15035,7 +15039,7 @@ impl Loading {
     /// and title panorama.
     fn set_ui(&mut self, gui: UiResources, root: PathBuf) {
         log::info!(
-            "Horizon: loading the title artwork after {} ms",
+            "Skyline: loading the title artwork after {} ms",
             self.started.elapsed().as_millis()
         );
         self.menu.set_root(root, &self.settings);
@@ -15104,13 +15108,13 @@ impl Loading {
                     self.menu.perf.title_shown()
                 }
                 Ok(_) => {}
-                Err(e) => log::warn!("Horizon: loading screen frame failed: {e}"),
+                Err(e) => log::warn!("Skyline: loading screen frame failed: {e}"),
             }
         }
         if !self.shown {
             self.shown = true;
             log::info!(
-                "Horizon: loading screen shown after {} ms",
+                "Skyline: loading screen shown after {} ms",
                 self.started.elapsed().as_millis()
             );
         }
@@ -15139,7 +15143,7 @@ impl Loading {
             self.settings.horizon.api,
         )?;
         log::info!(
-            "Horizon: world renderer ready after {} ms",
+            "Skyline: world renderer ready after {} ms",
             self.started.elapsed().as_millis()
         );
         let renderer_ms = renderer_at.elapsed().as_millis();
@@ -15180,7 +15184,7 @@ impl Loading {
         game.apply_settings();
         game.previous = Instant::now();
         log::info!(
-            "Horizon: startup handoff {} ms (renderer {} ms, start_game {} ms)",
+            "Skyline: startup handoff {} ms (renderer {} ms, start_game {} ms)",
             handoff_at.elapsed().as_millis(),
             renderer_ms,
             game_ms
@@ -15353,7 +15357,7 @@ pub fn run() -> Result<()> {
     horizon_client::spans::enable(options.spikes.is_some());
     let vanilla_root = options.resources.clone();
     let early_settings = Settings::load(&std::env::current_dir()?.join("options.txt"));
-    // "Playing Horizon" on Discord: never for a server; an automated run only talks to a test's fake Discord.
+    // "Playing Skyline" on Discord: never for a server; an automated run only talks to a test's fake Discord.
     if options.dedicated.is_none() {
         let automated = options.benchmark.is_some()
             || options.offscreen
@@ -15363,14 +15367,14 @@ pub fn run() -> Result<()> {
     }
     // Snapshots of derived tables live in the game folder, never beside the
     // shared resources.
-    Behaviours::set_cache_dir(std::env::current_dir()?.join(".horizon-cache"));
+    Behaviours::set_cache_dir(std::env::current_dir()?.join(".skyline-cache"));
     if !synchronous_startup(&options) {
         return run_loading(options, early_settings, vanilla_root, None, started);
     }
     let mut pack_error = None;
     options.resources = packs::startup_root(&vanilla_root, &early_settings.resource_packs, &[])
         .unwrap_or_else(|e| {
-            log::warn!("Horizon: resource packs not applied: {e}");
+            log::warn!("Skyline: resource packs not applied: {e}");
             pack_error = Some(e.to_string());
             vanilla_root.clone()
         });
@@ -15437,7 +15441,7 @@ mod startup_cpu_tests {
 
     #[test]
     fn worker_prepares_owned_models_and_inventory_before_handoff() {
-        let root = std::env::temp_dir().join(format!("horizon-startup-cpu-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("skyline-startup-cpu-{}", std::process::id()));
         std::fs::create_dir_all(&root).unwrap();
         std::fs::write(
             root.join("entity-models.json"),

@@ -1,14 +1,14 @@
 //! Whole-chunk dump in the format of the vanilla chunk-generation oracle.
 //!
 //! chunk_dump <client resource dir> <seed> <dimension> <x0,z0,x1,z1>...
-//! With HORIZON_SCAN set, one rectangle lists the structure starts in it.
-//! HORIZON_SAVED_STARTS names a JSON file of saved starts (`[{"id", "chunk":
+//! With SKYLINE_SCAN set, one rectangle lists the structure starts in it.
+//! SKYLINE_SAVED_STARTS names a JSON file of saved starts (`[{"id", "chunk":
 //! [x, z], "pieces": [...]}]`, jigsaw pieces as a save lists them) that take
 //! the place of the starts generation builds in their chunks.
 //!
 //! Chunks are generated through biomes, terrain and carvers, then decorated in
 //! row-major order over the target rectangle grown by one chunk (or in the
-//! order HORIZON_ORDER lists), each with its eight neighbours so feature spill
+//! order SKYLINE_ORDER lists), each with its eight neighbours so feature spill
 //! persists, exactly as the oracle does.
 //! For every target chunk this prints `chunk X Z`, one `q QY NAME...` line per
 //! quart layer (16 columns, z-major), one `y Y ID...` line per block row and
@@ -112,15 +112,15 @@ pub fn main() -> Result<(), Error> {
         })
         .collect::<Result<Vec<_>, Error>>()?;
     let blocks = registry(&resources)?;
-    // HORIZON_LIST_ORDER=x,z,view: print the chunks vanilla decorates around a
+    // SKYLINE_LIST_ORDER=x,z,view: print the chunks vanilla decorates around a
     // player standing in chunk x,z (`decoration_order::vanilla_order`) and exit.
-    if let Some(at) = std::env::var_os("HORIZON_LIST_ORDER") {
+    if let Some(at) = std::env::var_os("SKYLINE_LIST_ORDER") {
         let v: Vec<i32> = at
             .to_string_lossy()
             .split(',')
             .map(str::parse)
             .collect::<Result<_, _>>()?;
-        let [x, z, view]: [i32; 3] = v.try_into().map_err(|_| "HORIZON_LIST_ORDER=x,z,view")?;
+        let [x, z, view]: [i32; 3] = v.try_into().map_err(|_| "SKYLINE_LIST_ORDER=x,z,view")?;
         for (x, z) in horizon_world::worldgen::decoration_order::vanilla_order((x, z), view) {
             println!("{x} {z}");
         }
@@ -129,16 +129,16 @@ pub fn main() -> Result<(), Error> {
     let data = GeneratorData::load(&resources.join("worldgen"), blocks)?;
     let generator = OverworldGenerator::for_dimension(data, seed, "minecraft:normal", &dimension)?;
     let mut worker = generator.worker();
-    // HORIZON_PHASE: terrain (no decoration), structures (pieces only) or full.
-    let phase = std::env::var("HORIZON_PHASE").unwrap_or_else(|_| "full".into());
+    // SKYLINE_PHASE: terrain (no decoration), structures (pieces only) or full.
+    let phase = std::env::var("SKYLINE_PHASE").unwrap_or_else(|_| "full".into());
     worker.set_structures_only(phase == "structures");
-    if std::env::var_os("HORIZON_SCAN").is_some() {
+    if std::env::var_os("SKYLINE_SCAN").is_some() {
         let [x0, z0, x1, z1] = rects[0];
         for x in x0..=x1 {
             for z in z0..=z1 {
                 for s in worker.structure_starts(ChunkPos::new(x, z)) {
                     if s.chunk == ChunkPos::new(x, z) {
-                        if std::env::var_os("HORIZON_PIECES").is_some() {
+                        if std::env::var_os("SKYLINE_PIECES").is_some() {
                             for piece in &s.pieces {
                                 let b = piece.bounding_box();
                                 println!(
@@ -169,7 +169,7 @@ pub fn main() -> Result<(), Error> {
         }
         return Ok(());
     }
-    let saved: Vec<Value> = match std::env::var_os("HORIZON_SAVED_STARTS") {
+    let saved: Vec<Value> = match std::env::var_os("SKYLINE_SAVED_STARTS") {
         Some(path) => serde_json::from_str(&fs::read_to_string(path)?)?,
         None => Vec::new(),
     };
@@ -193,10 +193,10 @@ pub fn main() -> Result<(), Error> {
             }
         }
         let mut failed = 0;
-        let margin = i32::from(std::env::var_os("HORIZON_ISOLATED").is_none());
-        // HORIZON_ORDER: a file of `x z` lines, the chunks to decorate in that
+        let margin = i32::from(std::env::var_os("SKYLINE_ISOLATED").is_none());
+        // SKYLINE_ORDER: a file of `x z` lines, the chunks to decorate in that
         // order (the oracle reads the same file); row-major by default.
-        let order: Vec<(i32, i32)> = match std::env::var_os("HORIZON_ORDER") {
+        let order: Vec<(i32, i32)> = match std::env::var_os("SKYLINE_ORDER") {
             Some(path) => fs::read_to_string(path)?
                 .lines()
                 .filter_map(|l| {

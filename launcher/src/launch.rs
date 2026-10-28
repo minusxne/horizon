@@ -55,9 +55,9 @@ pub struct Found {
     pub nvidia: bool,
 }
 
-/// `HORIZON_LAUNCHER_LINUX_TOOLS=gamemode,mangohud,gpu,nvidia`: what [`Found::here`] says is
+/// `SKYLINE_LAUNCHER_LINUX_TOOLS=gamemode,mangohud,gpu,nvidia`: what [`Found::here`] says is
 /// installed, on any system (for tests and screenshots).
-pub const TOOLS_ENV: &str = "HORIZON_LAUNCHER_LINUX_TOOLS";
+pub const TOOLS_ENV: &str = "SKYLINE_LAUNCHER_LINUX_TOOLS";
 
 fn on_path(program: &str) -> bool {
     std::env::var_os("PATH").is_some_and(|path| {
@@ -312,7 +312,7 @@ pub fn wrap(cmd: Command, launch: &Launch) -> Command {
         }
         Plan::Shell { script, words } => {
             let mut c = Command::new("/bin/sh");
-            c.arg("-c").arg(script).arg("horizon").args(words);
+            c.arg("-c").arg(script).arg("skyline").args(words);
             c
         }
         Plan::Cmd { line } => {

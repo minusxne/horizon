@@ -381,7 +381,7 @@ impl Game<'_> {
             None => {}
         }
     }
-    /// Typing for `horizon-ctl type` (`\n` is a line break).
+    /// Typing for `skyline-ctl type` (`\n` is a line break).
     pub(super) fn book_type(&mut self, text: &str) {
         let text = text.replace("\\n", "\n");
         match self.book.as_mut() {

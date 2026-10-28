@@ -858,7 +858,7 @@ mod tests {
     #[test]
     fn item_model_errors_wait_for_the_item_definitions() -> crate::Result<()> {
         let root =
-            std::env::temp_dir().join(format!("horizon-item-model-errors-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-item-model-errors-{}", std::process::id()));
         let model = root.join("assets/horizon/models/INVALID.json");
         fs::create_dir_all(model.parent().unwrap())?;
         fs::write(model, "{}")?;

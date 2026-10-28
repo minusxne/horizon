@@ -492,7 +492,7 @@ mod tests {
     #[test]
     fn primed_tnt_follows_water_currents_after_moving() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("movement-properties.nbt").exists() {
             return;

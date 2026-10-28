@@ -1,4 +1,4 @@
-//! The look of Horizon's graphics settings screens, in one place: sizes,
+//! The look of Skyline's graphics settings screens, in one place: sizes,
 //! colours and the widgets they draw with. The screens (`graphics_ui`) only
 //! lay out rows and handle input; a menu theme replaces this module.
 use crate::{

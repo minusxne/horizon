@@ -941,7 +941,7 @@ mod tests {
     /// A skin evicted from the atlas re-uploads (`again`), once per ask.
     #[test]
     fn evicted_skins_upload_again() {
-        let mut d = super::Downloader::new(std::env::temp_dir().join("horizon-test-skins"));
+        let mut d = super::Downloader::new(std::env::temp_dir().join("skyline-test-skins"));
         d.remember("skins/abc".into(), vec![1, 2, 3]);
         assert!(d.again("skins/abc"));
         assert!(!d.again("skins/missing"));

@@ -71,7 +71,7 @@ impl ChunkFormat {
                 continue;
             }
             // A global section is as wide as the server's registry: 16 bits
-            // from a vanilla server, wider from a Horizon host with the same
+            // from a vanilla server, wider from a Skyline host with the same
             // content mods. Read it at that width, then widen it to ours.
             let ours = block_strategy();
             let strategy = if ours.wire_has_palette(s.states.bits) {
@@ -186,7 +186,7 @@ impl ChunkDecoder {
                 }
             });
         if let Err(e) = spawned {
-            log::warn!("Horizon: no chunk decoder thread ({e}); chunks decode in the frame");
+            log::warn!("Skyline: no chunk decoder thread ({e}); chunks decode in the frame");
         }
         Self { jobs, done }
     }
@@ -244,7 +244,7 @@ impl Game<'_> {
         let chunk = match column {
             Ok(chunk) => chunk,
             Err(e) => {
-                log::warn!("Horizon: chunk {} {}: {e}", p.x, p.z);
+                log::warn!("Skyline: chunk {} {}: {e}", p.x, p.z);
                 return;
             }
         };

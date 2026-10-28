@@ -2153,7 +2153,7 @@ mod frog_tests {
     #[test]
     fn a_frog_walks_at_the_vanilla_speed() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../.local/horizon-client")
+            .join("../../.local/skyline")
             .join(horizon_core::VANILLA_VERSION);
         if !root.join("entity-types.json").exists() {
             return;

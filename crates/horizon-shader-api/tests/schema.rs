@@ -29,7 +29,7 @@ fn reads_every_key_of_schema_1() {
         ),
         ("sample_pack", "Sample Pack", "1.0.0", "0.1")
     );
-    assert_eq!(m.authors, ["Horizon"]);
+    assert_eq!(m.authors, ["Skyline"]);
     assert_eq!(m.license.as_deref(), Some("MIT"));
     assert_eq!(m.sky.as_ref().unwrap().file, "sky.wgsl");
     assert_eq!(
@@ -184,7 +184,7 @@ fn reads_the_sample_folder_and_its_package_alike() {
         folder.package().unwrap(),
         "packaging is reproducible"
     );
-    let dir = std::env::temp_dir().join(format!("horizon-shader-api-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("skyline-shader-api-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("sample_pack.hshader");
     std::fs::write(&path, &bytes).unwrap();

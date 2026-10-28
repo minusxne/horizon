@@ -3,7 +3,7 @@ name = "{name}"
 version = "0.1.0"
 description = ""
 authors = []
-# The Horizon mod API the SDK targets.
+# The Skyline mod API the SDK targets.
 api = "0.1"
 # client: runs in the player's game.
 side = "client"

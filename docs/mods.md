@@ -1,10 +1,10 @@
-# Horizon mods
+# Skyline mods
 
-Horizon gets its own mod system, written in Rust and run in a sandbox, plus
-two ways to bring over what Java players use: native Horizon ports of popular
+Skyline gets its own mod system, written in Rust and run in a sandbox, plus
+two ways to bring over what Java players use: native Skyline ports of popular
 mods and the data-driven parts of packs and mods. Fabric and NeoForge jars do
 **not** run as they are: their code calls and patches Minecraft's Java classes, and
-Horizon has none. What carries over is the data and assets inside a jar
+Skyline has none. What carries over is the data and assets inside a jar
 ([modpacks.md](modpacks.md)).
 
 Mods are **off and absent by default**. A fresh install has no `horizon-mods`
@@ -15,7 +15,7 @@ folder, loads no runtime and plays exactly like vanilla 26.3.
 | The contract (WIT) | `crates/horizon-mod-sdk/wit/horizon.wit` | 0.1: log, game-read, chat, hud, storage, command, ui; tick, frame, chat and command hooks |
 | SDK for mod authors | `crates/horizon-mod-sdk` | 0.1 |
 | Example mods | `crates/horizon-mod-sdk/examples/coords-hud`, `examples/predator-missile` | coordinates, facing and time HUD, `/where`, `/coords`; `/missile`, a guided missile from vanilla commands |
-| Horizon's official mods | `mods/official/` | the extras moving to the registry: FPS Counter (`fps-overlay`), Keystrokes, Zoom, Minimap; Far View (`far-view`), distant terrain; and Recipes, a recipe viewer |
+| Skyline's official mods | `mods/official/` | the extras moving to the registry: FPS Counter (`fps-overlay`), Keystrokes, Zoom, Minimap; Far View (`far-view`), distant terrain; and Recipes, a recipe viewer |
 | Runtime | `crates/horizon-mods` | wasmtime 48 LTS, component model |
 | Authoring tool | `crates/cargo-horizon-mod` | `cargo horizon-mod new [--template code\|content] / build / run / test / check`, and the registry's CI (`registry build / review / list`) |
 | In the game | `crates/horizon-client/src/game/mods.rs`, Options > Mods | client mods |
@@ -43,7 +43,7 @@ folder, loads no runtime and plays exactly like vanilla 26.3.
 ## How it works
 
 ```
- mod crate (Rust)                         Horizon
+ mod crate (Rust)                         Skyline
  ───────────────                          ───────
  impl Mod for MyMod { ... }               horizon-mods::Mods
  export_mod!(MyMod)                         ├─ Engine (cranelift), made on first mod
@@ -87,11 +87,11 @@ folder, loads no runtime and plays exactly like vanilla 26.3.
 | `chat` | `chat` | `show(text)`: a line only the local player sees, after the mod's name (8 per call) |
 | `hud` | `hud` | `set-panel(corner, lines)`, `clear()`: up to 16 lines of 256 characters |
 | `storage` | `storage` | `get(key)`, `set(key, value)`, `delete(key)`: a per-mod folder of up to 64 files, 4 MiB total, at most 1 MiB written per call |
-| `command` | `command` | `run(line)`: a vanilla command run as the player, with the player's permissions, after the hook returns (8 per call); mods' own commands are not run. `run-quiet(lines)`: up to 256 a call, the same rights, nothing in the chat (single player and Horizon's servers run them 64 a tick and log one line a batch; elsewhere they go as chat commands and their feedback shows) |
+| `command` | `command` | `run(line)`: a vanilla command run as the player, with the player's permissions, after the hook returns (8 per call); mods' own commands are not run. `run-quiet(lines)`: up to 256 a call, the same rights, nothing in the chat (single player and Skyline's servers run them 64 a tick and log one line a batch; elsewhere they go as chat commands and their feedback shows) |
 | `ui` | `ui` | `open-screen`, `close-screen`, `set-settings`: a screen the mod owns and a page in Options > Mods, of text, button, item and list widgets the game lays out and draws with its own menus' code; `browser.set-items`, `browser.poll`: a recipe viewer's panel of items right of the inventory and container screens (not the creative one), which the game pages and draws with its own slots and search box, and the mod hears its clicks, its searches and the mod's own keys (`input.register-key`) pressed over any item on the screen; `browser.set-recipes`: recipes in the panel's place (crafting grids, cooking, stonecutting, smithing and brewing layouts, their slots cycling through their stacks, a note and an action button each), paged by the game, with clicks on their slots, action buttons, page turns and a back button. **Experimental:** the manifest needs `experimental = ["ui"]` |
 | `render` | `render` | `set-hud(shapes)`: up to 1024 fills, four-cornered shapes, GUI sprites, items and text, kept on the HUD (over the hotbar, under chat and screens, hidden with F1) until replaced; `set-corner(corner, w, h, shapes)`: a box the game places in a corner, stacked with its overlays and other panels, as `hud`'s panels are; `text-width(text)`; `frame-stats()`: the game's FPS, min and 1% low; `gui-size()`; `shake(strength, seconds)`: the view turns, the player doesn't, scaled by Distortion Effects; `set-zoom(zoom)`: the field of view divided by up to 10, eased or at once, with slower turning, while playing and not through a spyglass (the strongest of several mods' zooms counts); `set-minimap(minimap)`: a map of the world around the player in a corner, as a map item colours it (the floor underground and under roofs), square or round, turning with the player or north up, with the player's arrow; the game keeps its tiles within its own frame budget (one map at a time, the first loaded mod's); `set-far-terrain(far-terrain)`: the world past the render distance as distant terrain, out to 64 to 1024 chunks, built by the game's own workers (the player's LOD Distance, when on, wins; the first loaded mod's). The game's own HUD renderer draws them: a mod never supplies shader code. **Experimental:** `experimental = ["render"]` |
-| `input` | `input` | `claim-items(ids)`: the use button on those items is the mod's (`use-start`, `use-stop` with the ticks held; the game doesn't place, eat or swing); `register-key(name, label, key)`: up to 16 keys (`key.keyboard.r`), heard while playing as `key-down` / `key-up` (the game's own mapping on that key still runs; a screen opening lets held keys up), mouse buttons as `key.mouse.4`. The player rebinds them on the mod's page in Options > Mods, where the game lists them first as Key Binds rows (click, then press a key or mouse button; Esc binds none), even for a mod without `ui`; the choice is kept in `horizon-mods.txt` (`key.<mod>.<name>:key.keyboard.z`) and wins over `register-key`'s default; `claim-wheel(on)`: the wheel's steps become `wheel` events and the hotbar doesn't move (the one input a mod takes from the game; a mod's keys never do); `held()`; `mapping(name)`: a movement or click mapping's key label and whether it is held; `clicks-per-second()`; `poll()` returns the events, at most 256 kept. **Experimental:** `experimental = ["input"]` |
-| `recipes` | `recipes` | `items()`: every item in the registry's order, with its name in the player's language and its tags; `all()`: every recipe (crafting, smelting, blasting, smoking, campfire, stonecutting, smithing, brewing), its slots as the stacks that fit each, its results, cooking time and experience, and the recipe book's id for it; `known()`: the book ids the player's recipe book holds; `place(book-id, all)`: the recipe book's click on a recipe, in the open inventory's or crafting table's grid (refused for a recipe the player's book doesn't hold, as vanilla's server refuses it); `give(stack)`: in creative mode, the stack into the player's inventory, as from the creative inventory. The recipes are the world's in single player and on Horizon's servers, vanilla 26.3's on any other server (a client is sent no others), while `known` follows that server's book. The game makes the tables once, when a mod first reads them. **Experimental:** `experimental = ["recipes"]` |
+| `input` | `input` | `claim-items(ids)`: the use button on those items is the mod's (`use-start`, `use-stop` with the ticks held; the game doesn't place, eat or swing); `register-key(name, label, key)`: up to 16 keys (`key.keyboard.r`), heard while playing as `key-down` / `key-up` (the game's own mapping on that key still runs; a screen opening lets held keys up), mouse buttons as `key.mouse.4`. The player rebinds them on the mod's page in Options > Mods, where the game lists them first as Key Binds rows (click, then press a key or mouse button; Esc binds none), even for a mod without `ui`; the choice is kept in `skyline-mods.txt` (`key.<mod>.<name>:key.keyboard.z`) and wins over `register-key`'s default; `claim-wheel(on)`: the wheel's steps become `wheel` events and the hotbar doesn't move (the one input a mod takes from the game; a mod's keys never do); `held()`; `mapping(name)`: a movement or click mapping's key label and whether it is held; `clicks-per-second()`; `poll()` returns the events, at most 256 kept. **Experimental:** `experimental = ["input"]` |
+| `recipes` | `recipes` | `items()`: every item in the registry's order, with its name in the player's language and its tags; `all()`: every recipe (crafting, smelting, blasting, smoking, campfire, stonecutting, smithing, brewing), its slots as the stacks that fit each, its results, cooking time and experience, and the recipe book's id for it; `known()`: the book ids the player's recipe book holds; `place(book-id, all)`: the recipe book's click on a recipe, in the open inventory's or crafting table's grid (refused for a recipe the player's book doesn't hold, as vanilla's server refuses it); `give(stack)`: in creative mode, the stack into the player's inventory, as from the creative inventory. The recipes are the world's in single player and on Skyline's servers, vanilla 26.3's on any other server (a client is sent no others), while `known` follows that server's book. The game makes the tables once, when a mod first reads them. **Experimental:** `experimental = ["recipes"]` |
 
 | Hook (export) | When |
 |---|---|
@@ -165,7 +165,7 @@ horizon-mods --features runtime,pack --release --test sandbox -- --ignored --noc
 | coords-hud's `tick` (reads the player and clock, formats 3 lines, compares) | 2.3 µs |
 | loading coords-hud (read, compile with cranelift, instantiate, `init`) | 50 ms, once |
 
-In the game, same world and view, `horizon-ctl bench 10` three times each
+In the game, same world and view, `skyline-ctl bench 10` three times each
 (4 other sessions shared the machine, so the tails are noisy; the median is
 the stable figure):
 
@@ -201,11 +201,11 @@ runtime,pack`).
 ## Playing with mods
 
 1. Put `.hmod` files (or mod folders holding `horizon-mod.toml` and
-   `mod.wasm`) in `horizon-mods/` beside `options.txt` (in the launcher's game
+   `mod.wasm`) in `skyline-mods/` beside `options.txt` (in the launcher's game
    folder).
 2. Options > **Mods** lists them with what each may do ("May see your
    position, health and the time, draw text on your screen, ...") and a
-   switch. They start off; the choice is kept in `horizon-mods.txt`
+   switch. They start off; the choice is kept in `skyline-mods.txt`
    (`mod.<id>:true`).
 3. A mod that failed to load or stopped shows why, in red, on its row.
 
@@ -229,7 +229,7 @@ cargo horizon-mod test              # build, then run tests/*.toml with no game
 ```
 
 `run` starts `horizon-client` (on `PATH`, or `--game PATH`, or
-`HORIZON_CLIENT`) with `--dev-mod target/horizon-mod/<id>.hmod`. A dev mod is
+`SKYLINE_CLIENT`) with `--dev-mod target/horizon-mod/<id>.hmod`. A dev mod is
 always on, and the game checks its file once a second: rebuild and it restarts
 with "Mods reloaded" in chat. Its in-memory state starts over; whatever it
 saved with capability `storage` survives the reload.
@@ -316,7 +316,7 @@ checked:
 
 Unknown keys are errors, so a typo never passes silently. The same runner is
 `horizon_mods::testing` for Rust code that drives a mod (`TestGame`,
-`Script`): Horizon's own tests run the examples' scripts with it. Scripts test
+`Script`): Skyline's own tests run the examples' scripts with it. Scripts test
 any mod, whatever it was written in.
 
 ### Template layout
@@ -478,7 +478,7 @@ its component targets the WIT world `horizon-server-mod` instead of
 | Interface | Capability | Functions |
 |---|---|---|
 | `log` | always | as for client mods |
-| `storage` | `storage` | as for client mods, in the server's `horizon-mods/` |
+| `storage` | `storage` | as for client mods, in the server's `skyline-mods/` |
 | `players` | `players` | `online()`: id, name, position, dimension, game mode, health of each player on; `tell(id, text)`, `broadcast(text)`: system messages after the mod's name, 8 per call |
 | `world` | `world` | `get-block(dimension, x, y, z)`: the state in a loaded chunk, `minecraft:oak_log[axis=y]`; `get-biome(dimension, x, y, z)`: `minecraft:plains`, ...; `set-blocks(dimension, changes)`: up to 4096 per call, checked at once, made as `/setblock` makes them (neighbours, light, block entities, every player told) after the call, before that dimension's next tick |
 
@@ -542,14 +542,14 @@ that are on, and only that one:
 | Single player (default) | the server thread | the window's player, a connection like any other |
 | Single player `--in-frame` | the window's own game, beside its client mods | the window's player |
 | Open to LAN, Play with Friends | the host's server thread (or its window, in-frame) | the host and every guest |
-| Dedicated server (`--dedicated`, `horizon-server`) | the server | every connected player |
+| Dedicated server (`--dedicated`, `skyline-server`) | the server | every connected player |
 
 A window that is a client of a server (single player's window, a LAN guest,
 any multiplayer server) never runs them; its Mods page lists a server mod with
 the others, and its switch takes effect the next time a world opens. The mods
-live in `horizon-mods/` of the game folder, or of the server's folder on a
+live in `skyline-mods/` of the game folder, or of the server's folder on a
 dedicated server, and are turned on as client mods are: Options > Mods, or
-`mod.<id>:true` in `horizon-mods.txt`. `--dev-mod <file>` runs one always
+`mod.<id>:true` in `skyline-mods.txt`. `--dev-mod <file>` runs one always
 on and reloads it when its file changes, on a server too.
 
 **When hooks run.** At the end of each server tick the game tells the server
@@ -570,9 +570,9 @@ arguments).
 
 ## Publish your mod
 
-Horizon's registry lists mods, modpacks (`.hpack`) and resource packs made for Horizon, each reviewed before it is
+Skyline's registry lists mods, modpacks (`.hpack`) and resource packs made for Skyline, each reviewed before it is
 published. Players find them at [playhorizon.dev/mods](https://playhorizon.dev/mods) and in the launcher (Mods, then
-**Horizon** beside Modrinth), which checks every file before it installs it.
+**Skyline** beside Modrinth), which checks every file before it installs it.
 
 1. Run `cargo horizon-mod check` on the file (above): the registry runs the same checks.
 2. Put the source somewhere public, under a licence that lets players run it: reviewers read it, and the file must be
@@ -595,9 +595,9 @@ An update is the same form with a new version; only the project's `owners` can p
 has one. A published file never changes. Without the form, open the pull request by hand (the repository's README
 says how). The formats: [api/mod-index.md](api/mod-index.md).
 
-### Horizon's official mods
+### Skyline's official mods
 
-The Horizon extras that are mods now, and Horizon's own recipe viewer, live in `mods/official/<name>/`, one crate each in the game's workspace, so
+The Skyline extras that are mods now, and Skyline's own recipe viewer, live in `mods/official/<name>/`, one crate each in the game's workspace, so
 `cargo clippy --workspace` and pr_ready cover them. They use only the public API, like any other mod, with the same
 options on their settings page as the extra had and the same look. Each is published by a maintainer: build it on
 `main` with the toolchain CI uses (`cd mods/official/<name> && cargo horizon-mod build`), then open a pull request in
@@ -609,10 +609,10 @@ so the same rustc and `Cargo.lock` give the same file.
 |---|---|---|---|
 | FPS Counter | `fps_overlay` | Extras > FPS counter | `corner`: `top_left` (default), `top_right`, `bottom_left`, `bottom_right`; `lows`: `false` (default), `true` |
 | Keystrokes | `keystrokes` | Extras > Keystrokes | `corner`: as above, default `top_left`; `cps`: `true` (default), `false` |
-| Zoom | `zoom` | Extras > Zoom | `level`: `2`, `3`, `4` (default), `6`, `8`, `10`; `smooth`: `true` (default), `false`; `sensitivity` (slower turning): `true` (default), `false`. The key is the game's: `key.zoom.zoom` in `horizon-mods.txt`, default `key.keyboard.z` |
+| Zoom | `zoom` | Extras > Zoom | `level`: `2`, `3`, `4` (default), `6`, `8`, `10`; `smooth`: `true` (default), `false`; `sensitivity` (slower turning): `true` (default), `false`. The key is the game's: `key.zoom.zoom` in `skyline-mods.txt`, default `key.keyboard.z` |
 | Minimap | `minimap` | Extras > Minimap | `corner`: as above, default `top_right`; `size`: `64`, `96` (default), `128`; `shape`: `square` (default), `round`; `zoom` (blocks per pixel): `0.5`, `1` (default), `2`, `4`; `rotate`: `false` (default), `true`. The game draws the map (`render.set-minimap`) |
 | Far View | `far_view` | Graphics > LOD Distance and Far Detail | `distance` (chunks): `64`, `128`, `256` (default), `512`, `1024`; `detail`: `full` (default), `reduced`. The game builds and draws the distant terrain (`render.set-far-terrain`); the player's LOD Distance, when on, wins |
-| Recipes | `recipes` | nothing (new) | `give` (a click on the item panel gives the item in creative mode: one, a stack with a right click): `false` (default), `true`. The keys are the game's: `key.recipes.recipe` (default `key.keyboard.r`) and `key.recipes.uses` (default `key.keyboard.u`) in `horizon-mods.txt`. Every item sits in the item panel (`browser`) with a search box (words in the name or id, `@namespace`, `#tag`); R or a click shows an item's recipes, U or a right click its uses, a tab per station, and + fills the grid with a recipe the player knows (`recipes.place`). On servers that are not Horizon it shows the game's own 26.3 recipes; known recipes and + follow the server's recipe book |
+| Recipes | `recipes` | nothing (new) | `give` (a click on the item panel gives the item in creative mode: one, a stack with a right click): `false` (default), `true`. The keys are the game's: `key.recipes.recipe` (default `key.keyboard.r`) and `key.recipes.uses` (default `key.keyboard.u`) in `skyline-mods.txt`. Every item sits in the item panel (`browser`) with a search box (words in the name or id, `@namespace`, `#tag`); R or a click shows an item's recipes, U or a right click its uses, a tab per station, and + fills the grid with a recipe the player knows (`recipes.place`). On servers that are not Skyline it shows the game's own 26.3 recipes; known recipes and + follow the server's recipe book |
 
 ## Versions and compatibility
 
@@ -625,28 +625,28 @@ so the same rustc and `Cargo.lock` give the same file.
   line it does not serve with a clear message.
 - Within a line, each function has an API level, the one it arrived at
   ([stability](api/stability.md#mod-api-levels)). A mod needs the level of
-  the newest function it calls, read from its file: an older Horizon refuses
-  it with "made for a newer Horizon: update Horizon", and the registry lists
+  the newest function it calls, read from its file: an older Skyline refuses
+  it with "made for a newer Skyline: update Skyline", and the registry lists
   the level so installers take a version the game can run.
   `cargo horizon-mod check` prints it ("needs mod API level 1 or newer").
-- Horizon follows Minecraft releases; the mod API does not have to. Vanilla
+- Skyline follows Minecraft releases; the mod API does not have to. Vanilla
   concepts mods see (dimensions, block and item ids) are the game's own ids,
   so a version port changes the data, not the API.
 
 ## Multiplayer
 
 - **Client mods** (`side = "client"`, all of 0.1) run in the player's game,
-  in single player and on any server, vanilla or Horizon. They see only what
+  in single player and on any server, vanilla or Skyline. They see only what
   the client already knows (the snapshot), like F3 does, and act only on the
   local screen and chat. A server cannot see them.
 - **Server mods** (`side = "server"`, API 0.3) run where the world is
   simulated: single player's server thread (or the window, in-frame), a LAN
   host and the dedicated server ([Server mods](#server-mods-api-03-experimental)).
-  They use only vanilla messages, so any client, vanilla or Horizon, can join.
+  They use only vanilla messages, so any client, vanilla or Skyline, can join.
 - **Both** (`side = "both"`): a server mod with a client half (new blocks,
-  their textures, a custom screen). On join the Horizon server announces its
+  their textures, a custom screen). On join the Skyline server announces its
   mods (id, version, SHA-256) on a `horizon:mods` custom payload channel; a
-  Horizon client with matching client halves enables them for that session, or
+  Skyline client with matching client halves enables them for that session, or
   offers to download them from the same source the launcher uses. Vanilla
   clients are refused only if the server says its mods need a client.
 - Registries (new blocks and items) are server-owned and synced like vanilla's
@@ -657,17 +657,17 @@ so the same rustc and `Cargo.lock` give the same file.
 - **The file.** `.hmod`: a zip holding `horizon-mod.toml`, `mod.wasm` and,
   later, `assets/` and `data/`. `mod.wasm` is capped at 32 MiB.
 - **Integrity.** Every download is checked against the SHA-256 the index
-  lists before the file reaches `horizon-mods/`.
+  lists before the file reaches `skyline-mods/`.
 - **Signing.** Authors sign `.hmod` files with an Ed25519 key (minisign
   format: a `.hmod.minisig` beside it); the index pins each project's public
   key, so an update signed by another key is refused. Unsigned local files
   stay allowed, with an "unsigned" mark on the Mods page.
-- **Where mods come from.** Horizon's registry ([Publish your mod](#publish-your-mod)): reviewed pull requests in
+- **Where mods come from.** Skyline's registry ([Publish your mod](#publish-your-mod)): reviewed pull requests in
   [horizon-rust/horizon-mods](https://github.com/horizon-rust/horizon-mods), files as its release assets, and an
   `index.json` on GitHub Pages that the launcher and the website read. A file the registry takes down
   (`revoked.toml`) is refused by the launcher and turned off where installed.
 - **The launcher.** A Mods tab per installation: browse and search the index,
-  install, update, turn on and off (it writes the same `horizon-mods.txt`),
+  install, update, turn on and off (it writes the same `skyline-mods.txt`),
   see capabilities before installing. The launcher's CLI and MCP tools gain
   `mods list|search|install|remove|enable|disable`, so agents can set up a
   modded game the same way players do.

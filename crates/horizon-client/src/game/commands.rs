@@ -51,7 +51,7 @@ pub(super) enum Target {
     Painting(u32),
     Boat(u32),
     Cart(u32),
-    /// An entity of a type Horizon does not simulate (markers, displays,
+    /// An entity of a type Skyline does not simulate (markers, displays,
     /// interactions...): kept as its saved data at a position.
     Other(u32),
     /// An End crystal, by its entity id (`minecraft:end_crystal`).
@@ -59,7 +59,7 @@ pub(super) enum Target {
     /// The Ender Dragon, by its entity id (`minecraft:ender_dragon`).
     Dragon(u32),
 }
-/// An entity of a type Horizon does not simulate: its compound lives in the
+/// An entity of a type Skyline does not simulate: its compound lives in the
 /// entity memory (`persist.raw`), its position and rotation here.
 #[derive(Clone, Debug)]
 pub(in crate::game) struct OtherEntity {
@@ -1564,7 +1564,7 @@ impl Game<'_> {
             }
         };
         if clock != "minecraft:overworld" {
-            // Only the overworld clock runs in Horizon (no End yet).
+            // Only the overworld clock runs in Skyline (no End yet).
             return Err(err("commands.time.no_default_clock", &[&clock]));
         }
         let total = self.world.day_time;

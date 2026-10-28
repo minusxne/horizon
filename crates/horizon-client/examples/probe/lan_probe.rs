@@ -1,4 +1,4 @@
-//! Horizon's LAN world discovery for tools/test_lan_parity.py: the cases of
+//! Skyline's LAN world discovery for tools/test_lan_parity.py: the cases of
 //! VanillaLanOracle (announcements sent, datagrams heard, list resets) run
 //! through `lan::discovery`, printing the same lines.
 use horizon_client::lan::discovery::{

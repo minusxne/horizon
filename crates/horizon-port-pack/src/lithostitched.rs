@@ -3,7 +3,7 @@
 //! `spec-ctov.md` §4).
 //!
 //! - `lithostitched:jigsaw` structures become vanilla's jigsaw. Lithostitched
-//!   lays jigsaws out its own way (OPEN-L5): Horizon keeps vanilla's layouts.
+//!   lays jigsaws out its own way (OPEN-L5): Skyline keeps vanilla's layouts.
 //! - Its processors (`block_swap`, `reference`, `apply_random`, `condition`,
 //!   `set_block`, `discard_input`) are the game's own types
 //!   (`horizon_world`'s `structure::processor`): they are carried as written,

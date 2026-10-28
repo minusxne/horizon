@@ -1,4 +1,4 @@
-//! `horizon-launcher <subcommand>`: the same steps as the window, from a terminal. Every
+//! `skyline-launcher <subcommand>`: the same steps as the window, from a terminal. Every
 //! command goes through `backend`; this file only parses arguments and prints.
 use clap::{Parser, Subcommand};
 use horizon_launcher::account::{self, Accounts};
@@ -11,9 +11,9 @@ use std::process::Command;
 
 #[derive(Parser)]
 #[command(
-    name = "horizon-launcher",
+    name = "skyline-launcher",
     version = backend::VERSION,
-    about = "Installs, prepares and starts Horizon. Without a subcommand, opens the window."
+    about = "Installs, prepares and starts Skyline. Without a subcommand, opens the window."
 )]
 struct Cli {
     /// Print JSON instead of text, where a command has something to report
@@ -74,7 +74,7 @@ enum ServersCmd {
         #[arg(long)]
         version: Option<String>,
     },
-    /// Run a horizon-server command on a server, for example: servers run "My server" -- status
+    /// Run a skyline-server command on a server, for example: servers run "My server" -- status
     Run {
         /// The server's name or folder
         server: String,
@@ -215,9 +215,9 @@ enum InstanceCmd {
     },
     /// Make Play start this instance
     Select { instance: String },
-    /// Keep an instance on one installed Horizon version, or "latest" to follow updates again
+    /// Keep an instance on one installed Skyline version, or "latest" to follow updates again
     Version { instance: String, version: String },
-    /// Export an instance (or a port) to share: its settings, packs, Horizon mods and the worlds
+    /// Export an instance (or a port) to share: its settings, packs, Skyline mods and the worlds
     /// named, as a .mrpack (resource packs from Modrinth listed by download) or a zip. Never
     /// logs, screenshots or account data; worlds go without their per-player files
     Export {
@@ -443,7 +443,7 @@ enum ModsCmd {
         #[arg(long)]
         instance: Option<String>,
     },
-    /// Search for packs Horizon loads
+    /// Search for packs Skyline loads
     Search {
         text: Vec<String>,
         #[arg(long, value_enum, default_value_t = KindArg::Resource)]
@@ -454,7 +454,7 @@ enum ModsCmd {
         #[arg(long, value_enum, default_value_t = SourceArg::Modrinth)]
         source: SourceArg,
     },
-    /// Say how well a Java mod runs in Horizon: its jar is downloaded (checksum checked),
+    /// Say how well a Java mod runs in Skyline: its jar is downloaded (checksum checked),
     /// carried over and read; the answer is kept
     Check {
         project: String,
@@ -498,7 +498,7 @@ enum ModsCmd {
         #[arg(long)]
         instance: Option<String>,
     },
-    /// Turn on a mod the browser installed (horizon-mods.txt, as the game's Options > Mods does)
+    /// Turn on a mod the browser installed (skyline-mods.txt, as the game's Options > Mods does)
     Enable {
         project: String,
         /// The instance (default: the selected one)
@@ -519,7 +519,7 @@ enum KindArg {
     Mod,
     Resource,
     Modpack,
-    /// Horizon's own shader packs (Horizon's registry only)
+    /// Skyline's own shader packs (Skyline's registry only)
     Shader,
     /// Data packs (Modrinth): install one into a world with `mods install <pack> --world <name>`
     Datapack,
@@ -530,7 +530,7 @@ enum SourceArg {
     Modrinth,
     /// CurseForge support is coming soon
     Curseforge,
-    /// Horizon's own registry: mods, modpacks and resource packs made for Horizon, reviewed
+    /// Skyline's own registry: mods, modpacks and resource packs made for Skyline, reviewed
     Horizon,
 }
 
@@ -548,7 +548,7 @@ impl SourceArg {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// List Horizon releases, or the installed versions
+    /// List Skyline releases, or the installed versions
     Versions {
         /// Only the versions installed here (no network)
         #[arg(long)]
@@ -607,7 +607,7 @@ enum Cmd {
         #[arg(long)]
         accept_eula: bool,
     },
-    /// Native mods (experimental, docs/native-mods.md): compile mixin bundles on the Horizon
+    /// Native mods (experimental, docs/native-mods.md): compile mixin bundles on the Skyline
     /// revision they pin, with the launcher's own Rust, as the version the "Native mods" instance
     /// plays. Not sandboxed: the mods' code runs with your rights
     NativeBuild {
@@ -641,7 +641,7 @@ enum Cmd {
     /// while-playing stay|minimize|hide (what the window does while the game runs), language
     /// system|en|fr|ru (the window's language; system follows the computer's), accent
     /// violet|blue|teal|green|amber|red|pink, background PATH (a picture behind Home; "default"
-    /// shows Horizon's landscape)
+    /// shows Skyline's landscape)
     Settings {
         #[arg(value_parser = SETTING_KEYS)]
         key: Option<String>,
@@ -676,13 +676,13 @@ enum Cmd {
         #[arg(long)]
         crash: bool,
     },
-    /// Look for a newer Horizon release and launcher, and install them
+    /// Look for a newer Skyline release and launcher, and install them
     Update {
         /// Only report what is available
         #[arg(long)]
         check: bool,
     },
-    /// Linux: put Horizon in the applications menu (an entry and the icon, under
+    /// Linux: put Skyline in the applications menu (an entry and the icon, under
     /// $XDG_DATA_HOME), or take it out with --remove
     DesktopEntry {
         /// Remove the entry and the icon, and stop adding them back
@@ -739,8 +739,8 @@ enum Cmd {
         #[command(subcommand)]
         action: Option<RustCmd>,
     },
-    /// Servers hosted with horizon-server (the Servers page): list them, create one, or run any
-    /// horizon-server command on one
+    /// Servers hosted with skyline-server (the Servers page): list them, create one, or run any
+    /// skyline-server command on one
     Servers {
         #[command(subcommand)]
         action: Option<ServersCmd>,
@@ -759,7 +759,7 @@ enum Cmd {
         test: bool,
     },
     /// Show or set No AI: on hides and turns off every AI feature (the companion, agent control,
-    /// horizon-ctl and both MCP servers); off, the default, makes them available
+    /// skyline-ctl and both MCP servers); off, the default, makes them available
     NoAi {
         /// Omit to show the current state
         #[arg(value_parser = ["on", "off"])]
@@ -1005,7 +1005,7 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
                 );
             } else {
                 println!(
-                    "Installed {tag}. Prepare it next: horizon-launcher prepare --version {tag}"
+                    "Installed {tag}. Prepare it next: skyline-launcher prepare --version {tag}"
                 );
             }
         }
@@ -1265,7 +1265,7 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
             } else {
                 println!("{}", shared.url);
                 println!(
-                    "Delete it: horizon-launcher unshare-log {}:{}",
+                    "Delete it: skyline-launcher unshare-log {}:{}",
                     shared.id, shared.token
                 );
             }
@@ -1297,10 +1297,10 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
             settings.save();
             if remove {
                 horizon_launcher::desktop::remove()?;
-                println!("Removed Horizon from the applications menu.");
+                println!("Removed Skyline from the applications menu.");
             } else {
                 horizon_launcher::desktop::install(backend::exe_path())?;
-                println!("Horizon is in the applications menu.");
+                println!("Skyline is in the applications menu.");
             }
         }
         Cmd::Worlds { action } => worlds(
@@ -1351,7 +1351,7 @@ fn rust(action: RustCmd, as_json: bool) -> Result<(), String> {
                 match (&installed, &version) {
                     (Some(t), Some(v)) => println!("{v} in {}", t.dir.display()),
                     _ => println!(
-                        "Rust {} is not installed (`horizon-launcher rust install`).",
+                        "Rust {} is not installed (`skyline-launcher rust install`).",
                         rust::VERSION
                     ),
                 }
@@ -1391,12 +1391,12 @@ fn update(check: bool, as_json: bool) -> Result<(), String> {
         return Ok(());
     }
     match &updates.horizon {
-        None => println!("Horizon: up to date."),
-        Some(r) if check => println!("Horizon: {} is available.", r.tag),
+        None => println!("Skyline: up to date."),
+        Some(r) if check => println!("Skyline: {} is available.", r.tag),
         Some(r) => {
             let tag =
                 backend::install_tag(&r.tag, true, progress(format!("Installing {}", r.tag)))?;
-            println!("Horizon: installed {tag}.");
+            println!("Skyline: installed {tag}.");
         }
     }
     match &updates.launcher {
@@ -1426,7 +1426,7 @@ fn account_command(action: AccountCmd, as_json: bool) -> Result<(), String> {
         accounts
             .find(who)
             .cloned()
-            .ok_or_else(|| format!("No signed-in account {who}. See `horizon-launcher account`."))
+            .ok_or_else(|| format!("No signed-in account {who}. See `skyline-launcher account`."))
     };
     match action {
         AccountCmd::List => {
@@ -1446,7 +1446,7 @@ fn account_command(action: AccountCmd, as_json: bool) -> Result<(), String> {
             } else if accounts.accounts.is_empty() && accounts.offline.is_empty() {
                 println!(
                     "No Microsoft account signed in. Play needs one that owns Minecraft: Java \
-                     Edition: horizon-launcher account sign-in"
+                     Edition: skyline-launcher account sign-in"
                 );
             } else {
                 for a in &accounts.accounts {
@@ -1627,7 +1627,7 @@ fn data(action: DataCmd, as_json: bool) -> Result<(), String> {
             println!("Waiting to be sent: {}", status["waiting"]);
             match horizon_telemetry::endpoint() {
                 Some(url) => println!("Server: {url}"),
-                None => println!("Server: turned off (HORIZON_TELEMETRY_URL=off), nothing is sent"),
+                None => println!("Server: turned off (SKYLINE_TELEMETRY_URL=off), nothing is sent"),
             }
         }
         DataCmd::Allow { kinds } => {
@@ -1670,7 +1670,7 @@ fn servers(action: ServersCmd, as_json: bool) -> Result<(), String> {
             .into_iter()
             .find(|e| e.name == which || e.dir == std::path::Path::new(which))
             .ok_or_else(|| {
-                format!("No server called {which}: `horizon-launcher servers` lists them")
+                format!("No server called {which}: `skyline-launcher servers` lists them")
             })
     };
     match action {
@@ -1688,7 +1688,7 @@ fn servers(action: ServersCmd, as_json: bool) -> Result<(), String> {
                         .collect(),
                 ));
             } else if list.is_empty() {
-                println!("No server yet: horizon-launcher servers create --accept-eula");
+                println!("No server yet: skyline-launcher servers create --accept-eula");
             }
             for e in list.iter().filter(|_| !as_json) {
                 println!(
@@ -1741,7 +1741,7 @@ fn servers(action: ServersCmd, as_json: bool) -> Result<(), String> {
             let tag = backend::resolve_version(version.as_deref())?;
             servers::set_up(&tag)?;
             println!(
-                "Servers run Horizon {}",
+                "Servers run Skyline {}",
                 servers::runtime_release().unwrap_or(tag)
             );
         }
@@ -1752,7 +1752,7 @@ fn servers(action: ServersCmd, as_json: bool) -> Result<(), String> {
                 .status()
                 .map_err(|e| e.to_string())?;
             if !status.success() {
-                return Err(format!("horizon-server exited with {status}"));
+                return Err(format!("skyline-server exited with {status}"));
             }
         }
         ServersCmd::Forget { server } => {
@@ -1806,7 +1806,7 @@ fn mods(action: ModsCmd, as_json: bool) -> Result<(), String> {
                 json(list.iter().map(entry_json).collect());
             } else if list.is_empty() {
                 println!(
-                    "Nothing installed from the browser yet: horizon-launcher mods search <text>"
+                    "Nothing installed from the browser yet: skyline-launcher mods search <text>"
                 );
             }
             for e in list.iter().filter(|_| !as_json) {
@@ -1877,9 +1877,9 @@ fn mods(action: ModsCmd, as_json: bool) -> Result<(), String> {
                         p.summary
                     );
                     if unchecked {
-                        println!("  horizon-launcher mods check {}", p.slug);
+                        println!("  skyline-launcher mods check {}", p.slug);
                     } else if datapack {
-                        println!("  horizon-launcher mods install {} --world <world>", p.slug);
+                        println!("  skyline-launcher mods install {} --world <world>", p.slug);
                     } else if let Some(why) = support.reason() {
                         println!("  {why}");
                     }
@@ -1981,7 +1981,7 @@ fn mods(action: ModsCmd, as_json: bool) -> Result<(), String> {
                         pack.version,
                         pack.mods.join(", ")
                     );
-                    println!("Play it: horizon-launcher modpack play {}", pack.id);
+                    println!("Play it: skyline-launcher modpack play {}", pack.id);
                 }
                 return Ok(());
             }
@@ -1996,7 +1996,7 @@ fn mods(action: ModsCmd, as_json: bool) -> Result<(), String> {
                     .map(|t| backend::resources(&t));
                 let pack = modpacks::import_and_port(&file, resources.as_deref(), log)?;
                 println!("{} ({})", modpacks::outcome(&pack), pack.summary());
-                println!("Play it: horizon-launcher modpack play {}", pack.slug);
+                println!("Play it: skyline-launcher modpack play {}", pack.slug);
                 return Ok(());
             }
             let done = installed::install(&*source, &p, everything, &home, &line)?;
@@ -2265,7 +2265,7 @@ fn instance(action: InstanceCmd, as_json: bool) -> Result<(), String> {
                         json(value(&i, false));
                     } else {
                         println!(
-                            "Made the instance {} in {}: horizon-launcher instance select \"{}\"",
+                            "Made the instance {} in {}: skyline-launcher instance select \"{}\"",
                             i.name,
                             i.home.display(),
                             i.name
@@ -2276,7 +2276,7 @@ fn instance(action: InstanceCmd, as_json: bool) -> Result<(), String> {
                     let pack = modpacks::import(&file, &|line: String| eprintln!("{line}"))?;
                     println!("{} ({})", modpacks::outcome(&pack), pack.summary());
                     println!(
-                        "Port and play it: horizon-launcher modpack port {}",
+                        "Port and play it: skyline-launcher modpack port {}",
                         pack.slug
                     );
                 }
@@ -2287,13 +2287,13 @@ fn instance(action: InstanceCmd, as_json: bool) -> Result<(), String> {
                     };
                     let p = horizon_launcher::packs::add(&i.home, &file)?;
                     println!(
-                        "Added {} to {}: turn it on with horizon-launcher packs on",
+                        "Added {} to {}: turn it on with skyline-launcher packs on",
                         p.title, i.name
                     );
                 }
                 Dropped::DataPack => {
                     return Err(format!(
-                        "{} is a data pack: put it into a world with horizon-launcher worlds \
+                        "{} is a data pack: put it into a world with skyline-launcher worlds \
                          datapack-add <world> <file>",
                         file.display()
                     ))
@@ -2679,7 +2679,7 @@ fn modpack(action: ModpackCmd, as_json: bool) -> Result<(), String> {
             let packs = modpacks::list();
             let registry = horizon::pack::list();
             if packs.is_empty() && registry.is_empty() && !as_json {
-                println!("No modpack imported yet: horizon-launcher modpack import <pack>");
+                println!("No modpack imported yet: skyline-launcher modpack import <pack>");
             }
             packs.iter().for_each(show);
             for p in &registry {
@@ -2689,7 +2689,7 @@ fn modpack(action: ModpackCmd, as_json: bool) -> Result<(), String> {
                     );
                 } else {
                     println!(
-                        "{} {}  ({}, from Horizon's registry)\n  {}",
+                        "{} {}  ({}, from Skyline's registry)\n  {}",
                         p.name,
                         p.version,
                         p.id,
@@ -2733,7 +2733,7 @@ mod tests {
     #[test]
     fn play_takes_extra_arguments_that_start_with_hyphens() {
         let cli = Cli::try_parse_from([
-            "horizon-launcher",
+            "skyline-launcher",
             "play",
             "--arg",
             "--server-thread",
@@ -2750,7 +2750,7 @@ mod tests {
     #[test]
     fn game_args_takes_one_line_that_starts_with_hyphens() {
         let cli = Cli::try_parse_from([
-            "horizon-launcher",
+            "skyline-launcher",
             "game-args",
             "--server-thread --render-distance 40",
         ])
@@ -2769,7 +2769,7 @@ mod tests {
     #[test]
     fn mods_commands_name_their_instance() {
         let parse = |args: &[&str]| {
-            let cli = Cli::try_parse_from([&["horizon-launcher", "mods"], args].concat()).unwrap();
+            let cli = Cli::try_parse_from([&["skyline-launcher", "mods"], args].concat()).unwrap();
             match cli.command {
                 Some(Cmd::Mods { action }) => action,
                 _ => panic!("expected mods"),
@@ -2791,7 +2791,7 @@ mod tests {
         assert!(parse(&[]).is_none());
         // Search and Check read no instance: checks are shared.
         assert!(Cli::try_parse_from([
-            "horizon-launcher",
+            "skyline-launcher",
             "mods",
             "search",
             "x",

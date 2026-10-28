@@ -1,4 +1,4 @@
-//! Horizon's official minimap, formerly the built-in extra: a map of the
+//! Skyline's official minimap, formerly the built-in extra: a map of the
 //! terrain around the player in a corner (`render.set-minimap`; the game
 //! keeps its tiles). Its settings page has the extra's five options, kept in
 //! the mod's storage (`corner`, `size`, `shape`, `zoom`, `rotate`) with the

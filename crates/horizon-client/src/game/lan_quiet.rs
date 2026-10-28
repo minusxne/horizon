@@ -1,4 +1,4 @@
-//! Quiet commands (`horizon_protocol::quiet`): a Horizon client's mod sends a
+//! Quiet commands (`horizon_protocol::quiet`): a Skyline client's mod sends a
 //! batch of command lines in one payload, and the server runs each exactly as
 //! that player typing it would (`guest_command`'s checks, the player's own
 //! permission level, at the time it runs) with its output suppressed, as

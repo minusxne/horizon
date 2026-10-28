@@ -1,12 +1,12 @@
 # Shader API
 
-Horizon has no shader packs today: the earlier implementation was removed on 2026-10-24. Two things will replace it,
-designed separately: a **Horizon shader API**, described here, and a clean-room loader for the existing pack format
+Skyline has no shader packs today: the earlier implementation was removed on 2026-10-24. Two things will replace it,
+designed separately: a **Skyline shader API**, described here, and a clean-room loader for the existing pack format
 (its own spec; it is not part of this API). Both sit on the same renderer hooks, agreed between the two.
 
 ## Overview: what a shader author will be able to do
 
-Write WGSL against documented stages of Horizon's renderer, with typed inputs, options the player can change, a
+Write WGSL against documented stages of Skyline's renderer, with typed inputs, options the player can change, a
 reload as soon as a file is saved and an overlay that shows what each pass costs and draws. The renderer keeps
 everything that makes it fast (culling, batching, LOD, the mesher); a pack changes how surfaces and light look, not
 how the world is fed to the GPU.
@@ -98,7 +98,7 @@ stages.
 
 - 2026-10-26: the material stage in the game: terrain's surfaces through the pack's `material`.
 - 2026-10-26: the sky stage in the game: the pack's `sky` gets vanilla's colour along each ray.
-- 2026-10-26: the post stage in the game (`HORIZON_SHADER_PACK`, hot reload with the last good pack kept).
+- 2026-10-26: the post stage in the game (`SKYLINE_SHADER_PACK`, hot reload with the last good pack kept).
 - 2026-10-25: `horizon-shader` (`new`, `check`, `pack`), three templates, the example pack and the guide.
 - 2026-10-25: the check (naga validation, signatures, options, budgets, SPIR-V/Metal/HLSL translation).
 - 2026-10-25: the stages of API 0.1 (sky, material, post), their inputs and the generated reference.

@@ -1,11 +1,11 @@
-//! Horizon's optional extras (minimap, lighting, inventory tools): their
-//! settings, kept in `horizon-extras.txt` next to `options.txt` so that file
+//! Skyline's optional extras (minimap, lighting, inventory tools): their
+//! settings, kept in `skyline-extras.txt` next to `options.txt` so that file
 //! stays exactly vanilla's, and the logic behind them. Every extra is off by
-//! default; see `docs/extras.md`. Horizon's own switches outside the Extras page
+//! default; see `docs/extras.md`. Skyline's own switches outside the Extras page
 //! (No AI, Agent Control, Discord Rich Presence) are kept here too.
 use std::{collections::VecDeque, fs, path::Path};
 
-pub const FILE: &str = "horizon-extras.txt";
+pub const FILE: &str = "skyline-extras.txt";
 /// The name the options screen uses while the sort key waits for a key.
 pub const SORT_KEY: &str = "horizon.sort";
 
@@ -108,9 +108,9 @@ pub struct Extras {
     /// No AI: every AI feature hidden and off (`horizon_core::no_ai`; the launcher writes it too).
     pub no_ai: bool,
     /// Agents may control the game the player starts: it opens its control socket for
-    /// horizon-ctl and MCP clients (off by default; an agent's own launch always opens it).
+    /// skyline-ctl and MCP clients (off by default; an agent's own launch always opens it).
     pub agent_control: bool,
-    /// "Playing Horizon" on the player's Discord profile (`discord_presence`; on by default).
+    /// "Playing Skyline" on the player's Discord profile (`discord_presence`; on by default).
     pub discord_presence: bool,
 }
 impl Default for Extras {
@@ -383,10 +383,10 @@ pub enum Item {
     MouseTweaksWheel,
     Sort,
     SortKey,
-    /// Not on the Extras page: Horizon Settings shows No AI, its AI Agent page Agent Control.
+    /// Not on the Extras page: Skyline Settings shows No AI, its AI Agent page Agent Control.
     NoAi,
     AgentControl,
-    /// On the Horizon Settings page.
+    /// On the Skyline Settings page.
     DiscordPresence,
 }
 /// The Extras page: headers and items.
@@ -455,13 +455,13 @@ impl Item {
                 "Sorts the part under the cursor. Click, then press a key; Escape unbinds it."
             }
             Item::NoAi => {
-                "Hides and turns off every AI feature: agent control, horizon-ctl and the MCP servers. The launcher's switch too."
+                "Hides and turns off every AI feature: agent control, skyline-ctl and the MCP servers. The launcher's switch too."
             }
             Item::DiscordPresence => {
-                "Shows Playing Horizon on your Discord profile while Discord runs: menus, single player or multiplayer, the dimension and the time played. Never a world's name or a server's address."
+                "Shows Playing Skyline on your Discord profile while Discord runs: menus, single player or multiplayer, the dimension and the time played. Never a world's name or a server's address."
             }
             Item::AgentControl => {
-                "Your own AI agent can play this game through horizon-ctl or an MCP client, on this computer only."
+                "Your own AI agent can play this game through skyline-ctl or an MCP client, on this computer only."
             }
         }
     }

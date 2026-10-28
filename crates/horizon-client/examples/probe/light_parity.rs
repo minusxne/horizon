@@ -1,5 +1,5 @@
 //! Differential light test: relight chunks of a world saved by the vanilla
-//! server with Horizon's light engine and compare every SkyLight/BlockLight
+//! server with Skyline's light engine and compare every SkyLight/BlockLight
 //! value with the arrays vanilla stored.
 //!
 //! cargo run --profile fast -p horizon-client --example probe -- light_parity \

@@ -176,7 +176,7 @@ impl StructureMobs for StructureMobFinalizer {
         let Some(data) = self.data.get_or_init(|| {
             let data = load(&self.root);
             if data.is_none() {
-                log::error!("Horizon: no mob data, structure mobs are finalized when loaded");
+                log::error!("Skyline: no mob data, structure mobs are finalized when loaded");
             }
             data
         }) else {
@@ -215,7 +215,7 @@ impl StructureMobs for StructureMobFinalizer {
         } else if let Some(r) = any.downcast_mut::<XoroshiroRandom>() {
             run(&mut level, r, difficulty, &spawn, &mut m)
         } else {
-            log::error!("Horizon: unknown region random, structure mobs are finalized when loaded");
+            log::error!("Skyline: unknown region random, structure mobs are finalized when loaded");
             return false;
         };
         let mut mobs = vec![(m, Some(raw))];
@@ -237,7 +237,7 @@ mod tests {
     /// createSpawnWeapon) and saves what Piglin.addAdditionalSaveData writes.
     #[test]
     fn bastion_crossbow_piglin_finalizes_as_structure() {
-        let Some(root) = std::env::var_os("HORIZON_TEST_RESOURCES").map(PathBuf::from) else {
+        let Some(root) = std::env::var_os("SKYLINE_TEST_RESOURCES").map(PathBuf::from) else {
             return;
         };
         let file = root.join("worldgen/structure/minecraft/bastion/mobs/crossbow_piglin.nbt");
@@ -400,7 +400,7 @@ mod tests {
     /// memories are as placed: vanilla saved them 13 brain ticks later.
     #[test]
     fn bastion_chunk_mobs_match_vanilla() {
-        let Some(root) = std::env::var_os("HORIZON_TEST_RESOURCES").map(PathBuf::from) else {
+        let Some(root) = std::env::var_os("SKYLINE_TEST_RESOURCES").map(PathBuf::from) else {
             return;
         };
         let got = chunk_mobs(&root, 12345, "minecraft:the_nether", -23, 8);
@@ -424,7 +424,7 @@ mod tests {
     /// trident drowned on a zombie nautilus, as vanilla saved chunk (3, 26).
     #[test]
     fn ocean_ruin_drowned_match_vanilla() {
-        let Some(root) = std::env::var_os("HORIZON_TEST_RESOURCES").map(PathBuf::from) else {
+        let Some(root) = std::env::var_os("SKYLINE_TEST_RESOURCES").map(PathBuf::from) else {
             return;
         };
         let got = chunk_mobs(&root, 12345, "minecraft:overworld", 3, 26);

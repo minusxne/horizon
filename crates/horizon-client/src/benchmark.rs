@@ -1,6 +1,6 @@
 //! `horizon-client --benchmark SCENARIO`: the run `tools/perf_bench.py` drives from outside, driven
 //! from inside, so anyone can measure their machine with nothing but the game. A thread sends the
-//! same control commands `horizon-ctl` would, through the game's own command queue, and writes a
+//! same control commands `skyline-ctl` would, through the game's own command queue, and writes a
 //! report (docs/benchmark-report.md) to `benchmarks/` in the game folder.
 //!
 //! The scenes, the world (seed 1234, creative) and every step and figure match `tools/perf_bench.py`,
@@ -82,8 +82,8 @@ pub fn start(requests: Sender<Request>, setup: Setup) {
         .spawn(move || {
             let control = Control(requests);
             match run(&control, setup) {
-                Ok(path) => println!("Horizon: benchmark report {}", path.display()),
-                Err(e) => eprintln!("Horizon: benchmark failed: {e}"),
+                Ok(path) => println!("Skyline: benchmark report {}", path.display()),
+                Err(e) => eprintln!("Skyline: benchmark failed: {e}"),
             }
             let _ = control.call("quit");
         })
@@ -510,7 +510,7 @@ mod tests {
     #[test]
     fn only_replaces_its_own_world() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-benchmark-test-{}", std::process::id()));
+            std::env::temp_dir().join(format!("skyline-benchmark-test-{}", std::process::id()));
         let world = dir.join("saves").join(WORLD);
         std::fs::create_dir_all(&world).unwrap();
         assert!(

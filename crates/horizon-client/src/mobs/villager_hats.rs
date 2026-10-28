@@ -67,10 +67,10 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "requires prepared 26.3 models and textures in HORIZON_TEST_RESOURCES"]
+    #[ignore = "requires prepared 26.3 models and textures in SKYLINE_TEST_RESOURCES"]
     fn metadata_head_visibility_matches_exported_no_hat_models() {
         use crate::mobs::{load_model, render::draw};
-        let root = std::env::var_os("HORIZON_TEST_RESOURCES").expect("HORIZON_TEST_RESOURCES");
+        let root = std::env::var_os("SKYLINE_TEST_RESOURCES").expect("SKYLINE_TEST_RESOURCES");
         let mut hats = VillagerHats::load(Path::new(&root));
         assert_eq!(hats.0["entity/villager/profession/farmer"], Hat::Full);
         assert_eq!(hats.0["entity/villager/type/plains"], Hat::None);

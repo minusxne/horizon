@@ -1,6 +1,6 @@
 //! The labelled widgets and focus targets drawn in the last frame, for the
-//! control socket: a script clicks a button by its label (`horizon-ctl
-//! click-button Respawn`) or any widget by its id in [`tree`] (`horizon-ctl
+//! control socket: a script clicks a button by its label (`skyline-ctl
+//! click-button Respawn`) or any widget by its id in [`tree`] (`skyline-ctl
 //! click done`), whatever screen drew it. Also the mouse cursor the widget
 //! under the mouse asks for.
 use std::cell::{Cell, RefCell};
@@ -268,7 +268,7 @@ pub fn slug(label: &str) -> String {
 /// The labelled widgets and the focus targets of a frame as one list with
 /// ids: a target drawn at a labelled widget's rectangle is that widget
 /// (its kind wins, a slider's value, unless the label says it's a tab:
-/// Horizon's segments); other targets follow, unlabelled. With the GUI
+/// Skyline's segments); other targets follow, unlabelled. With the GUI
 /// size, what lies off screen (layout probes) is left out before naming.
 pub fn tree(widgets: &[Widget], targets: &[Target], screen: Option<[f32; 2]>) -> Vec<Node> {
     let same = |a: [f32; 4], b: [f32; 4]| a.iter().zip(b).all(|(p, q)| (p - q).abs() < 0.5);

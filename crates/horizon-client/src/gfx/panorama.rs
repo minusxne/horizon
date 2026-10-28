@@ -16,7 +16,7 @@ pub struct Faces {
 impl Faces {
     pub fn load(root: &Path) -> Self {
         Self::try_load(root).unwrap_or_else(|error| {
-            log::warn!("Horizon: title panorama unavailable ({error})");
+            log::warn!("Skyline: title panorama unavailable ({error})");
             Self {
                 size: 1,
                 pixels: [96, 110, 111, 255].repeat(6),
@@ -258,7 +258,7 @@ mod tests {
         fn new(size: u32) -> Self {
             static NEXT: AtomicU32 = AtomicU32::new(0);
             let root = std::env::temp_dir().join(format!(
-                "horizon-panorama-{}-{}",
+                "skyline-panorama-{}-{}",
                 std::process::id(),
                 NEXT.fetch_add(1, Ordering::Relaxed),
             ));

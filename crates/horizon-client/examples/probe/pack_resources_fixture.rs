@@ -1,4 +1,4 @@
-//! The resource root Horizon builds for a pack selection (`packs::build_overlay`)
+//! The resource root Skyline builds for a pack selection (`packs::build_overlay`)
 //! and what its loaders read from it, for VanillaPackResourcesOracle.
 use horizon_client::{lang::Language, packs, sound_events::SoundRegistry};
 use std::{fmt::Write, fs, path::PathBuf};

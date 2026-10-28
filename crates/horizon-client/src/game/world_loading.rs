@@ -255,7 +255,7 @@ pub(super) fn preload_world_data(
                 });
             match spawned {
                 Ok(thread) => *preload = Preload::Started { thread, left: None },
-                Err(e) => log::warn!("Horizon: world data preload: {e}"),
+                Err(e) => log::warn!("Skyline: world data preload: {e}"),
             }
         }
         Preload::Idle => {}
@@ -268,7 +268,7 @@ pub(super) fn preload_world_data(
                 super::lan::forget_sync_data();
                 horizon_threads::release_free_memory();
                 *preload = Preload::Idle;
-                log::info!("Horizon: preloaded world data dropped, no world opened");
+                log::info!("Skyline: preloaded world data dropped, no world opened");
             }
         }
     }
@@ -331,7 +331,7 @@ pub(super) fn make_streaming(
         let structures =
             horizon_client::save::WorldGen::read(world_root).is_none_or(|w| w.structures);
         let inner = Arc::new(VanillaTerrain::for_world(&options.resources.join("worldgen"), pack.assets.registry, res.biomes(), seed, dim.id(), structures).map_err(|e| {
-                format!("{e}\nPrepare the worldgen bundle with the launcher, or: horizon-prepare --prepare")
+                format!("{e}\nPrepare the worldgen bundle with the launcher, or: skyline-prepare --prepare")
             })?);
         if dim == Dim::Overworld && structures {
             inner.search_rings_behind();

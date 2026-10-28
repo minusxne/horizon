@@ -3,9 +3,13 @@ name = "horizon-launcher"
 version = "0.2.0"
 edition = "2021"
 license = "MIT"
-description = "Downloads, prepares and starts Horizon builds"
+description = "Downloads, prepares and starts Skyline builds"
 
 [workspace]
+
+[[bin]]
+name = "skyline-launcher"
+path = "src/main.rs"
 
 [dependencies]
 gpui = "0.2.2"
@@ -34,7 +38,7 @@ horizon-friends = { path = "../crates/horizon-friends" }
 horizon-bench = { path = "../crates/horizon-bench" }
 # Import modpack: the porting pipeline, run on the player's own files (docs/modpacks.md).
 horizon-port-pack = { path = "../crates/horizon-port-pack" }
-# Horizon's mod registry: its index and the checks a download passes before install.
+# Skyline's mod registry: its index and the checks a download passes before install.
 horizon-mods = { path = "../crates/horizon-mods", features = ["index"] }
 # Signed updates: archives are checked against the release's signed checksums (docs/security.md).
 horizon-release-sign = { path = "../crates/horizon-release-sign" }

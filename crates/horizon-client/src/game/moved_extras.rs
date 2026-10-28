@@ -1,6 +1,6 @@
 //! Extras that are official mods now (`horizon_client::moved_extras`): on
 //! the first start after the update, a player who had one on gets the mod
-//! installed from Horizon's registry, turned on, with their settings, and
+//! installed from Skyline's registry, turned on, with their settings, and
 //! one line in the chat saying so. The download runs on its own thread; if
 //! it fails (offline), the game tries again at the next start.
 
@@ -82,7 +82,7 @@ mod with_mods {
                         Ok(()) => {
                             self.settings.extras.moved.push(m.id.to_owned());
                             self.settings.mods.enabled.insert(m.id.to_owned());
-                            // The install wrote the key to horizon-mods.txt;
+                            // The install wrote the key to skyline-mods.txt;
                             // the settings save below must keep it.
                             let keys = self.settings.mods.keys.entry(m.id.to_owned()).or_default();
                             for (name, key) in m.keys(&self.settings.extras) {
@@ -93,10 +93,10 @@ mod with_mods {
                             installed = true;
                         }
                         Err(e) => {
-                            log::warn!("Horizon: {} not installed, next start retries: {e}", m.id);
+                            log::warn!("Skyline: {} not installed, next start retries: {e}", m.id);
                             self.mods.moved.notices.push(
                                 Text::literal(format!(
-                                    "{} moved to the mod browser; it couldn't be installed for you yet, Horizon tries again at the next start",
+                                    "{} moved to the mod browser; it couldn't be installed for you yet, Skyline tries again at the next start",
                                     m.name
                                 ))
                                 .with_color(text::GRAY),

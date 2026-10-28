@@ -719,7 +719,7 @@ impl ChunkEncoder {
     /// ClientboundLightUpdatePacket for the light sections over `changed` (a
     /// bit per section of the column, `sectionLightChanged`), as vanilla's
     /// `ClientboundLightUpdatePacketData` writes them, with both kinds of
-    /// each section (Horizon's light engine doesn't tell them apart; the
+    /// each section (Skyline's light engine doesn't tell them apart; the
     /// client keeps the same light either way). A section changed as its
     /// last block went (light dimming around a removed block) is sent too:
     /// a client not tracking the block would otherwise keep its old light.

@@ -38,7 +38,7 @@ pub enum Attenuation {
     None,
     Linear,
 }
-/// The tickable instance kinds Horizon plays (`TickableSoundInstance`).
+/// The tickable instance kinds Skyline plays (`TickableSoundInstance`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Ticking {
     /// Not tickable.
