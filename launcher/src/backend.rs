@@ -4043,6 +4043,7 @@ mod tests {
     /// earlier one): the next replacement still lands at the path it started from.
     #[cfg(unix)]
     #[test]
+    #[ignore = "self-update is being removed (plan step 1)"]
     fn a_replaced_binary_is_replaced_again_at_its_path() {
         use std::os::unix::fs::PermissionsExt;
         let dir =

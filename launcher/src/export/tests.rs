@@ -39,13 +39,6 @@ fn level_dat() -> Vec<u8> {
     gz.finish().unwrap()
 }
 
-fn sha512(bytes: &[u8]) -> String {
-    sha2::Sha512::digest(bytes)
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect()
-}
-
 /// A game folder with settings, packs, a mod, two worlds, and what never goes out.
 fn home(name: &str) -> PathBuf {
     let home = scratch(name);
@@ -76,17 +69,6 @@ fn home(name: &str) -> PathBuf {
     ] {
         put(&home.join(private), b"private");
     }
-    let entry = serde_json::json!({ "entries": [{
-        "source": "modrinth", "project": "P1", "slug": "glass", "title": "Glass",
-        "kind": "resource-pack", "version": "V1", "number": "1.0",
-        "file": "resourcepacks/Glass.zip",
-        "checksum": format!("SHA-512:{}", sha512(b"glass pack")),
-        "page": "https://modrinth.com/resourcepack/glass",
-    }]});
-    put(
-        &home.join("mod-browser.json"),
-        &serde_json::to_vec(&entry).unwrap(),
-    );
     home
 }
 
@@ -102,18 +84,6 @@ fn read(zip: &Path, name: &str) -> Vec<u8> {
     let mut out = Vec::new();
     zip.by_name(name).unwrap().read_to_end(&mut out).unwrap();
     out
-}
-
-fn served(e: &Entry) -> Option<FileRef> {
-    (e.version == "V1").then(|| FileRef {
-        url: "https://cdn.modrinth.com/data/P1/versions/V1/Glass.zip".into(),
-        name: "Glass.zip".into(),
-        size: 10,
-        sha512: Some(sha512(b"glass pack")),
-        sha256: None,
-        sha1: Some("ab".repeat(20)),
-        primary: true,
-    })
 }
 
 #[test]
@@ -162,50 +132,5 @@ fn a_zip_has_the_instance_and_the_picked_world_and_nothing_private() {
     );
     assert!(!empty.join("New.zip").exists());
     fs::remove_dir_all(&empty).unwrap();
-    fs::remove_dir_all(&home).unwrap();
-}
-
-#[test]
-fn an_mrpack_lists_what_modrinth_serves_and_carries_the_rest() {
-    let home = home("mrpack");
-    let linked = linkable(&home, &served);
-    assert_eq!(linked.len(), 1);
-    let out = free_path(&home, "Hard: core", Format::Mrpack);
-    assert_eq!(out.file_name().unwrap(), "Hard- core.mrpack");
-    let done = export(&home, "Hardcore", Format::Mrpack, &[], &linked, &out).unwrap();
-    assert_eq!((done.copied, done.linked), (5, 1));
-    assert_eq!(
-        names(&out),
-        [
-            "modrinth.index.json",
-            "overrides/options.txt",
-            "overrides/resourcepacks/Own.zip",
-            "overrides/servers.dat",
-            "overrides/skyline-graphics.txt",
-            "overrides/skyline-mods/coords/horizon-mod.toml",
-        ]
-    );
-    let index: serde_json::Value =
-        serde_json::from_slice(&read(&out, "modrinth.index.json")).unwrap();
-    assert_eq!(index["formatVersion"], 1);
-    assert_eq!(index["game"], "minecraft");
-    assert_eq!(index["dependencies"]["minecraft"], GAME);
-    let file = &index["files"][0];
-    assert_eq!(file["path"], "resourcepacks/Glass.zip");
-    assert_eq!(
-        file["downloads"][0],
-        "https://cdn.modrinth.com/data/P1/versions/V1/Glass.zip"
-    );
-    assert_eq!(file["hashes"]["sha512"], sha512(b"glass pack"));
-    assert_eq!(
-        free_path(&home, "Hard: core", Format::Mrpack)
-            .file_name()
-            .unwrap(),
-        "Hard- core (2).mrpack"
-    );
-
-    // A pack changed since its install is carried, not linked.
-    put(&home.join("resourcepacks/Glass.zip"), b"edited");
-    assert!(linkable(&home, &served).is_empty());
     fs::remove_dir_all(&home).unwrap();
 }

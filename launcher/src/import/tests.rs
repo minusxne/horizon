@@ -32,13 +32,13 @@ fn put(path: &Path, bytes: &[u8]) {
 /// Makes instances as folders of `root`, refusing a name already taken, as the launcher does.
 fn maker(root: &Path) -> impl Fn(&str) -> Result<Instance, String> + '_ {
     move |name: &str| {
-        let home = root.join(crate::modpacks::slug(name));
+        let home = root.join(instances::slug(name));
         if home.exists() {
             return Err(format!("There is already an instance called {name}."));
         }
         fs::create_dir_all(&home).unwrap();
         Ok(Instance {
-            id: crate::modpacks::slug(name),
+            id: instances::slug(name),
             name: name.into(),
             kind: instances::Kind::Own,
             work: home.clone(),

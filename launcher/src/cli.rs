@@ -1624,39 +1624,4 @@ mod tests {
             _ => panic!("expected game-args"),
         }
     }
-
-    #[test]
-    fn mods_commands_name_their_instance() {
-        let parse = |args: &[&str]| {
-            let cli = Cli::try_parse_from([&["skyline-launcher", "mods"], args].concat()).unwrap();
-            match cli.command {
-                Some(Cmd::Mods { action }) => action,
-                _ => panic!("expected mods"),
-            }
-        };
-        match parse(&["install", "fresh-animations", "--instance", "Skyblock"]) {
-            Some(ModsCmd::Install {
-                project, instance, ..
-            }) => assert_eq!(
-                (project.as_str(), instance.as_deref()),
-                ("fresh-animations", Some("Skyblock"))
-            ),
-            _ => panic!("expected mods install"),
-        }
-        assert!(matches!(
-            parse(&["list"]),
-            Some(ModsCmd::List { instance: None })
-        ));
-        assert!(parse(&[]).is_none());
-        // Search and Check read no instance: checks are shared.
-        assert!(Cli::try_parse_from([
-            "skyline-launcher",
-            "mods",
-            "search",
-            "x",
-            "--instance",
-            "A"
-        ])
-        .is_err());
-    }
 }
