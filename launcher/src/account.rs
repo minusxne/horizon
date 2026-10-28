@@ -1144,9 +1144,19 @@ impl SignIn {
     }
 }
 
+/// Whether Play needs an account that owns the game: only where sign-in is set up. A build without
+/// Horizon's Azure app can't sign anyone in, so it plays offline as `cargo run -p horizon-client`
+/// does, from the player's own prepared Minecraft files.
+pub fn owner_gate() -> bool {
+    client_id().is_some()
+}
+
 /// The owner gate for the game about to start, then the selected account's session in a file
 /// for it: the file (none: offline) and why the account plays offline this time, if it does.
 pub fn session_for_game(game_home: &Path) -> Result<(Option<PathBuf>, Option<String>), NoOwner> {
+    if !owner_gate() {
+        return Ok((None, None));
+    }
     let mut accounts = Accounts::load();
     let pass = launch(
         &Endpoints::live(),

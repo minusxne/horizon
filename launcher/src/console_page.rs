@@ -278,7 +278,7 @@ impl Launcher {
                         )
                         .child(
                             button("console-link-open", "Open", Kind::Ghost, &t)
-                                .on_click(move |_, _, cx| cx.open_url(&open_url)),
+                                .on_click(move |_, _, cx| crate::open_url(cx, &open_url)),
                         )
                         .child(
                             button("console-unshare", "Delete it", Kind::Ghost, &t).on_click(

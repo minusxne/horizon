@@ -71,5 +71,9 @@ keyring = { version = "3", features = ["windows-native"] }
 # The icon resource in the .exe (build.rs).
 winresource = "0.1"
 
+# Offline snapshot: requests reach Microsoft sign-in and Minecraft services only.
+[patch.crates-io]
+ureq = { path = "../third_party/ureq" }
+
 [profile.release]
 strip = true

@@ -1,3 +1,7 @@
+> **Offline snapshot.** This fork is frozen for long-term local play: no updates, no telemetry, no
+> ads, no outside links, no server contact but optional Microsoft sign-in. See
+> [OFFLINE-SNAPSHOT.md](OFFLINE-SNAPSHOT.md).
+
 <p align="center">
   <img src="docs/media/banner.webp" alt="Horizon: Minecraft: Java Edition 26.3, rewritten in Rust and checked against vanilla by 281 differential harnesses" width="100%">
 </p>

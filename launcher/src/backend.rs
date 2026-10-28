@@ -12,7 +12,6 @@ use std::sync::{Arc, Mutex};
 pub const REPO: &str = "horizon-rust/horizon";
 pub const README_URL: &str = "https://github.com/horizon-rust/horizon/blob/main/launcher/README.md";
 /// The players' page on connecting an AI agent (the website's docs/agents.md).
-pub const AGENT_DOCS_URL: &str = "https://playhorizon.dev/docs/agents";
 /// This launcher's version: the release workflow sets `HORIZON_LAUNCHER_VERSION` from the
 /// tag it builds (no version-bump commits); other builds say Cargo.toml's.
 pub const VERSION: &str = version_or(option_env!("HORIZON_LAUNCHER_VERSION"));
@@ -232,10 +231,14 @@ pub fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
     release_order(a).cmp(&release_order(b))
 }
 
-/// Every published release of the repository, both kinds, as GitHub's JSON.
+/// Why this build never lists releases, installs updates or replaces itself.
+pub const OFFLINE_SNAPSHOT: &str =
+    "This is an offline snapshot of Horizon: it never looks for releases or updates.";
+
+/// Every published release of the repository: none in the offline snapshot, which never asks
+/// GitHub, so no update, nightly or new version is ever found or installed.
 fn release_list() -> Result<serde_json::Value, String> {
-    let url = format!("https://api.github.com/repos/{REPO}/releases?per_page=100");
-    get(&url)?.into_json().map_err(|e| e.to_string())
+    Err(OFFLINE_SNAPSHOT.into())
 }
 
 /// The releases in `list` whose tag passes `keep`, newest first, with the asset named `asset`.
@@ -367,12 +370,12 @@ pub struct Links {
 }
 
 impl Default for Links {
-    /// What the launcher uses until (or unless) it can read links.json.
+    /// None: the offline snapshot shows no outside link (an empty address hides its button).
     fn default() -> Self {
         Self {
-            discord: "https://discord.gg/HcTeMZxe5E".into(),
-            sponsor: "https://github.com/sponsors/ludovic111".into(),
-            website: "https://playhorizon.dev".into(),
+            discord: String::new(),
+            sponsor: String::new(),
+            website: String::new(),
         }
     }
 }
@@ -397,13 +400,9 @@ impl Links {
     }
 }
 
-/// The links from main, or the built-in ones when offline.
+/// The links: none in the offline snapshot, which shows no outside link and never fetches them.
 pub fn links() -> Links {
-    let url = format!("https://raw.githubusercontent.com/{REPO}/main/launcher/links.json");
-    get(&url)
-        .ok()
-        .and_then(|r| r.into_string().ok())
-        .map_or_else(Links::default, |text| Links::parse(&text))
+    Links::default()
 }
 
 /// The launcher's data folder; `HORIZON_LAUNCHER_HOME` overrides it (for tests and scripts).
@@ -2155,9 +2154,9 @@ pub fn exe_path() -> &'static Path {
     EXE.get_or_init(|| std::env::current_exe().unwrap_or_else(|_| PathBuf::from(LAUNCHER_BINARY)))
 }
 
-/// Development builds and `HORIZON_LAUNCHER_NO_SELF_UPDATE` never replace themselves.
+/// The offline snapshot never replaces itself.
 pub fn self_update_allowed() -> bool {
-    !cfg!(debug_assertions) && std::env::var_os("HORIZON_LAUNCHER_NO_SELF_UPDATE").is_none()
+    false
 }
 
 /// The version in `horizon-launcher --version`'s output (`horizon-launcher 0.1.5`).
@@ -2728,8 +2727,9 @@ impl Settings {
         self.language.unwrap_or_else(crate::i18n::Language::system)
     }
     /// Whether new Horizon versions are installed automatically.
+    /// Never in the offline snapshot: it stays on the versions installed here.
     pub fn auto_install(&self) -> bool {
-        self.install_new_versions.unwrap_or(true)
+        false
     }
     pub fn save(&self) {
         let _ = fs::create_dir_all(data_dir());
@@ -3363,21 +3363,24 @@ mod tests {
     }
 
     #[test]
-    fn new_versions_install_automatically_unless_turned_off() {
-        // No settings file, an old one that never mentioned it, and 0.1.1's default `false`.
-        assert!(Settings::parse("").auto_install());
-        assert!(Settings::parse("{}").auto_install());
-        assert!(
-            Settings::parse(r#"{"selected": "v2026.10.13", "auto_install": false}"#).auto_install()
-        );
-        assert!(Settings::parse(r#"{"install_new_versions": true}"#).auto_install());
-        assert!(!Settings::parse(r#"{"install_new_versions": false}"#).auto_install());
-        // Saving after the player turned it off keeps it off.
-        let off = Settings {
-            install_new_versions: Some(false),
-            ..Settings::default()
-        };
-        assert!(!Settings::parse(&serde_json::to_string(&off).unwrap()).auto_install());
+    fn the_offline_snapshot_reaches_no_server_but_sign_in() {
+        // Refused before any lookup: no network is needed to see it.
+        for url in [
+            "https://api.github.com/repos/horizon-rust/horizon/releases",
+            "https://telemetry.playhorizon.dev/v1/items",
+            "https://api.modrinth.com/v2/search",
+        ] {
+            let e = get(url).unwrap_err();
+            assert!(e.contains("offline build"), "{url}: {e}");
+        }
+    }
+
+    #[test]
+    fn the_offline_snapshot_never_installs_new_versions() {
+        assert!(!Settings::parse("").auto_install());
+        assert!(!Settings::parse(r#"{"install_new_versions": true}"#).auto_install());
+        assert!(!self_update_allowed());
+        assert!(release_list().is_err());
         // The selection rule is unchanged: the new version is selected only from the newest.
         let installed = ["v2026.10.12".to_string(), "v2026.10.1".to_string()];
         assert!(select_after_update(Some("v2026.10.12"), &installed));
@@ -3387,14 +3390,10 @@ mod tests {
     #[test]
     fn links_fall_back_to_the_built_in_ones() {
         let defaults = Links::default();
-        assert_eq!(defaults.discord, "https://discord.gg/HcTeMZxe5E");
-        assert_eq!(defaults.sponsor, "https://github.com/sponsors/ludovic111");
-        assert_eq!(defaults.website, "https://playhorizon.dev");
-        // The file on main says the same thing as the defaults.
-        let file = Links::parse(
-            r#"{"discord": "https://discord.gg/HcTeMZxe5E", "sponsor": "https://github.com/sponsors/ludovic111", "website": "https://playhorizon.dev"}"#,
-        );
-        assert_eq!(file, defaults);
+        // The offline snapshot has none, and never reads links.json.
+        assert_eq!(links(), defaults);
+        assert!(defaults.discord.is_empty() && defaults.sponsor.is_empty());
+        assert!(defaults.website.is_empty());
         // Unreadable or missing, offline included: the defaults.
         assert_eq!(Links::parse(""), defaults);
         assert_eq!(Links::parse("<html>404</html>"), defaults);

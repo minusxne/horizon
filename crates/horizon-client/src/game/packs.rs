@@ -43,8 +43,13 @@ pub fn open_folder(dir: &Path) {
         log::warn!("Horizon: could not open {}: {e}", dir.display());
     }
 }
-/// `Util.getPlatform().openUri`: the system browser on the link.
+/// `Util.getPlatform().openUri`: the system browser on the link. The offline snapshot opens no
+/// outside link (a chat or server link is copied by its other button instead), only local paths.
 pub fn open_uri(uri: &str) {
+    if uri.contains("://") && !uri.starts_with("file://") {
+        log::info!("Horizon: this offline build opens no outside link: {uri}");
+        return;
+    }
     open_folder(Path::new(uri));
 }
 /// The resource root to load from, given the vanilla root, the selection and

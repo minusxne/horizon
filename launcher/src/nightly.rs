@@ -44,20 +44,12 @@ fn is_date(text: &str) -> bool {
         })
 }
 
-/// The current nightly build, or None while there is none.
+/// The current nightly build: never one in the offline snapshot, which never asks GitHub.
 pub fn latest() -> Result<Option<Release>, String> {
-    let url = format!(
-        "https://api.github.com/repos/{}/releases/tags/{NIGHTLY}",
-        backend::REPO
-    );
-    let release: serde_json::Value = match backend::get(&url) {
-        Ok(response) => response.into_json().map_err(|e| e.to_string())?,
-        Err(e) if e.ends_with("answered 404") => return Ok(None),
-        Err(e) => return Err(e),
-    };
-    Ok(parse(&release))
+    Err(backend::OFFLINE_SNAPSHOT.into())
 }
 
+#[cfg_attr(not(test), allow(dead_code))] // the offline snapshot fetches no nightly to parse
 fn parse(release: &serde_json::Value) -> Option<Release> {
     let list = serde_json::Value::Array(vec![release.clone()]);
     backend::parse_releases(&list, ASSET, |tag| tag == NIGHTLY)

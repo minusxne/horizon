@@ -303,7 +303,9 @@ impl Launcher {
                             .child(
                                 button("ts-install", "Install Tailscale", Kind::Secondary, &t)
                                     .bg(t.plate)
-                                    .on_click(|_, _, cx| cx.open_url(tailscale::install_url())),
+                                    .on_click(|_, _, cx| {
+                                        crate::open_url(cx, tailscale::install_url())
+                                    }),
                             )
                             .child(check),
                     );
@@ -332,7 +334,7 @@ impl Launcher {
                     .bg(t.plate)
                     .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                         match &auth_url {
-                            Some(url) => cx.open_url(url),
+                            Some(url) => crate::open_url(cx, url),
                             None => {
                                 if let Err(e) = tailscale::open_app() {
                                     this.internet.message = Some(Err(e));
@@ -426,7 +428,7 @@ impl Launcher {
         let t = self.theme;
         let line = |s: String| text(theme::CAPTION).text_color(t.muted).child(s);
         let link = |id: &'static str, label: &'static str, url: &'static str| {
-            button(id, label, Kind::Ghost, &t).on_click(move |_, _, cx| cx.open_url(url))
+            button(id, label, Kind::Ghost, &t).on_click(move |_, _, cx| crate::open_url(cx, url))
         };
         let token = self.internet.token();
         if token.is_none() {

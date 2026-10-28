@@ -1187,7 +1187,7 @@ impl Launcher {
                         Kind::Ghost,
                         &t,
                     )
-                    .on_click(move |_, _, cx| cx.open_url(&page_url)),
+                    .on_click(move |_, _, cx| crate::open_url(cx, &page_url)),
                 );
             }
             if busy == Some(p.id.as_str()) {

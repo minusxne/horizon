@@ -502,7 +502,7 @@ impl Launcher {
                     .children(super::mods_page::stars(&p.id, &t).map(|s| text(theme::UI).child(s)))
                     .child(
                         button("mods-rate", "Sign in with GitHub to rate", Kind::Ghost, &t)
-                            .on_click(move |_, _, cx| cx.open_url(&url)),
+                            .on_click(move |_, _, cx| crate::open_url(cx, &url)),
                     ),
             );
         }
@@ -545,14 +545,14 @@ impl Launcher {
                         Kind::Ghost,
                         &t,
                     )
-                    .on_click(move |_, _, cx| cx.open_url(&page_url)),
+                    .on_click(move |_, _, cx| crate::open_url(cx, &page_url)),
                 );
             }
             for (i, l) in d.links.iter().enumerate() {
                 let url = l.url.clone();
                 links = links.child(
                     button(format!("mods-link-{i}"), l.label.clone(), Kind::Ghost, &t)
-                        .on_click(move |_, _, cx| cx.open_url(&url)),
+                        .on_click(move |_, _, cx| crate::open_url(cx, &url)),
                 );
             }
             page = page.child(links);

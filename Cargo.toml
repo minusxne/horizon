@@ -1,5 +1,5 @@
 [workspace]
-exclude = ["launcher", "crates/horizon-telemetry-server", "crates/horizon-mod-registry", "third_party/wgpu-hal"]
+exclude = ["launcher", "crates/horizon-telemetry-server", "crates/horizon-mod-registry", "third_party/wgpu-hal", "third_party/ureq"]
 members = [
     "crates/horizon-core",
     "crates/horizon-dualsense",
@@ -65,6 +65,8 @@ large_enum_variant = "allow"
 # folder once a wgpu release has the fix.
 [patch.crates-io]
 wgpu-hal = { path = "third_party/wgpu-hal" }
+# Offline snapshot: requests reach Microsoft sign-in and Minecraft services only (src/unit.rs).
+ureq = { path = "third_party/ureq" }
 
 # Line tables keep file:line in backtraces; full debug info made every
 # example and test binary hundreds of megabytes and slow to link.

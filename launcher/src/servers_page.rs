@@ -1198,15 +1198,12 @@ impl Launcher {
         {
             page = page.child(self.problem_notice(p, cx));
         }
-        let partner = super::partner::banner("partner-servers", 600., &t);
         if self.servers.list.is_empty() {
-            return page
-                .child(centered(
-                    "No server yet. Create one: it takes a few seconds, and with the defaults \
+            return page.child(centered(
+                "No server yet. Create one: it takes a few seconds, and with the defaults \
                      (tick the EULA, press Create) you get a friends-only survival world.",
-                    &t,
-                ))
-                .child(partner);
+                &t,
+            ));
         }
         let mut list = div().flex().flex_col().border_t_1().border_color(t.rule);
         for (i, e) in self.servers.list.clone().into_iter().enumerate() {
@@ -1247,7 +1244,7 @@ impl Launcher {
                 &t,
             ));
         }
-        page.child(list).child(partner)
+        page.child(list)
     }
 
     fn add_server_folder(&mut self, cx: &mut Context<Self>) {
@@ -1437,7 +1434,7 @@ impl Launcher {
             let d = dir.to_path_buf();
             panel.on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                 match servers::Api::open(&d).map(|a| a.panel_link()) {
-                    Some(Ok(url)) => cx.open_url(&url),
+                    Some(Ok(url)) => crate::open_url(cx, &url),
                     Some(Err(e)) => this.servers.problem = Some(Problem::plain(e)),
                     None => {}
                 }
@@ -2819,7 +2816,7 @@ impl Launcher {
                     .cursor_pointer()
                     .hover(|s| s.opacity(0.8))
                     .child("Read it")
-                    .on_click(|_, _, cx| cx.open_url(servers::EULA_URL)),
+                    .on_click(|_, _, cx| crate::open_url(cx, servers::EULA_URL)),
             );
         let body = div()
             .id("create-body")

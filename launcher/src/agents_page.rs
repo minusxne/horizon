@@ -191,17 +191,7 @@ impl Launcher {
                     .child(message.clone()),
             );
         }
-        Some(
-            section.child(
-                div()
-                    .id("agent-docs")
-                    .text_color(t.accent)
-                    .cursor_pointer()
-                    .hover(|s| s.opacity(0.8))
-                    .child("What an agent can do, and the commands")
-                    .on_click(|_, _, cx| cx.open_url(backend::AGENT_DOCS_URL)),
-            ),
-        )
+        Some(section)
     }
 }
 

@@ -29,7 +29,6 @@ mod mods_project;
 mod multiplayer_page;
 mod owner_page;
 mod packs_page;
-mod partner;
 mod perf;
 mod screenshots_page;
 mod scrollbar;
@@ -306,32 +305,6 @@ impl Launcher {
             }
         })
         .detach();
-        // Counts the time the sidebar's partner banner is on screen, until it may be hidden.
-        cx.spawn(async move |this, cx| loop {
-            cx.background_executor()
-                .timer(Duration::from_secs(10))
-                .await;
-            let counting = this.update(cx, |this, cx| {
-                let s = &mut this.settings;
-                if s.partner_hidden || s.partner_seen_secs >= partner::SEEN_BEFORE_HIDE {
-                    return false;
-                }
-                if this.page != Page::Servers {
-                    s.partner_seen_secs += 10;
-                    if s.partner_seen_secs % 60 == 0
-                        || s.partner_seen_secs >= partner::SEEN_BEFORE_HIDE
-                    {
-                        s.save();
-                        cx.notify();
-                    }
-                }
-                true
-            });
-            if !matches!(counting, Ok(true)) {
-                break;
-            }
-        })
-        .detach();
         let mut settings = Settings::load();
         i18n::set(settings.language());
         if settings.minecraft_dir.is_none() {
@@ -475,7 +448,8 @@ impl Launcher {
         std::thread::spawn(move || {
             let store = account::store();
             let _ = keychain_tx.send(Msg::Keychain(store.persistent()));
-            let _ = keychain_tx.send(Msg::Owner(accounts.has_owner(store)));
+            let owns = !account::owner_gate() || accounts.has_owner(store);
+            let _ = keychain_tx.send(Msg::Owner(owns));
         });
         std::thread::spawn(move || {
             let reused = backend::reuse_prepared_everywhere();
@@ -1349,6 +1323,42 @@ fn button(
     keyboard(track_hover(base, id), &t).active(|s| s.opacity(theme::PRESSED).top(px(1.)))
 }
 
+/// Opens `url` only when it stays on this computer (a server's own web panel, a file) or is
+/// Microsoft's sign-in page: the offline snapshot opens no other outside link.
+fn link_allowed(url: &str) -> bool {
+    let Some((scheme, rest)) = url.split_once("://") else {
+        return false;
+    };
+    let host = rest.split(['/', '?', '#']).next().unwrap_or("");
+    let host = host.rsplit_once('@').map_or(host, |(_, h)| h);
+    let host = match host.strip_prefix('[') {
+        Some(v6) => v6.split(']').next().unwrap_or(""),
+        None => host.split(':').next().unwrap_or(""),
+    };
+    match scheme {
+        "file" => true,
+        "http" | "https" => matches!(
+            host,
+            "localhost"
+                | "127.0.0.1"
+                | "::1"
+                | "www.microsoft.com"
+                | "microsoft.com"
+                | "login.live.com"
+                | "login.microsoftonline.com"
+        ),
+        _ => false,
+    }
+}
+
+pub(crate) fn open_url(cx: &mut App, url: &str) {
+    if link_allowed(url) {
+        cx.open_url(url);
+    } else {
+        eprintln!("This offline build of Horizon opens no outside link: {url}");
+    }
+}
+
 /// Copies to the clipboard, or into `HORIZON_LAUNCHER_CLIPBOARD` when a test run sets it
 /// (`horizon_launcher::desktop_seams`).
 fn copy_to_clipboard(cx: &mut App, item: gpui::ClipboardItem) {
@@ -1803,7 +1813,7 @@ impl Launcher {
 
     /// The sidebar: Horizon and the imported modpacks, the player's servers, then the
     /// launcher's own update, the community links and its version.
-    fn sidebar(&mut self, window: &Window, cx: &mut Context<Self>) -> Stateful<Div> {
+    fn sidebar(&mut self, cx: &mut Context<Self>) -> Stateful<Div> {
         let t = self.theme;
         self.load_packs();
         let heading = |label: String| {
@@ -1853,7 +1863,6 @@ impl Launcher {
                 cx.notify();
             }));
         let items = self.instance_items(heading, cx);
-        let mut rows = items.len();
         let list = div()
             .flex()
             .flex_col()
@@ -1869,8 +1878,6 @@ impl Launcher {
         if !servers.is_empty() {
             list = list.child(heading(tr("SERVERS").into()));
         }
-        rows += servers.len();
-        let headings = 1 + usize::from(!servers.is_empty());
         for e in servers {
             let up = self.servers.is_up(&e.dir);
             let open = self.page == Page::Servers && self.servers.open.as_ref() == Some(&e.dir);
@@ -1917,7 +1924,7 @@ impl Launcher {
                 .hover(move |s| s.text_color(t.ink).bg(t.raised.opacity(0.6)))
                 .child(blocks::icon(icon, 18., t.muted))
                 .child(blocks::pixel(14., FontWeight::MEDIUM).child(label))
-                .on_click(move |_, _, cx| cx.open_url(&url))
+                .on_click(move |_, _, cx| crate::open_url(cx, &url))
         };
         let mut foot = div().mt_auto().flex().flex_col().gap(px(2.)).pt(px(12.));
         match &self.self_update {
@@ -1959,44 +1966,6 @@ impl Launcher {
                 )
             }
             _ => {}
-        }
-        // Sculk's card above the links: seen without scrolling, on every page but Servers, which shows
-        // its wide banner. Tall where the sidebar has the height for it besides its rows (about 60
-        // high each, under headings of about 40) and the links, compact otherwise. After a while on
-        // screen a "Hide" beside its label puts it away for good.
-        if self.page != Page::Servers && !self.settings.partner_hidden {
-            let free = f32::from(window.viewport_size().height)
-                - theme::TOPBAR
-                - 40. * headings as f32
-                - 60. * rows as f32
-                - 110.;
-            let mut side = div().relative().mb(px(8.)).child(partner::card(
-                "partner-side",
-                theme::SIDEBAR - 20.,
-                free < partner::TALL_HEIGHT,
-                &t,
-            ));
-            if self.settings.partner_seen_secs >= partner::SEEN_BEFORE_HIDE {
-                let hide = div()
-                    .id("partner-hide")
-                    .absolute()
-                    .top(px(0.))
-                    .right(px(0.))
-                    .cursor_pointer()
-                    .child(
-                        text(theme::MICRO)
-                            .text_color(t.muted)
-                            .hover(move |s| s.text_color(t.ink))
-                            .child(tr("HIDE")),
-                    )
-                    .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                        this.settings.partner_hidden = true;
-                        this.settings.save();
-                        cx.notify();
-                    }));
-                side = side.child(keyboard(hide, &t));
-            }
-            foot = foot.child(side);
         }
         if !self.links.discord.is_empty() {
             foot = foot.child(link(
@@ -2562,7 +2531,7 @@ impl Launcher {
             actions = actions.child(
                 button("crash-discord", "Report on Discord", Kind::Secondary, &t)
                     .bg(t.plate)
-                    .on_click(move |_, _, cx| cx.open_url(&discord)),
+                    .on_click(move |_, _, cx| crate::open_url(cx, &discord)),
             );
         }
         actions = actions.child(
@@ -3327,7 +3296,7 @@ impl Launcher {
                     )
                     .child(
                         button("sign-in-open", "Open link", Kind::Secondary, &t)
-                            .on_click(move |_, _, cx| cx.open_url(&uri)),
+                            .on_click(move |_, _, cx| crate::open_url(cx, &uri)),
                     )
                     .child(
                         button("sign-in-cancel", "Cancel", Kind::Ghost, &t).on_click(cx.listener(
@@ -3721,7 +3690,7 @@ impl Launcher {
                         .bg(t.plate)
                         .on_click({
                             let url = self.links.sponsor.clone();
-                            move |_: &ClickEvent, _, cx| cx.open_url(&url)
+                            move |_: &ClickEvent, _, cx| crate::open_url(cx, &url)
                         }),
                 )
         });
@@ -3893,7 +3862,7 @@ impl Render for Launcher {
         }
         let stone = self.art.stone(t.page_rgb, t.dark, window.scale_factor());
         let topbar = self.topbar(window, cx);
-        let sidebar = self.sidebar(window, cx);
+        let sidebar = self.sidebar(cx);
         let mut root = div()
             .id("root")
             .track_focus(&self.root_focus)

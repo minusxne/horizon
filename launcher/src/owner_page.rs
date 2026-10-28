@@ -112,7 +112,7 @@ impl Launcher {
                     )
                     .child(
                         button("owner-open", "Open link", Kind::Primary, &t)
-                            .on_click(move |_, _, cx| cx.open_url(&uri)),
+                            .on_click(move |_, _, cx| crate::open_url(cx, &uri)),
                     )
             }
             Some(SignInState::Starting) => answers,

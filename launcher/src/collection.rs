@@ -111,10 +111,9 @@ fn json_view(view: &(String, String), t: &Theme, scroll: &Scrollbar) -> Div {
 }
 
 impl Launcher {
-    /// Whether the question covers the window: not answered for this consent version, and the
-    /// opening is over.
+    /// Whether the question covers the window: never in the offline snapshot, which sends nothing.
     pub(crate) fn asking_consent(&self) -> bool {
-        self.opening.is_none() && self.collection.consent.needs_asking()
+        false
     }
 
     fn answer_consent(&mut self, choices: Choices) {
