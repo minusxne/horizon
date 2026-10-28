@@ -1,5 +1,5 @@
 [workspace]
-exclude = ["launcher", "crates/horizon-telemetry-server", "crates/horizon-mod-registry", "third_party/wgpu-hal", "third_party/ureq"]
+exclude = ["launcher", "third_party/wgpu-hal", "third_party/ureq"]
 members = [
     "crates/horizon-core",
     "crates/horizon-dualsense",
@@ -13,7 +13,6 @@ members = [
     "crates/horizon-items",
     "crates/horizon-server-files",
     "crates/horizon-server",
-    "crates/horizon-bots",
     "crates/horizon-assets",
     "crates/horizon-protocol",
     "crates/horizon-theme",
@@ -21,7 +20,6 @@ members = [
     "crates/horizon-telemetry",
     "crates/horizon-bench",
     "crates/horizon-friends",
-    "crates/horizon-relay",
     "crates/horizon-mod-sdk",
     "crates/horizon-mods",
     "crates/horizon-mods/tests/guest",
