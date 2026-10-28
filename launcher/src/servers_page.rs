@@ -2343,7 +2343,7 @@ impl Launcher {
                  closes, and comes back by itself if the computer restarts."
                     .into()
             } else {
-                "Off: the server stops when you close the launcher.".into()
+                "Off: the server stops when you close Skyline.".into()
             },
             toggle.into_any_element(),
         )

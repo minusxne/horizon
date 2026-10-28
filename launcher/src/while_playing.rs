@@ -73,12 +73,12 @@ impl Launcher {
             }
         });
         let said = match current {
-            WhilePlaying::Stay => "The launcher stays open while you play.",
+            WhilePlaying::Stay => "Skyline stays open while you play.",
             WhilePlaying::Minimize => {
-                "The launcher goes down when the game starts, and comes back when it closes."
+                "Skyline goes down when the game starts, and comes back when it closes."
             }
             WhilePlaying::Hide => {
-                "The launcher hides when the game starts, and comes back when it closes."
+                "Skyline hides when the game starts, and comes back when it closes."
             }
         };
         index_row(

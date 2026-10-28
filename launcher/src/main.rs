@@ -1951,7 +1951,12 @@ impl Launcher {
     /// The Play page's focal point: Skyline, the instance that plays and whether it is ready.
     fn hero(&self, _tag: &str, version: &str, prepared: bool, _cx: &mut Context<Self>) -> Div {
         let t = self.theme;
-        let instance = self.selected_instance().map(|i| i.name.clone());
+        // The default instance is itself called "Skyline": under the wordmark that would read
+        // "Skyline Skyline", so only an instance with its own name gets the line.
+        let instance = self
+            .selected_instance()
+            .map(|i| i.name.clone())
+            .filter(|name| !name.trim().eq_ignore_ascii_case("skyline"));
         div()
             .flex()
             .flex_none()
@@ -2301,7 +2306,7 @@ impl Launcher {
             let version = backend::game_version(&tag);
             let confirming = self.confirm_remove.as_ref() == Some(&tag);
             let state = if !runs {
-                tr("Made for an older launcher: it has no skyline program. Remove it.").to_string()
+                tr("An older build: it has no skyline program. Remove it.").to_string()
             } else if prepared {
                 trf("Minecraft {version} · prepared", &[("version", &version)])
             } else {
@@ -2763,8 +2768,8 @@ fn key_bindings() -> Vec<KeyBinding> {
 fn menus() -> Vec<Menu> {
     vec![
         Menu {
-            name: "Skyline Launcher".into(),
-            items: vec![MenuItem::action("Quit Skyline Launcher", Quit)],
+            name: "Skyline".into(),
+            items: vec![MenuItem::action("Quit Skyline", Quit)],
         },
         Menu {
             name: "Window".into(),
@@ -2860,10 +2865,10 @@ mod tests {
     #[test]
     fn the_app_menu_has_quit() {
         let menus = super::menus();
-        assert_eq!(menus[0].name, "Skyline Launcher");
+        assert_eq!(menus[0].name, "Skyline");
         assert!(matches!(
             &menus[0].items[0],
-            gpui::MenuItem::Action { name, .. } if name == "Quit Skyline Launcher"
+            gpui::MenuItem::Action { name, .. } if name == "Quit Skyline"
         ));
     }
 

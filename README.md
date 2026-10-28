@@ -31,6 +31,32 @@ instance works) and a 26.3 server jar you already have:
 
     skyline-prepare --root . --prepare --minecraft-dir PATH --server-jar PATH
 
+With Prism Launcher, `--minecraft-dir` is the instance's `minecraft` folder,
+for example
+`~/.local/share/PrismLauncher/instances/26.3/minecraft` (Flatpak:
+`~/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher/instances/26.3/minecraft`).
+The server jar is the `server.jar` Prism or the official launcher downloads.
+
+The launcher does the same from its Versions page: Add from folder (pick the
+`target/release` folder you built), then Prepare, and it asks for your
+Minecraft folder if it can't find one.
+
+## Playing
+
+Start `skyline-launcher`:
+
+- Play: the selected instance, its recent worlds and the Play button.
+- Content: the instance's Skyline mods (`.hmod` files and mod folders),
+  resource and shader packs, and each world's data packs. Drop files on a
+  section or use its Add button; nothing is downloaded.
+- Servers: LAN servers you host on this computer, reachable on your own
+  network.
+- Versions: the Skyline builds on this computer.
+- Settings: your offline player name, appearance, language, game arguments,
+  what happens while you play, and where your data is.
+
+You can also run `skyline` directly from the build folder.
+
 ## Where data lives
 
 - Game data (worlds, options, packs, mods): `~/.local/share/skyline`

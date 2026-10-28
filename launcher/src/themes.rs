@@ -175,7 +175,7 @@ pub fn keep_background(dir: &Path, file: &Path) -> Result<String, String> {
         .with_guessed_format()
         .ok()
         .and_then(|r| r.into_dimensions().ok())
-        .ok_or_else(|| format!("{shown} isn't a picture the launcher can read."))?;
+        .ok_or_else(|| format!("{shown} isn't a picture Skyline can read."))?;
     if w < 64 || h < 64 {
         return Err(format!("{shown} is {w}×{h}: too small to fill Home."));
     }
