@@ -1204,59 +1204,6 @@ fn preparer_binary(dir: &Path) -> Option<PathBuf> {
     binary.is_file().then_some(binary)
 }
 
-/// Downloads the pinned version from Mojang into `dir` when an account in the launcher owns
-/// Minecraft (asked again now), else says what signing in would do, as the last line of the
-/// not-found error.
-fn download_for_owner(
-    pins: &sources::Pins,
-    dir: &Path,
-    fetch: sources::Fetch,
-    log: &dyn Fn(String),
-) -> Result<(), String> {
-    let v = &pins.version;
-    let mut accounts = account::Accounts::load();
-    let pass = account::launch(
-        &account::Endpoints::live(),
-        account::client_id().as_deref(),
-        account::store(),
-        &mut accounts,
-    );
-    let _ = accounts.save();
-    match pass {
-        Ok(account::Launch {
-            owner: Some((owner, _)),
-            ..
-        }) => {
-            let name = owner.name;
-            log(format!(
-                "{name} owns Minecraft: downloading {v} from Mojang"
-            ));
-            let os = match sources::Os::current() {
-                sources::Os::Linux => "linux",
-                sources::Os::MacOs => "osx",
-                sources::Os::Windows => "windows",
-            };
-            mojang::download(pins, dir, os, 8, fetch, &mojang::CANCEL, log).map_err(|e| {
-                format!("\n  • Skyline tried to download {v} from Mojang for {name}, but: {e}")
-            })
-        }
-        // An owner by its last answer, who can't be asked now.
-        Ok(pass) => Err(format!(
-            "\n  • Downloading {v} from Mojang needs your Microsoft account, which could not be \
-             checked: {}",
-            pass.offline.unwrap_or_default()
-        )),
-        Err(_) if !accounts.accounts.is_empty() => Err(
-            "\n  • No signed-in account owns Minecraft: Java Edition, so Skyline can't download it."
-                .into(),
-        ),
-        Err(_) => Err(format!(
-            "\n  • Or sign in with the Microsoft account that owns Minecraft: Skyline then \
-             downloads {v} from Mojang itself."
-        )),
-    }
-}
-
 /// The Java home for this version: a runtime for precompiled exporters, a JDK for older
 /// preparers or changed sources. Forward the selection to external preparers too.
 /// Else try the official launcher's Java in `games`, then download the runtime named by
@@ -1371,6 +1318,43 @@ pub enum MinecraftFrom {
     Mojang,
 }
 
+/// Where a Minecraft server jar may already be on this computer, the likeliest first.
+fn server_jar_candidates(version: &str, minecraft: &Path) -> Vec<PathBuf> {
+    let mut found: Vec<PathBuf> = std::env::var_os("SKYLINE_SERVER_JAR")
+        .map(PathBuf::from)
+        .into_iter()
+        .collect();
+    let in_version = minecraft.join("versions").join(version);
+    found.push(in_version.join("server.jar"));
+    found.push(in_version.join(format!("{version}-server.jar")));
+    for dir in installed().iter().map(|t| version_dir(t).join(".local/server-jars")) {
+        found.push(dir.join(format!("server-{version}.jar")));
+        found.push(dir.join(format!("{version}.jar")));
+    }
+    if let Some(downloads) = dirs::download_dir() {
+        found.push(downloads.join(format!("minecraft_server.{version}.jar")));
+        found.push(downloads.join(format!("server-{version}.jar")));
+        found.push(downloads.join("server.jar"));
+    }
+    found
+}
+
+/// Keeps a server jar the player picked as the one preparing `version` uses.
+pub fn use_server_jar(version: &str, picked: &Path) -> Result<PathBuf, String> {
+    let is_jar = picked
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("jar"));
+    if !is_jar || !picked.is_file() {
+        return Err(format!("{} is not a .jar file.", picked.display()));
+    }
+    let jar = data_dir()
+        .join("server-jars")
+        .join(format!("{version}.jar"));
+    fs::create_dir_all(jar.parent().unwrap()).map_err(|e| e.to_string())?;
+    fs::copy(picked, &jar).map_err(|e| e.to_string())?;
+    Ok(jar)
+}
+
 /// Checks what the preparation needs and picks how to run it. PLAY.txt describes the same
 /// steps: the player's own launcher install, the server jar from that version's own json, and
 /// Java (and Python, for versions before skyline-prepare). Also returns the Minecraft folder
@@ -1407,23 +1391,14 @@ pub fn preparer(
             Ok(body)
         };
         let linked = data_dir().join("linked-minecraft");
-        if from == MinecraftFrom::Mojang {
-            // Straight from Mojang (what is already there and whole is kept), for an owner only.
-            download_for_owner(&pins, &own, &fetch, log)
-                .map_err(|e| e.trim_start_matches("\n  • ").to_string())?;
-            own
+        let resolved = sources::resolve(minecraft, &pins, &known, &linked, &fetch, log);
+        if reused {
+            assets_folder(resolved, &chosen, &version, log)
         } else {
-            let resolved = sources::resolve(minecraft, &pins, &known, &linked, &fetch, log);
-            if reused {
-                assets_folder(resolved, &chosen, &version, log)
-            } else {
-                match resolved? {
-                    sources::Resolved::Folder(dir) => dir,
-                    sources::Resolved::NotFound(checked) => {
-                        let not_found = sources::not_found(&version, &checked, minecraft);
-                        download_for_owner(&pins, &own, &fetch, log).map_err(|e| not_found + &e)?;
-                        own
-                    }
+            match resolved? {
+                sources::Resolved::Folder(dir) => dir,
+                sources::Resolved::NotFound(checked) => {
+                    return Err(sources::not_found(&version, &checked, minecraft));
                 }
             }
         }
@@ -1464,21 +1439,20 @@ pub fn preparer(
         .join("server-jars")
         .join(format!("{version}.jar"));
     if !reused && !jar.exists() {
-        let json: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&manifest).map_err(|e| e.to_string())?)
-                .map_err(|e| e.to_string())?;
-        let url = json["downloads"]["server"]["url"]
-            .as_str()
-            .ok_or_else(|| format!("{} has no server download", manifest.display()))?;
-        log(format!("Downloading the {version} server jar from Mojang"));
+        // Skyline downloads nothing: the server jar comes from this computer.
+        let found = server_jar_candidates(&version, &minecraft)
+            .into_iter()
+            .find(|p| p.is_file())
+            .ok_or_else(|| {
+                format!(
+                    "The Minecraft {version} server jar is needed once to prepare. Put it at {} (Prism and the official launcher download it as server.jar), then press Prepare again.",
+                    jar.display()
+                )
+            })?;
+        log(format!("Using the {version} server jar at {}", found.display()));
         fs::create_dir_all(jar.parent().unwrap()).map_err(|e| e.to_string())?;
-        let mut body = Vec::new();
-        get(url)?
-            .into_reader()
-            .read_to_end(&mut body)
-            .map_err(|e| e.to_string())?;
         let partial = jar.with_extension("partial");
-        fs::write(&partial, body)
+        fs::copy(&found, &partial)
             .and_then(|_| fs::rename(&partial, &jar))
             .map_err(|e| e.to_string())?;
     }
@@ -1888,6 +1862,91 @@ pub fn remove_version(tag: &str) -> Result<(), String> {
         settings.save();
     }
     Ok(())
+}
+
+/// Whether a version has the game's program (a version from before the rename has
+/// `horizon-client` instead, which this launcher doesn't start).
+pub fn has_program(tag: &str) -> bool {
+    version_dir(tag).join(CLIENT).exists()
+}
+
+/// The programs a Skyline build folder holds, the game's first.
+const PROGRAMS: [&str; 4] = ["skyline", "skyline-ctl", "skyline-prepare", "skyline-server"];
+
+/// Where a picked folder keeps the built game: the folder itself, or its `target/release` (a
+/// source checkout).
+fn build_folder(picked: &Path) -> Option<PathBuf> {
+    let exe = |name: &str| {
+        if cfg!(windows) {
+            format!("{name}.exe")
+        } else {
+            name.to_string()
+        }
+    };
+    [picked.to_path_buf(), picked.join("target").join("release")]
+        .into_iter()
+        .find(|dir| dir.join(exe(PROGRAMS[0])).is_file())
+}
+
+/// A version name for a picked folder: its own name (a checkout's, not `release`), made safe for
+/// a folder and not taken yet.
+fn added_name(picked: &Path, taken: &[String]) -> String {
+    let base: String = picked
+        .components()
+        .rev()
+        .filter_map(|c| c.as_os_str().to_str())
+        .find(|n| !matches!(*n, "release" | "debug" | "target" | "bin"))
+        .unwrap_or("local")
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() || c == '.' || c == '-' { c } else { '-' })
+        .collect();
+    let base = if base.is_empty() { "local".into() } else { base };
+    (1..)
+        .map(|n| if n == 1 { base.clone() } else { format!("{base}-{n}") })
+        .find(|n| !taken.contains(n) && !version_dir(n).exists())
+        .unwrap_or(base)
+}
+
+/// Adds a Skyline build from a folder on this computer as a version: its programs are linked
+/// (copied where links can't be made), with the checkout's `research-lock.json` when it has one.
+/// Returns the new version's name.
+pub fn add_version_from_folder(picked: &Path) -> Result<String, String> {
+    let build = build_folder(picked).ok_or_else(|| {
+        format!(
+            "No Skyline game in {}: pick the folder with the `skyline` program (or a source checkout built with cargo build --release).",
+            picked.display()
+        )
+    })?;
+    let name = added_name(picked, &installed());
+    let dir = version_dir(&name);
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let link = |from: &Path, to: &Path| -> Result<(), String> {
+        #[cfg(unix)]
+        let made = std::os::unix::fs::symlink(from, to);
+        #[cfg(not(unix))]
+        let made = fs::copy(from, to).map(|_| ());
+        made.map_err(|e| format!("{}: {e}", to.display()))
+    };
+    for program in PROGRAMS {
+        let file = if cfg!(windows) {
+            format!("{program}.exe")
+        } else {
+            program.to_string()
+        };
+        let from = build.join(&file);
+        if from.is_file() {
+            link(&from, &dir.join(&file))?;
+        }
+    }
+    if let Some(lock) = build
+        .ancestors()
+        .map(|d| d.join("research-lock.json"))
+        .find(|p| p.is_file())
+    {
+        link(&lock, &dir.join("research-lock.json"))?;
+    }
+    fs::write(dir.join(COMPLETE), "").map_err(|e| e.to_string())?;
+    Ok(name)
 }
 
 /// The Minecraft folder to prepare from: the one given, the one chosen in the launcher, or the
