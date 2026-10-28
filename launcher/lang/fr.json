@@ -156,7 +156,7 @@
   "The nightly could not be installed: {error}": "La Nightly n'a pas pu être installée : {error}",
   "{version} in the Nightly instance. Choose Horizon in the sidebar to play the release.": "{version} dans l'instance Nightly. Choisissez Horizon dans la barre latérale pour jouer la version publiée.",
   "No nightly build yet.": "Pas encore de version Nightly.",
-  "This build of the launcher has no Microsoft sign-in (HORIZON_MSA_CLIENT_ID), so it can't start the game.": "Cette version du launcher n'a pas de connexion Microsoft (HORIZON_MSA_CLIENT_ID) : elle ne peut pas lancer le jeu.",
+  "This build of the launcher has no Microsoft sign-in (HORIZON_MSA_CLIENT_ID): Play starts the game offline.": "Cette version du launcher n'a pas de connexion Microsoft (HORIZON_MSA_CLIENT_ID) : Jouer lance le jeu hors ligne.",
   "Sign in with a Microsoft account that owns Minecraft: Java Edition to play": "Connectez-vous avec un compte Microsoft qui possède Minecraft: Java Edition pour jouer",
   "Horizon needs a Microsoft account that owns Minecraft: Java Edition, like other launchers. It also plays online servers with your name and skin.": "Horizon a besoin d'un compte Microsoft qui possède Minecraft: Java Edition, comme les autres launchers. Il permet aussi de jouer sur les serveurs en ligne avec votre nom et votre skin.",
   "Sign in": "Se connecter",
