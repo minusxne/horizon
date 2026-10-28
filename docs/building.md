@@ -52,3 +52,12 @@ Run test games from a scratch folder with a scratch `SKYLINE_HOME` and
 
 `icons` needs `rsvg-convert` (librsvg2-bin). Without it, `tools/bin/rsvg-convert` is a
 small pycairo stand-in that handles the brand masters: `PATH=$PWD/tools/bin:$PATH cargo run -p xtask -- icons`.
+
+## Release packages
+
+`.github/workflows/release.yml` builds `skyline-windows-x64.zip` and
+`skyline_VERSION_amd64.deb` on GitHub Actions (`gh workflow run release --ref skyline`;
+add `-f tag=vX.Y.Z`, or push a `v*` tag, to publish them as a pre-release).
+Locally, after the two release builds above:
+
+    tools/package_skyline.sh deb VERSION dist

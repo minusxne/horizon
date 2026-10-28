@@ -1,0 +1,116 @@
+name: release
+# Builds Skyline for Windows (skyline-windows-x64.zip) and Debian/Ubuntu (skyline_VERSION_amd64.deb).
+#   gh workflow run release --ref skyline                  # build only: the files are the run's artifacts
+#   gh workflow run release --ref skyline -f tag=v26.3.0   # also publish them as a pre-release with that tag
+# Pushing a tag v* builds and publishes too.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Publish a pre-release with this tag (empty = build only)
+        type: string
+        default: ''
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  CARGO_TERM_COLOR: always
+  TAG: ${{ inputs.tag || (github.ref_type == 'tag' && github.ref_name) || '' }}
+jobs:
+  build:
+    name: build ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-latest
+            exe: .exe
+            rustflags: -C target-feature=+crt-static
+          - name: deb
+            # An older Ubuntu, so the binaries run on any recent Debian or Ubuntu.
+            os: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.name }}
+          workspaces: |
+            . -> target
+            launcher -> target
+      - name: Linux headers
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libxkbcommon-dev \
+            libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev libvulkan-dev
+      - name: Version
+        run: |
+          version=${TAG:-$(git rev-parse --short HEAD)}
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "SKYLINE_VERSION=${version#v}" >> "$GITHUB_ENV"
+          echo "SKYLINE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Build the game, skyline-ctl, skyline-prepare and skyline-server
+        run: cargo build --release --locked -p horizon-client -p horizon-prepare -p horizon-server
+      - name: Build the launcher
+        working-directory: launcher
+        run: cargo build --release --locked
+      - name: Every program starts
+        run: |
+          set -euo pipefail
+          for p in skyline skyline-ctl skyline-prepare skyline-server; do
+            test -f "target/release/$p${{ matrix.exe }}" || { echo "::error::$p is missing"; exit 1; }
+          done
+          test -f "launcher/target/release/skyline-launcher${{ matrix.exe }}"
+          target/release/skyline${{ matrix.exe }} --help > /dev/null
+          target/release/skyline-prepare${{ matrix.exe }} --version
+          target/release/skyline-server${{ matrix.exe }} --version
+      - name: Package
+        run: |
+          set -euo pipefail
+          file=$(bash tools/package_skyline.sh ${{ matrix.name }} "$VERSION" dist)
+          ls -l dist
+          if [[ "${{ matrix.name }}" == deb ]]; then dpkg-deb --info "$file"; dpkg-deb --contents "$file" | head -20; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skyline-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: build
+    if: needs.build.result == 'success' && (inputs.tag != '' || github.ref_type == 'tag')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: skyline-*
+          merge-multiple: true
+      - name: Publish ${{ env.TAG }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
+            --title "Skyline $TAG" \
+            --notes "Skyline, offline Minecraft: Java Edition 26.3 in Rust. Windows: unzip and run skyline-launcher.exe. Debian/Ubuntu: sudo apt install ./skyline_*.deb, then skyline-launcher (Versions > Add from folder > /usr/lib/skyline). No Mojang files are included: skyline-prepare builds them from your own Minecraft 26.3." \
+            ./*
