@@ -8,7 +8,6 @@ mod blocks;
 mod cli;
 mod console;
 mod console_page;
-mod cull;
 mod datapacks_page;
 mod export_page;
 mod import_page;
@@ -115,8 +114,6 @@ struct Launcher {
     /// How many times the page changed, for the page transition.
     switches: usize,
     content_scroll: Scrollbar,
-    /// The rows of the page's long list (Versions, Patch notes) last drawn.
-    long_list: cull::Cull,
     opening: Option<Opening>,
     installed: Vec<String>,
     /// The version being deleted on a background thread. It is already out of `installed`, so
@@ -242,7 +239,6 @@ impl Launcher {
             page: Page::from_env(),
             switches: 0,
             content_scroll: Scrollbar::default(),
-            long_list: cull::Cull::default(),
             opening: (!settings.skip_opening).then(|| {
                 let focus = cx.focus_handle();
                 window.focus(&focus);
@@ -323,7 +319,6 @@ impl Launcher {
             self.page = page;
             self.switches += 1;
             self.content_scroll = Scrollbar::default();
-            self.long_list = cull::Cull::default();
         }
         self.picker_open = false;
         self.account_menu = false;
@@ -1156,19 +1151,6 @@ fn player_name(text: &str) -> Option<String> {
         .map(str::trim)
         .filter(|n| !n.is_empty())
         .map(str::to_owned)
-}
-
-/// `1234` as `1,234`.
-fn thousands(n: u64) -> String {
-    let digits = n.to_string();
-    let mut out = String::new();
-    for (i, c) in digits.chars().enumerate() {
-        if i > 0 && (digits.len() - i).is_multiple_of(3) {
-            out.push(',');
-        }
-        out.push(c);
-    }
-    out
 }
 
 /// A mono line in upper case: the status above a title, the footer's links.
@@ -2887,14 +2869,5 @@ mod tests {
         assert_eq!(player_name("name:Steve\r\n").as_deref(), Some("Steve"));
         assert_eq!(player_name("Player63010\n"), None);
         assert_eq!(player_name(""), None);
-    }
-
-    #[test]
-    fn counts_get_thousands_separators() {
-        let shown: Vec<String> = [0, 7, 999, 1000, 12_300, 1_234_500]
-            .into_iter()
-            .map(super::thousands)
-            .collect();
-        assert_eq!(shown, ["0", "7", "999", "1,000", "12,300", "1,234,500"]);
     }
 }

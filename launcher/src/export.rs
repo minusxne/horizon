@@ -1,15 +1,15 @@
-//! Sharing an instance (or a port): its settings, packs and Skyline mods, and the worlds the
-//! player picks, as a `.mrpack` (Modrinth's modpack format, from its published spec) or a plain
-//! `.zip` of the game folder's layout.
+//! Sharing an instance: its settings, packs and Skyline mods, and the worlds the player picks, as
+//! a plain `.zip` of the game folder's layout (the default) or a `.mrpack` (Modrinth's modpack
+//! format, from its published spec).
 //!
 //! Only what makes the instance goes in, from a fixed list ([`FILES`], [`FOLDERS`]): never logs,
 //! screenshots, backups, caches, or anything tied to the player's account. A world goes without
 //! its per-player files (`playerdata/`, `stats/`, `advancements/`) and its level.dat without the
 //! player's UUID.
 //!
-//! In a `.mrpack`, a resource pack the browser installed from Modrinth, still the same file, is
-//! listed by its download (`files`, with its SHA-1 and SHA-512) instead of being copied; the
-//! rest goes under `overrides/`, which a launcher copies into the game folder.
+//! In a `.mrpack`, every file goes under `overrides/`, which a launcher copies into the game
+//! folder. The format can also list a file by its download ([`Linked`]); Skyline downloads
+//! nothing, so the window and the CLI never pass any.
 use horizon_world::nbt::{self, Limits, Tag};
 use std::fs;
 use std::io::{Read, Write};

@@ -1,6 +1,6 @@
 //! Instances in the window (`horizon_launcher::instances`): the sidebar's list, by group, and the
-//! dialog that makes one (empty, or a copy of the selected one) or changes its name, group and
-//! icon.
+//! dialog that makes one (empty, or a copy of the selected one), changes its name, group and
+//! icon, or deletes it (its folder goes to the trash).
 use super::*;
 use gpui::RenderImage;
 use horizon_launcher::instances::{self, Icon, Instance, Kind as InstanceKind};
@@ -51,6 +51,8 @@ pub(super) struct InstanceDialog {
     icon: Option<Icon>,
     error: Option<String>,
     busy: bool,
+    /// The player pressed Delete… and is asked to confirm.
+    confirm_delete: bool,
 }
 
 /// The instances and their icons as images, kept between frames.
@@ -263,7 +265,46 @@ impl Launcher {
             copy: false,
             error: None,
             busy: false,
+            confirm_delete: false,
         });
+    }
+
+    /// Deletes the instance being edited: its folder goes to the system's trash, and Play
+    /// starts Skyline again if it was the selected one.
+    pub(super) fn delete_instance(&mut self, cx: &mut Context<Self>) {
+        let Some(d) = self.instances.dialog.as_mut().filter(|d| !d.busy) else {
+            return;
+        };
+        let Some(id) = d.editing.clone() else {
+            return;
+        };
+        d.busy = true;
+        d.error = None;
+        let task = cx
+            .background_executor()
+            .spawn(async move { instances::delete(&id) });
+        cx.spawn(async move |this, cx| {
+            let result = task.await;
+            let _ = this.update(cx, |this, cx| {
+                match result {
+                    Ok(_) => {
+                        this.instances.dialog = None;
+                        this.settings = Settings::load();
+                        this.reload_instances();
+                        this.go(Page::Play);
+                    }
+                    Err(e) => {
+                        if let Some(d) = &mut this.instances.dialog {
+                            d.busy = false;
+                            d.confirm_delete = false;
+                            d.error = Some(e);
+                        }
+                    }
+                }
+                cx.notify();
+            });
+        })
+        .detach();
     }
 
     /// Escape closes the dialog. Whether it did.
@@ -308,9 +349,7 @@ impl Launcher {
                         this.instances.dialog = None;
                         this.select_instance(&instance);
                         this.reload_instances();
-                        if matches!(instance.kind, InstanceKind::Default | InstanceKind::Own) {
-                            this.go(Page::Play);
-                        }
+                        this.go(Page::Play);
                     }
                     Err(e) => {
                         if let Some(d) = &mut this.instances.dialog {
@@ -328,13 +367,20 @@ impl Launcher {
     pub(super) fn instance_dialog(&mut self, cx: &mut Context<Self>) -> Option<Stateful<Div>> {
         let t = self.theme;
         let d = self.instances.dialog.as_ref()?;
-        let (editing, copy, icon, error, busy) = (
+        let (editing, copy, icon, error, busy, confirm_delete) = (
             d.editing.is_some(),
             d.copy,
             d.icon.clone(),
             d.error.clone(),
             d.busy,
+            d.confirm_delete,
         );
+        let deletable = d
+            .editing
+            .as_ref()
+            .and_then(|id| self.instances.list.iter().find(|i| &i.id == id))
+            .filter(|i| i.kind == InstanceKind::Own)
+            .map(|i| (i.name.clone(), i.home.clone()));
         let from = self
             .selected_instance()
             .map_or_else(|| "Skyline".into(), |i| i.name.clone());
@@ -469,7 +515,53 @@ impl Launcher {
             _ => "Create",
         };
         let save = button("instance-save", label, Kind::Primary, &t);
-        let import: Option<gpui::Stateful<Div>> = None;
+        if let (true, Some((name, home))) = (confirm_delete, &deletable) {
+            body = body.child(
+                plate(&t)
+                    .flex()
+                    .flex_col()
+                    .gap(px(6.))
+                    .px(px(14.))
+                    .py(px(10.))
+                    .child(
+                        text(theme::LABEL)
+                            .text_color(t.ink)
+                            .child(trf("Delete {name}?", &[("name", name)])),
+                    )
+                    .child(text(theme::CAPTION).text_color(t.ink_soft).child(trf(
+                        "Its folder, with its worlds, options and packs, goes to the trash: {folder}",
+                        &[("folder", &home.display().to_string())],
+                    ))),
+            );
+        }
+        let delete = deletable.as_ref().map(|_| {
+            let b = button(
+                "instance-delete",
+                if confirm_delete {
+                    "Delete"
+                } else {
+                    "Delete…"
+                },
+                if confirm_delete {
+                    Kind::Secondary
+                } else {
+                    Kind::Ghost
+                },
+                &t,
+            );
+            if busy {
+                disabled(b)
+            } else {
+                b.on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
+                    match this.instances.dialog.as_mut() {
+                        Some(d) if d.confirm_delete => this.delete_instance(cx),
+                        Some(d) => d.confirm_delete = true,
+                        None => {}
+                    }
+                    cx.notify();
+                }))
+            }
+        });
         let foot = div()
             .flex()
             .justify_end()
@@ -478,12 +570,16 @@ impl Launcher {
             .py(px(16.))
             .border_t_1()
             .border_color(t.rule)
-            .children(import);
+            .children(delete)
+            .child(div().flex_1());
         let foot = if busy {
             foot.child(disabled(cancel)).child(disabled(save))
         } else {
             foot.child(cancel.on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                this.instances.dialog = None;
+                match this.instances.dialog.as_mut() {
+                    Some(d) if d.confirm_delete => d.confirm_delete = false,
+                    _ => this.instances.dialog = None,
+                }
                 cx.notify();
             })))
             .child(save.on_click(cx.listener(|this, _: &ClickEvent, _, cx| {

@@ -1,4 +1,4 @@
-//! Export… on Home's Instance row: the selected instance as a `.mrpack` or a `.zip`, with the
+//! Export… on Home's Instance row: the selected instance as a `.zip` (the default) or a `.mrpack`, with the
 //! worlds the player switches on, written to the launcher's `exports/` folder
 //! (`horizon_launcher::export`).
 use super::*;
@@ -30,7 +30,7 @@ impl Launcher {
             .collect();
         self.export = Some(ExportPanel {
             instance: i.id.clone(),
-            format: Format::Mrpack,
+            format: Format::Zip,
             worlds,
             busy: false,
             done: None,
@@ -90,7 +90,7 @@ impl Launcher {
             return None;
         }
         let panel = self.export.as_ref()?;
-        let formats = [(Format::Mrpack, ".mrpack"), (Format::Zip, ".zip")];
+        let formats = [(Format::Zip, ".zip"), (Format::Mrpack, ".mrpack")];
         let mut pick = div().flex().items_center().gap(px(6.));
         for (format, label) in formats {
             let on = panel.format == format;
@@ -112,10 +112,11 @@ impl Launcher {
         }
         let about = match panel.format {
             Format::Mrpack => {
-                "Modrinth's modpack format: resource packs from Modrinth are listed by their \
-                 download, the rest is carried in it."
+                "Modrinth's modpack format, for other launchers: every file is carried in it."
             }
-            Format::Zip => "The game folder's own layout, zipped.",
+            Format::Zip => {
+                "The game folder's own layout, zipped: Skyline imports it as a new instance."
+            }
         };
         let mut worlds = div().flex().flex_col().gap(px(6.));
         if panel.worlds.is_empty() {
