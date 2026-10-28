@@ -330,6 +330,11 @@ mod tests {
     use crate::{packs, text::Text};
     use std::sync::atomic::{AtomicUsize, Ordering};
 
+    /// Waits out one tick of the coarse clock file timestamps come from (see `Fixture::write`).
+    fn tick() {
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+
     struct Fixture(PathBuf);
     impl Fixture {
         fn new() -> Self {
@@ -346,6 +351,13 @@ mod tests {
         fn write(&self, name: &str, bytes: &[u8]) {
             let path = self.0.join(name);
             fs::create_dir_all(path.parent().unwrap()).unwrap();
+            // File timestamps come from the kernel's coarse clock (one tick, up to 10 ms):
+            // a same-length rewrite in the same tick as the last build keeps mtime and
+            // ctime, so the cache rightly can't see it. Real edits are never that fast;
+            // wait a tick so the tests check invalidation, not the clock.
+            if path.exists() {
+                tick();
+            }
             fs::write(path, bytes).unwrap();
         }
         fn dir_pack(&self, name: &str) -> Pack {
@@ -370,6 +382,9 @@ mod tests {
                 output_signature(&cached).unwrap(),
                 output_signature(&self.0.join("reference")).unwrap()
             );
+            // Whatever the test changes next lands in a later timestamp tick than the
+            // stamps this build recorded (directory entries added or removed included).
+            tick();
         }
     }
     impl Drop for Fixture {
@@ -523,6 +538,7 @@ mod tests {
         // Same-length rewrites cannot hide behind file size or preserved mtime.
         let path = f.0.join(format!("high/{resource}"));
         let original_time = fs::metadata(&path).unwrap().modified().unwrap();
+        tick();
         fs::write(&path, br#"{"p":"c"}"#).unwrap();
         // Windows requires a writable handle to restore the timestamp.
         fs::OpenOptions::new()
@@ -673,6 +689,7 @@ mod tests {
         let before = fs::metadata(&marker).unwrap().modified().unwrap();
         let path = f.0.join("pack").join(name);
         let original_time = fs::metadata(&path).unwrap().modified().unwrap();
+        tick();
         fs::write(&path, b"bbb").unwrap();
         fs::File::open(&path)
             .unwrap()
