@@ -49,3 +49,6 @@ Run test games from a scratch folder with a scratch `SKYLINE_HOME` and
 
     cargo run -p xtask -- tokens   # crates/horizon-theme -> tokens.css
     cargo run -p xtask -- icons    # docs/media/brand/*.svg -> packaging/icons
+
+`icons` needs `rsvg-convert` (librsvg2-bin). Without it, `tools/bin/rsvg-convert` is a
+small pycairo stand-in that handles the brand masters: `PATH=$PWD/tools/bin:$PATH cargo run -p xtask -- icons`.

@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Minimal stand-in for librsvg's `rsvg-convert -w W -h H FILE` (PNG to stdout), enough for
+Skyline's brand masters: <rect> (x, y, width, height, rx, fill, opacity), <g> with fill,
+opacity, clip-path and translate/scale transforms, and a <clipPath> of one rounded rect.
+Uses pycairo (python3-cairo, already installed); group opacity is applied to the whole group."""
+import io, re, sys
+import xml.etree.ElementTree as ET
+import cairo
+
+def parse_args(argv):
+    w = h = None; path = None; i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a in ("-w", "--width"): w = int(argv[i + 1]); i += 2
+        elif a in ("-h", "--height"): h = int(argv[i + 1]); i += 2
+        else: path = a; i += 1
+    return w, h, path
+
+def tag(e): return e.tag.split("}")[-1]
+
+def colour(s):
+    s = s.lstrip("#")
+    if len(s) == 3: s = "".join(c * 2 for c in s)
+    return tuple(int(s[i:i + 2], 16) / 255 for i in (0, 2, 4))
+
+def rounded(ctx, x, y, w, h, r):
+    if r <= 0:
+        ctx.rectangle(x, y, w, h); return
+    r = min(r, w / 2, h / 2)
+    ctx.new_sub_path()
+    ctx.arc(x + w - r, y + r, r, -1.5708, 0)
+    ctx.arc(x + w - r, y + h - r, r, 0, 1.5708)
+    ctx.arc(x + r, y + h - r, r, 1.5708, 3.14159)
+    ctx.arc(x + r, y + r, r, 3.14159, 4.71239)
+    ctx.close_path()
+
+def num(e, k, d=0.0): return float(e.get(k, d))
+
+def apply_transform(ctx, t):
+    for name, args in re.findall(r"(\w+)\(([^)]*)\)", t or ""):
+        v = [float(a) for a in re.split(r"[ ,]+", args.strip()) if a]
+        if name == "translate": ctx.translate(v[0], v[1] if len(v) > 1 else 0)
+        elif name == "scale": ctx.scale(v[0], v[1] if len(v) > 1 else v[0])
+
+def draw(ctx, e, fill, clips):
+    t = tag(e)
+    if t in ("title", "clipPath", "defs"): return
+    fill = e.get("fill", fill)
+    opacity = float(e.get("opacity", 1))
+    ctx.save()
+    apply_transform(ctx, e.get("transform"))
+    clip = e.get("clip-path")
+    if clip:
+        cid = re.search(r"#([^)]+)", clip).group(1)
+        for c in clips[cid]:
+            rounded(ctx, num(c, "x"), num(c, "y"), num(c, "width"), num(c, "height"), num(c, "rx"))
+        ctx.clip()
+    if opacity < 1: ctx.push_group()
+    if t == "rect":
+        rounded(ctx, num(e, "x"), num(e, "y"), num(e, "width"), num(e, "height"), num(e, "rx"))
+        ctx.set_source_rgb(*colour(fill or "#000"))
+        ctx.fill()
+    else:
+        for c in e: draw(ctx, c, fill, clips)
+    if opacity < 1:
+        ctx.pop_group_to_source(); ctx.paint_with_alpha(opacity)
+    ctx.restore()
+
+def main():
+    w, h, path = parse_args(sys.argv[1:])
+    root = ET.parse(path).getroot()
+    vb = [float(v) for v in root.get("viewBox").split()]
+    w = w or int(vb[2]); h = h or int(vb[3])
+    clips = {c.get("id"): [r for r in c if tag(r) == "rect"] for c in root.iter() if tag(c) == "clipPath"}
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, w, h)
+    ctx = cairo.Context(surface)
+    ctx.scale(w / vb[2], h / vb[3]); ctx.translate(-vb[0], -vb[1])
+    for c in root: draw(ctx, c, None, clips)
+    buf = io.BytesIO(); surface.write_to_png(buf)
+    sys.stdout.buffer.write(buf.getvalue())
+
+main()
