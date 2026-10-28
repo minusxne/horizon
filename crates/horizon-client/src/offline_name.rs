@@ -1,5 +1,5 @@
-//! The offline player name, when neither `--name`, `SKYLINE_PLAYER_NAME` nor a
-//! signed-in account gives one. Vanilla's client defaults `--username` to
+//! The offline player name, when neither `--name` nor `SKYLINE_PLAYER_NAME`
+//! gives one. Vanilla's client defaults `--username` to
 //! `"Player" + System.currentTimeMillis() % 1000` (net.minecraft.client.main.Main)
 //! and the official launcher always passes the account's name, so two players
 //! rarely share one. Skyline used plain `Player` for everyone, which is also

@@ -1,7 +1,9 @@
 //! Player skins from profile `textures` properties: authlib's
 //! `MinecraftServicesSessionService.unpackTextures`, vanilla's
 //! `SkinManager` lookup (which texture a player shows, and when the default
-//! one) and `SkinTextureDownloader.processLegacySkin`.
+//! one) and `SkinTextureDownloader.processLegacySkin`. Nothing is fetched from
+//! the network: a skin shows only if its texture is already in the local skin
+//! cache (`assets/skins`); every other player shows their default skin.
 
 /// `Property.hasSignature` and the services key check, as authlib's
 /// `SignatureState`.
@@ -171,181 +173,17 @@ pub(crate) fn nbt_text(tag: Option<&horizon_world::nbt::Tag>) -> Option<String> 
 
 pub use crate::chunk::block_entity::NameOrId;
 
-/// `GameProfile` as `fetchProfile` returns it: the account's id, name and
-/// property map (its `textures` property is the skin).
-#[derive(Clone, Debug)]
-pub struct ResolvedProfile {
-    pub id: u128,
-    pub name: String,
-    /// `(name, value, signature)` properties.
-    pub properties: Vec<(String, String, Option<String>)>,
-}
-impl ResolvedProfile {
-    /// `SessionService.getPackedTextures`: the `textures` property.
-    pub fn textures(&self) -> Option<(String, Signature)> {
-        self.properties
-            .iter()
-            .find(|(n, _, _)| n == "textures")
-            .map(|(_, v, s)| {
-                (
-                    v.clone(),
-                    if s.is_some() {
-                        Signature::Signed
-                    } else {
-                        Signature::Unsigned
-                    },
-                )
-            })
-    }
-}
-
-/// Where a `Dynamic` profile's resolution stands (`resolveProfile`'s future).
-#[derive(Clone, Debug)]
-pub enum Resolve {
-    Pending,
-    /// The services' answer: `None` for no profile or no answer, which the
-    /// cache holds like any result (`Optional.empty`).
-    Done(Option<ResolvedProfile>),
-}
-
-/// `ProfileResolver.Cached`: resolves a `Dynamic` profile through the
-/// services — `profileCacheByName` asks `profiles`/`getByName` for the id,
-/// `profileCacheById` asks `session`/`getProfileById` for the profile —
-/// at most 256 entries kept 10 minutes after their last use, fetched on
-/// background threads.
-pub struct Resolver {
-    entries: std::collections::HashMap<NameOrId, Entry>,
-    done: std::sync::mpsc::Receiver<(NameOrId, Option<ResolvedProfile>)>,
-    send: std::sync::mpsc::Sender<(NameOrId, Option<ResolvedProfile>)>,
-    last_sweep: std::time::Instant,
-}
-struct Entry {
-    touched: std::time::Instant,
-    /// `None` while the fetch is in flight.
-    resolved: Option<Option<ResolvedProfile>>,
-}
-/// `ProfileResolver.Cached`'s cache bounds.
-const MAX_PROFILES: usize = 256;
-const PROFILE_TTL: std::time::Duration = std::time::Duration::from_secs(10 * 60);
-
-/// `StringUtil.isValidPlayerName` (the check `fetchByName` makes first).
+/// `StringUtil.isValidPlayerName`.
 fn valid_player_name(name: &str) -> bool {
     name.encode_utf16().count() <= 16 && name.encode_utf16().all(|c| c > 32 && c < 127)
 }
 
-/// `fetchByNameOrId`: `getByName` answers `{id, name}`; `getProfileById`
-/// (`fetchProfile(id, requireSecure)`) answers `{id, name, properties}` —
-/// asked `unsigned=false` so the `textures` property is signed.
-fn resolve_profile(key: &NameOrId, doc: &serde_json::Value) -> Option<ResolvedProfile> {
-    let id = match key {
-        NameOrId::Id(id) => *id,
-        NameOrId::Name(name) => {
-            let url = crate::auth::endpoint(doc, "profiles", "getByName")?
-                .replace("{name}", &name.to_lowercase());
-            let body = http_get(&url)?;
-            let v: serde_json::Value = serde_json::from_slice(&body).ok()?;
-            crate::auth::parse_uuid(v.get("id")?.as_str()?)?
-        }
-    };
-    let url = crate::auth::endpoint(doc, "session", "getProfileById")?
-        .replace("{profileId}", &format!("{id:032x}"));
-    let separator = if url.contains('?') { '&' } else { '?' };
-    let body = http_get(&format!("{url}{separator}unsigned=false"))?;
-    let v: serde_json::Value = serde_json::from_slice(&body).ok()?;
-    Some(ResolvedProfile {
-        id: crate::auth::parse_uuid(v.get("id")?.as_str()?)?,
-        name: v.get("name")?.as_str()?.to_owned(),
-        properties: v
-            .get("properties")?
-            .as_array()?
-            .iter()
-            .map(|p| {
-                Some((
-                    p.get("name")?.as_str()?.to_owned(),
-                    p.get("value")?.as_str()?.to_owned(),
-                    p.get("signature")
-                        .and_then(|s| s.as_str())
-                        .map(str::to_owned),
-                ))
-            })
-            .collect::<Option<Vec<_>>>()?,
-    })
-}
-
-impl Default for Resolver {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-impl Resolver {
-    pub fn new() -> Self {
-        let (send, done) = std::sync::mpsc::channel();
-        Self {
-            entries: Default::default(),
-            done,
-            send,
-            last_sweep: std::time::Instant::now(),
-        }
-    }
-    /// `CacheBuilder.expireAfterAccess` with `maximumSize`.
-    fn sweep(&mut self) {
-        if self.last_sweep.elapsed() < std::time::Duration::from_secs(30) {
-            return;
-        }
-        self.last_sweep = std::time::Instant::now();
-        self.entries
-            .retain(|_, e| e.touched.elapsed() < PROFILE_TTL);
-        while self.entries.len() > MAX_PROFILES
-            && let Some(oldest) = self
-                .entries
-                .iter()
-                .min_by_key(|(_, e)| e.touched)
-                .map(|(k, _)| k.clone())
-        {
-            self.entries.remove(&oldest);
-        }
-    }
-    /// How the resolution of `key` stands, starting it the first time.
-    pub fn state(&mut self, key: &NameOrId) -> Resolve {
-        while let Ok((key, resolved)) = self.done.try_recv() {
-            self.entries.insert(
-                key,
-                Entry {
-                    touched: std::time::Instant::now(),
-                    resolved: Some(resolved),
-                },
-            );
-        }
-        self.sweep();
-        if let Some(entry) = self.entries.get_mut(key) {
-            entry.touched = std::time::Instant::now();
-            return match &entry.resolved {
-                Some(resolved) => Resolve::Done(resolved.clone()),
-                None => Resolve::Pending,
-            };
-        }
-        // `fetchByName` refuses an invalid name without a fetch; like every
-        // other empty answer that is the cached result.
-        let resolved = matches!(key, NameOrId::Name(name) if !valid_player_name(name));
-        self.entries.insert(
-            key.clone(),
-            Entry {
-                touched: std::time::Instant::now(),
-                resolved: resolved.then_some(None),
-            },
-        );
-        if resolved {
-            return Resolve::Done(None);
-        }
-        let (key, send) = (key.clone(), self.send.clone());
-        std::thread::spawn(move || {
-            let resolved = crate::auth::discovery()
-                .ok()
-                .and_then(|doc| resolve_profile(&key, &doc));
-            let _ = send.send((key, resolved));
-        });
-        Resolve::Pending
-    }
+/// A UUID with or without dashes.
+fn parse_uuid(text: &str) -> Option<u128> {
+    let hex: String = text.chars().filter(|c| *c != '-').collect();
+    (hex.len() == 32)
+        .then(|| u128::from_str_radix(&hex, 16).ok())
+        .flatten()
 }
 
 /// `ResolvableProfile` (an item's `minecraft:profile` component, a skull's
@@ -357,7 +195,8 @@ pub struct ProfileInfo {
     pub id: u128,
     /// The `textures` property's value and signature state, when present.
     pub textures: Option<(String, Signature)>,
-    /// `Dynamic` profiles resolve by name or id.
+    /// The name or id a `Dynamic` profile would resolve by (through Mojang's services, which
+    /// Skyline never asks: such a head shows its default skin).
     pub dynamic: Option<NameOrId>,
 }
 
@@ -375,7 +214,7 @@ fn profile_id(v: &serde_json::Value) -> Option<u128> {
                     | i[3] as u32 as u128
             })
         }
-        serde_json::Value::String(s) => crate::auth::parse_uuid(s),
+        serde_json::Value::String(s) => parse_uuid(s),
         _ => None,
     }
 }
@@ -446,23 +285,15 @@ pub fn dynamic_nbt(profile: &horizon_world::nbt::Tag) -> Option<NameOrId> {
     }
 }
 
-/// `PlayerSkinRenderCache.getOrDefault` for a head: the resolved skin once
+/// `PlayerSkinRenderCache.getOrDefault` for a head: the profile's own skin once
 /// its texture is in the atlas (`atlas`), else `partialProfile`'s default.
 pub fn head_skin(
     profile: &serde_json::Value,
-    resolver: &mut Resolver,
     downloads: &mut Downloader,
     atlas: impl Fn(&str) -> bool,
 ) -> String {
     let p = parse_profile(profile);
-    let property = p.textures.or_else(|| {
-        let key = p.dynamic.as_ref()?;
-        match resolver.state(key) {
-            Resolve::Done(Some(profile)) => profile.textures(),
-            _ => None,
-        }
-    });
-    if let Some((value, signature)) = property
+    if let Some((value, signature)) = p.textures
         && let Some(url) = unpack(&value, signature, &TEXTURE_URIS).skin
         && let Some(hash) = texture_hash(&url)
     {
@@ -611,10 +442,10 @@ pub fn process_legacy_skin(width: u32, height: u32, rgba: &[u8]) -> Option<Vec<u
     Some(img)
 }
 
-/// `SkinTextureDownloader`: fetches textures on background threads, from
-/// the local cache (`<root>/<2 hex>/<sha1>`) or over HTTP, keeping each one
-/// by kind and hash as vanilla's `TextureCache`s do. A texture that can't
-/// be fetched fails, and the player keeps their default skin.
+/// `SkinTextureDownloader` without the download: reads textures on background
+/// threads from the local cache (`<root>/<2 hex>/<sha1>`), keeping each one by
+/// kind and hash as vanilla's `TextureCache`s do. Skyline never fetches skins:
+/// a texture not in the cache fails, and the player keeps their default skin.
 pub struct Downloader {
     root: std::path::PathBuf,
     states: std::collections::HashMap<(Kind, String), Download>,
@@ -673,15 +504,10 @@ impl Downloader {
             .root
             .join(if digest.len() > 2 { &digest[..2] } else { "xx" })
             .join(&digest);
-        let (url, send) = (url.to_owned(), self.send.clone());
+        let send = self.send.clone();
         std::thread::spawn(move || {
-            let bytes = std::fs::read(&file).ok().or_else(|| {
-                let body = http_get(&url)?;
-                let _ = std::fs::create_dir_all(file.parent()?);
-                let _ = std::fs::write(&file, &body);
-                Some(body)
-            });
-            let image = bytes
+            let image = std::fs::read(&file)
+                .ok()
                 .and_then(|b| crate::hud::decode_bytes(&b).ok())
                 .and_then(|(w, h, rgba)| match kind {
                     Kind::Skin => process_legacy_skin(w, h, &rgba),
@@ -740,26 +566,6 @@ impl Downloader {
         }
         std::mem::take(&mut self.ready)
     }
-}
-
-/// A GET over HTTP or HTTPS (textures.minecraft.net serves both; vanilla
-/// uses https): the body of a 2xx answer, 16 MiB at most, after redirects.
-fn http_get(url: &str) -> Option<Vec<u8>> {
-    use std::io::Read;
-    let response = ureq::AgentBuilder::new()
-        .timeout(std::time::Duration::from_secs(15))
-        .user_agent("Java")
-        .build()
-        .get(url)
-        .call()
-        .ok()?;
-    let mut body = Vec::new();
-    response
-        .into_reader()
-        .take(16 << 20)
-        .read_to_end(&mut body)
-        .ok()?;
-    Some(body)
 }
 
 /// SHA-1 (FIPS 180-4).
@@ -881,63 +687,6 @@ mod tests {
         assert_eq!(p.dynamic, Some(NameOrId::Name("Notch".into())));
     }
 
-    /// `getByName` and `getProfileById` answer from the services the
-    /// discovery document names; a profile resolves through both.
-    #[test]
-    fn profiles_resolve_through_the_services() {
-        use std::io::{BufRead, BufReader, Write};
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-        let base = format!("http://{}", listener.local_addr().unwrap());
-        std::thread::spawn(move || {
-            let reply = |status: &str, body: &str| {
-                format!(
-                    "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
-                    body.len()
-                )
-            };
-            for stream in listener.incoming().take(3) {
-                let mut stream = stream.unwrap();
-                let mut line = String::new();
-                let mut reader = BufReader::new(stream.try_clone().unwrap());
-                reader.read_line(&mut line).unwrap();
-                while reader.read_line(&mut String::new()).unwrap() > 2 {}
-                let body = if line.contains("/users/profiles/minecraft/") {
-                    r#"{"id":"069a79f444e94726a5befca90e38aaf5","name":"Notch"}"#
-                } else if line.contains("/session/minecraft/profile/")
-                    && line.contains("unsigned=false")
-                {
-                    r#"{"id":"069a79f444e94726a5befca90e38aaf5","name":"Notch","properties":[{"name":"textures","value":"dmFsdWU=","signature":"c2ln"}]}"#
-                } else {
-                    "{}"
-                };
-                stream.write_all(reply("200 OK", body).as_bytes()).unwrap();
-            }
-        });
-        let doc = serde_json::json!({"discovery": {
-            "profiles": {"endpoints": {"getByName": {"uri": format!("{base}/users/profiles/minecraft/{{name}}")}}},
-            "session": {"endpoints": {"getProfileById": {"uri": format!("{base}/session/minecraft/profile/{{profileId}}")}}},
-        }});
-        let resolved =
-            super::resolve_profile(&super::NameOrId::Name("Notch".into()), &doc).unwrap();
-        assert_eq!(resolved.id, 0x069a_79f4_44e9_4726_a5be_fca9_0e38_aaf5);
-        assert_eq!(resolved.name, "Notch");
-        assert_eq!(
-            resolved.properties,
-            vec![(
-                "textures".to_owned(),
-                "dmFsdWU=".to_owned(),
-                Some("c2ln".to_owned())
-            )]
-        );
-        let by_id = super::resolve_profile(&super::NameOrId::Id(resolved.id), &doc).unwrap();
-        assert_eq!(by_id.name, "Notch");
-        // A discovery without `profiles`/`getByName` resolves no name.
-        let doc = serde_json::json!({"discovery": {
-            "session": {"endpoints": {"getProfileById": {"uri": format!("{base}/session/minecraft/profile/{{profileId}}")}}},
-        }});
-        assert!(super::resolve_profile(&super::NameOrId::Name("Notch".into()), &doc).is_none());
-    }
-
     /// A skin evicted from the atlas re-uploads (`again`), once per ask.
     #[test]
     fn evicted_skins_upload_again() {
@@ -974,35 +723,6 @@ mod tests {
         let bad = serde_json::json!({"properties": [{"name": "textures", "value": "not base64"}]});
         assert_eq!(super::profile_skin_url(&bad), None);
         assert_eq!(super::profile_skin_url(&serde_json::json!({})), None);
-    }
-
-    /// Textures come over plain HTTP too (a local server here; https is the
-    /// same request through rustls), and only 2xx answers count.
-    #[test]
-    fn http_get_reads_2xx_bodies() {
-        use std::io::{BufRead, BufReader, Write};
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-        let base = format!("http://{}", listener.local_addr().unwrap());
-        std::thread::spawn(move || {
-            for stream in listener.incoming().take(2) {
-                let mut stream = stream.unwrap();
-                let mut line = String::new();
-                let mut reader = BufReader::new(stream.try_clone().unwrap());
-                reader.read_line(&mut line).unwrap();
-                while reader.read_line(&mut String::new()).unwrap() > 2 {}
-                let reply: &[u8] = if line.contains("/texture/abc") {
-                    b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\nConnection: close\r\n\r\nPNG!"
-                } else {
-                    b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-                };
-                stream.write_all(reply).unwrap();
-            }
-        });
-        assert_eq!(
-            http_get(&format!("{base}/texture/abc")),
-            Some(b"PNG!".to_vec())
-        );
-        assert_eq!(http_get(&format!("{base}/texture/missing")), None);
     }
 
     use super::*;

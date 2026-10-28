@@ -19,7 +19,6 @@ impl Screen {
             | Self::Stats
             | Self::Advancements
             | Self::WorldOptions
-            | Self::Friends
             | Self::ServerLinks
             | Self::ConfirmLink
             | Self::DialogWarning
@@ -89,10 +88,8 @@ fn pause_buttons(
     v
 }
 
-/// The icon row: report bugs, feedback, friends, player reporting.
-/// `FRIENDS_ICON` (vanilla's `CommonButtons.friends`) opens Skyline's
-/// Play with Friends; the others stay inactive.
-const FRIENDS_ICON: usize = 2;
+/// The icon row: report bugs, feedback, friends, player reporting. All are
+/// online services, so all stay inactive.
 fn pause_icons(w: f32, h: f32, links: bool) -> [(f32, f32, &'static str); 4] {
     let x0 = ((w - 212.0) * 0.5).floor() + 60.0;
     let y = ((h - 166.0 - if links { 24.0 } else { 0.0 }) * 0.25).floor() + 98.0;
@@ -134,7 +131,6 @@ impl Game<'_> {
         self.remote.is_some() && self.integrated.is_none()
     }
     pub(super) fn draw_pause_menu(&mut self, batch: &mut HudBatch) {
-        let friends = self.friends_view().shown;
         let atlas = &self.gui.atlas;
         let (w, h) = (batch.width, batch.height);
         ui::menu_background(batch, atlas, 0.0, 0.0, w, h, true);
@@ -168,36 +164,12 @@ impl Game<'_> {
                 tooltip = Some(Text::translate("menu.custom_options.tooltip", &[]));
             }
         }
-        for (i, (x, y, sprite)) in pause_icons(w, h, links).into_iter().enumerate() {
-            let active = i == FRIENDS_ICON && friends;
-            let hover = ui::hovered(self.cursor, x, y, 20.0, 20.0);
-            // The icon has no label: name it for controller focus and the
-            // control socket's widget tree.
-            if i == FRIENDS_ICON {
-                horizon_client::widgets::record(
-                    horizon_client::friends_screen::TITLE,
-                    [x, y, 20.0, 20.0],
-                    active,
-                );
-            }
-            ui::button(
-                batch,
-                atlas,
-                x,
-                y,
-                20.0,
-                20.0,
-                &Text::empty(),
-                active,
-                active && hover,
-            );
+        for (x, y, sprite) in pause_icons(w, h, links) {
+            ui::button(batch, atlas, x, y, 20.0, 20.0, &Text::empty(), false, false);
             // SpriteIconButton.CenteredIcon: the 15x15 sprite at
             // x + width / 2 - 15 / 2 in integer pixels, untinted even
             // when the button is inactive.
             batch.sprite_scaled(atlas, sprite, x + 3.0, y + 3.0, 15.0, 15.0, u32::MAX);
-            if i == FRIENDS_ICON && hover {
-                tooltip = Some(Text::literal(horizon_client::friends_screen::TITLE));
-            }
         }
         // SpriteIconButton.withTootip: the label as a tooltip.
         if let Some(tip) = tooltip {
@@ -220,16 +192,10 @@ impl Game<'_> {
             (b.width, b.height)
         };
         let links = !self.server_links().is_empty();
-        let friends = pause_icons(w, h, links)[FRIENDS_ICON];
         let hit = pause_buttons(w, h, self.external_server(), links)
             .into_iter()
             .find(|b| b.5 && ui::hovered(self.cursor, b.0, b.1, b.2, 20.0))
-            .map(|b| b.4)
-            .or_else(|| {
-                (self.friends_view().shown
-                    && ui::hovered(self.cursor, friends.0, friends.1, 20.0, 20.0))
-                .then_some(10)
-            });
+            .map(|b| b.4);
         match hit {
             Some(0) => {
                 self.screen = Screen::Playing;
@@ -239,7 +205,6 @@ impl Game<'_> {
             Some(3) => self.open_stats(),
             Some(4) => self.open_advancements(true),
             Some(9) => self.open_world_options(),
-            Some(10) => self.screen = Screen::Friends,
             // DialogConnectionAccess.openDialog(Dialogs.SERVER_LINKS).
             Some(11) => {
                 self.links_ui.scroll = 0.0;

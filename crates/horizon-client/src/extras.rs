@@ -1,17 +1,12 @@
 //! Skyline's optional extras (minimap, lighting, inventory tools): their
 //! settings, kept in `skyline-extras.txt` next to `options.txt` so that file
 //! stays exactly vanilla's, and the logic behind them. Every extra is off by
-//! default; see `docs/extras.md`. Skyline's own switches outside the Extras page
-//! (No AI, Agent Control, Discord Rich Presence) are kept here too.
+//! default; see `docs/extras.md`.
 use std::{collections::VecDeque, fs, path::Path};
 
 pub const FILE: &str = "skyline-extras.txt";
 /// The name the options screen uses while the sort key waits for a key.
 pub const SORT_KEY: &str = "horizon.sort";
-
-/// The minimap's sizes in GUI pixels, and its zooms in blocks per pixel.
-pub const MINIMAP_SIZES: [(u8, &str); 3] = [(64, "Small"), (96, "Medium"), (128, "Large")];
-pub const MINIMAP_ZOOMS: [f32; 4] = [0.5, 1.0, 2.0, 4.0];
 
 /// A screen corner for an overlay.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -44,12 +39,6 @@ impl Corner {
             Corner::BottomRight => "Bottom right",
         }
     }
-    fn parse(s: &str, default: Corner) -> Corner {
-        Self::ALL
-            .into_iter()
-            .find(|c| c.name() == s)
-            .unwrap_or(default)
-    }
     pub fn top(self) -> bool {
         matches!(self, Corner::TopLeft | Corner::TopRight)
     }
@@ -72,29 +61,6 @@ pub struct Extras {
     pub zoom_smooth: bool,
     /// Divide mouse turning by the zoom.
     pub zoom_sensitivity: bool,
-    /// The FPS counter and keystrokes extras are official mods now
-    /// (`moved_extras`): their old settings stay here until the game has
-    /// installed the mod for a player who had one on.
-    pub fps: bool,
-    pub fps_corner: Corner,
-    /// Also show the minimum and 1% low.
-    pub fps_lows: bool,
-    pub keystrokes: bool,
-    pub keystrokes_corner: Corner,
-    /// Clicks per second under the mouse buttons.
-    pub keystrokes_cps: bool,
-    /// The official mods installed for the extras they replace, by mod id
-    /// (`movedToMods`): each is done once.
-    pub moved: Vec<String>,
-    pub minimap: bool,
-    pub minimap_corner: Corner,
-    /// Side in GUI pixels (`MINIMAP_SIZES`).
-    pub minimap_size: u8,
-    pub minimap_round: bool,
-    /// Blocks per pixel (`MINIMAP_ZOOMS`).
-    pub minimap_zoom: f32,
-    /// Turn with the player (forward up) instead of north up.
-    pub minimap_rotate: bool,
     /// Retry lost multiplayer connections (`reconnect`).
     pub auto_reconnect: bool,
     /// Mouse Tweaks-style drags in the inventory and storage containers.
@@ -105,13 +71,6 @@ pub struct Extras {
     pub sort: bool,
     /// A vanilla key name: sorts the part under the cursor.
     pub sort_key: String,
-    /// No AI: every AI feature hidden and off (`horizon_core::no_ai`; the launcher writes it too).
-    pub no_ai: bool,
-    /// Agents may control the game the player starts: it opens its control socket for
-    /// skyline-ctl and MCP clients (off by default; an agent's own launch always opens it).
-    pub agent_control: bool,
-    /// "Playing Skyline" on the player's Discord profile (`discord_presence`; on by default).
-    pub discord_presence: bool,
 }
 impl Default for Extras {
     fn default() -> Self {
@@ -123,27 +82,11 @@ impl Default for Extras {
             zoom_level: 4,
             zoom_smooth: true,
             zoom_sensitivity: true,
-            fps: false,
-            fps_corner: Corner::TopLeft,
-            fps_lows: false,
-            keystrokes: false,
-            keystrokes_corner: Corner::TopLeft,
-            keystrokes_cps: true,
-            moved: Vec::new(),
-            minimap: false,
-            minimap_corner: Corner::TopRight,
-            minimap_size: 96,
-            minimap_round: false,
-            minimap_zoom: 1.0,
-            minimap_rotate: false,
             auto_reconnect: false,
             mouse_tweaks: false,
             mouse_tweaks_wheel: true,
             sort: false,
             sort_key: "key.keyboard.unknown".into(),
-            no_ai: false,
-            agent_control: false,
-            discord_presence: true,
         }
     }
 }
@@ -180,44 +123,11 @@ impl Extras {
                 }
                 "zoomSmooth" => e.zoom_smooth = flag(e.zoom_smooth),
                 "zoomSensitivity" => e.zoom_sensitivity = flag(e.zoom_sensitivity),
-                "fps" => e.fps = flag(e.fps),
-                "fpsCorner" => e.fps_corner = Corner::parse(value, e.fps_corner),
-                "fpsLows" => e.fps_lows = flag(e.fps_lows),
-                "keystrokes" => e.keystrokes = flag(e.keystrokes),
-                "keystrokesCorner" => {
-                    e.keystrokes_corner = Corner::parse(value, e.keystrokes_corner)
-                }
-                "keystrokesCps" => e.keystrokes_cps = flag(e.keystrokes_cps),
-                "movedToMods" => {
-                    e.moved = value
-                        .split(',')
-                        .map(str::trim)
-                        .filter(|id| !id.is_empty())
-                        .map(str::to_owned)
-                        .collect()
-                }
-                "minimap" => e.minimap = flag(e.minimap),
-                "minimapCorner" => e.minimap_corner = Corner::parse(value, e.minimap_corner),
-                "minimapSize" => {
-                    if let Some(&(v, _)) = MINIMAP_SIZES.iter().find(|s| s.0.to_string() == value) {
-                        e.minimap_size = v;
-                    }
-                }
-                "minimapShape" => e.minimap_round = value == "round",
-                "minimapZoom" => {
-                    if let Some(&z) = MINIMAP_ZOOMS.iter().find(|z| z.to_string() == value) {
-                        e.minimap_zoom = z;
-                    }
-                }
-                "minimapRotate" => e.minimap_rotate = flag(e.minimap_rotate),
                 "autoReconnect" => e.auto_reconnect = flag(e.auto_reconnect),
                 "mouseTweaks" => e.mouse_tweaks = flag(e.mouse_tweaks),
                 "mouseTweaksWheel" => e.mouse_tweaks_wheel = flag(e.mouse_tweaks_wheel),
                 "sort" => e.sort = flag(e.sort),
                 "sortKey" if value.starts_with("key.") => e.sort_key = value.to_owned(),
-                horizon_core::no_ai::KEY => e.no_ai = flag(e.no_ai),
-                "agentControl" => e.agent_control = flag(e.agent_control),
-                "discordPresence" => e.discord_presence = flag(e.discord_presence),
                 _ => {}
             }
         }
@@ -225,7 +135,7 @@ impl Extras {
     }
     pub fn serialize(&self) -> String {
         format!(
-            "fullbright:{}\ndynamicLights:{}\nzoom:{}\nzoomKey:{}\nzoomLevel:{}\nzoomSmooth:{}\nzoomSensitivity:{}\nfps:{}\nfpsCorner:{}\nfpsLows:{}\nkeystrokes:{}\nkeystrokesCorner:{}\nkeystrokesCps:{}\nmovedToMods:{}\nminimap:{}\nminimapCorner:{}\nminimapSize:{}\nminimapShape:{}\nminimapZoom:{}\nminimapRotate:{}\nautoReconnect:{}\nmouseTweaks:{}\nmouseTweaksWheel:{}\nsort:{}\nsortKey:{}\n{}:{}\nagentControl:{}\ndiscordPresence:{}\n",
+            "fullbright:{}\ndynamicLights:{}\nzoom:{}\nzoomKey:{}\nzoomLevel:{}\nzoomSmooth:{}\nzoomSensitivity:{}\nautoReconnect:{}\nmouseTweaks:{}\nmouseTweaksWheel:{}\nsort:{}\nsortKey:{}\n",
             bool_text(self.fullbright),
             bool_text(self.dynamic_lights),
             bool_text(self.zoom),
@@ -233,32 +143,11 @@ impl Extras {
             self.zoom_level,
             bool_text(self.zoom_smooth),
             bool_text(self.zoom_sensitivity),
-            bool_text(self.fps),
-            self.fps_corner.name(),
-            bool_text(self.fps_lows),
-            bool_text(self.keystrokes),
-            self.keystrokes_corner.name(),
-            bool_text(self.keystrokes_cps),
-            self.moved.join(","),
-            bool_text(self.minimap),
-            self.minimap_corner.name(),
-            self.minimap_size,
-            if self.minimap_round {
-                "round"
-            } else {
-                "square"
-            },
-            self.minimap_zoom,
-            bool_text(self.minimap_rotate),
             bool_text(self.auto_reconnect),
             bool_text(self.mouse_tweaks),
             bool_text(self.mouse_tweaks_wheel),
             bool_text(self.sort),
             self.sort_key,
-            horizon_core::no_ai::KEY,
-            bool_text(self.no_ai),
-            bool_text(self.agent_control),
-            bool_text(self.discord_presence),
         )
     }
     /// Binds the extra key `name` (`SORT_KEY`); false for
@@ -383,11 +272,6 @@ pub enum Item {
     MouseTweaksWheel,
     Sort,
     SortKey,
-    /// Not on the Extras page: Skyline Settings shows No AI, its AI Agent page Agent Control.
-    NoAi,
-    AgentControl,
-    /// On the Skyline Settings page.
-    DiscordPresence,
 }
 /// The Extras page: headers and items.
 pub fn rows() -> Vec<Result<Item, &'static str>> {
@@ -415,9 +299,6 @@ impl Item {
             Item::MouseTweaksWheel => "Scroll wheel moves items",
             Item::Sort => "Sort buttons",
             Item::SortKey => "Sort key",
-            Item::NoAi => "No AI",
-            Item::AgentControl => "Agent Control",
-            Item::DiscordPresence => "Discord Rich Presence",
         }
     }
     /// The switch this setting belongs to: it does nothing while that is off.
@@ -426,8 +307,7 @@ impl Item {
         Some(match self {
             MouseTweaksWheel => MouseTweaks,
             SortKey => Sort,
-            Fullbright | DynamicLights | MouseTweaks | Sort | AutoReconnect | NoAi
-            | AgentControl | DiscordPresence => {
+            Fullbright | DynamicLights | MouseTweaks | Sort | AutoReconnect => {
                 return None;
             }
         })
@@ -454,15 +334,6 @@ impl Item {
             Item::SortKey => {
                 "Sorts the part under the cursor. Click, then press a key; Escape unbinds it."
             }
-            Item::NoAi => {
-                "Hides and turns off every AI feature: agent control, skyline-ctl and the MCP servers. The launcher's switch too."
-            }
-            Item::DiscordPresence => {
-                "Shows Playing Skyline on your Discord profile while Discord runs: menus, single player or multiplayer, the dimension and the time played. Never a world's name or a server's address."
-            }
-            Item::AgentControl => {
-                "Your own AI agent can play this game through skyline-ctl or an MCP client, on this computer only."
-            }
         }
     }
     /// The frame-time cost the main switch of an extra shows.
@@ -484,10 +355,7 @@ impl Item {
             Item::MouseTweaks => e.mouse_tweaks,
             Item::MouseTweaksWheel => e.mouse_tweaks_wheel,
             Item::Sort => e.sort,
-            Item::NoAi => e.no_ai,
-            Item::AgentControl => e.agent_control,
-            Item::DiscordPresence => e.discord_presence,
-            _ => return None,
+            Item::SortKey => return None,
         })
     }
     /// The value of the other items, as their button shows it.
@@ -510,9 +378,6 @@ impl Item {
             Item::MouseTweaks => e.mouse_tweaks = !e.mouse_tweaks,
             Item::MouseTweaksWheel => e.mouse_tweaks_wheel = !e.mouse_tweaks_wheel,
             Item::Sort => e.sort = !e.sort,
-            Item::NoAi => e.no_ai = !e.no_ai,
-            Item::AgentControl => e.agent_control = !e.agent_control,
-            Item::DiscordPresence => e.discord_presence = !e.discord_presence,
             Item::SortKey => {}
         }
     }
@@ -533,9 +398,8 @@ mod tests {
     fn everything_is_off_by_default_and_round_trips() {
         let d = Extras::default();
         assert!(!d.fullbright && !d.dynamic_lights);
-        assert!(!d.zoom && !d.fps && !d.keystrokes && !d.minimap && !d.auto_reconnect);
+        assert!(!d.zoom && !d.auto_reconnect);
         assert!(!d.mouse_tweaks && !d.sort);
-        assert!(d.discord_presence);
         assert_eq!(Extras::parse(""), d);
         assert_eq!(Extras::parse(&d.serialize()), d);
         let mut e = d.clone();
@@ -547,32 +411,25 @@ mod tests {
         e.zoom = true;
         e.zoom_key = "key.keyboard.c".into();
         e.zoom_level = 6;
-        e.fps_corner = Corner::BottomRight;
-        e.keystrokes = true;
-        e.keystrokes_cps = false;
-        e.moved = vec!["fps_overlay".into(), "keystrokes".into()];
-        e.minimap = true;
-        e.minimap_size = 128;
-        e.minimap_round = true;
-        e.minimap_zoom = 0.5;
-        e.minimap_rotate = true;
-        e.minimap_corner = Corner::BottomLeft;
         e.auto_reconnect = true;
         e.mouse_tweaks = true;
         e.mouse_tweaks_wheel = false;
         e.sort = true;
         e.sort_key = "key.keyboard.r".into();
-        e.discord_presence = false;
         assert_eq!(Extras::parse(&e.serialize()), e);
     }
 
     #[test]
     fn bad_lines_keep_defaults() {
-        let e = Extras::parse("zoom:maybe\nzoomLevel:99\nfpsCorner:middle\nzoomKey:z\nnoise");
+        let e = Extras::parse("zoom:maybe\nzoomLevel:99\nzoomKey:z\nnoise");
         assert!(!e.zoom);
         assert_eq!(e.zoom_level, 10);
-        assert_eq!(e.fps_corner, Corner::TopLeft);
         assert_eq!(e.zoom_key, "key.keyboard.z");
+        // Settings of removed extras (old files) are dropped.
+        assert_eq!(
+            Extras::parse("fps:true\nminimap:true\ndiscordPresence:false\nnoAi:true"),
+            Extras::default()
+        );
     }
 
     #[test]
@@ -655,11 +512,6 @@ mod tests {
         let mut e = Extras::default();
         Item::Sort.cycle(&mut e, true);
         assert_eq!(Item::Sort.value(&e), "On");
-        // The minimap's old keys still parse, for the move to its mod.
-        assert_eq!(
-            Extras::parse("minimapSize:7\nminimapZoom:3").minimap_zoom,
-            1.0
-        );
         for item in rows().into_iter().flatten() {
             assert!(!item.caption().is_empty() && !item.description().is_empty());
         }

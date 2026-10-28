@@ -13,7 +13,7 @@ use super::{
 use horizon_protocol::{
     PROTOCOL_VERSION,
     connection::{ConnReader, ConnWriter, Connection},
-    crypto::{offline_uuid, server_hash, uuid_string},
+    crypto::{offline_uuid, uuid_string},
     packets::{
         Empty,
         configuration::{self as cfg, ClientInformation, KnownPack},
@@ -574,15 +574,15 @@ fn lost(shared: &Shared, user: &str, text: &str) {
 static AUTHENTICATORS: AtomicU32 = AtomicU32::new(0);
 
 /// ServerLoginPacketListenerImpl.handleKey and the User Authenticator
-/// thread: check the client's answer to the encryption request, encrypt the
-/// connection, and ask the session service whether the player joined with
-/// this server's hash. The profile, or the text of the refusal.
+/// thread: check the client's answer to the encryption request and encrypt
+/// the connection. Vanilla then asks Mojang's session service whether the
+/// player joined with this server's hash; Skyline never contacts it, so the
+/// player is refused as when the service is down. The text of the refusal.
 fn authenticate(
     c: &mut Connection,
     shared: &Shared,
     online: &super::OnlineMode,
     name: &str,
-    address: std::net::SocketAddr,
     user: &str,
 ) -> Result<Result<(u128, Vec<login::Property>), String>, String> {
     let e = |e: horizon_protocol::Error| e.to_string();
@@ -614,7 +614,6 @@ fn authenticate(
         .ok()
         .and_then(|s| s.try_into().ok())
         .ok_or_else(protocol_error)?;
-    let digest = server_hash("", &secret, &online.public_der);
     c.enable_encryption(&secret);
     let thread = format!(
         "User Authenticator #{}",
@@ -625,44 +624,18 @@ fn authenticate(
             (log.write)(&thread, level, line);
         }
     };
-    let ip = online.prevent_proxy.then(|| address.ip());
-    match crate::auth::has_joined(name, &digest, ip) {
-        Ok(Some(profile)) => {
-            log(
-                "INFO",
-                &format!("UUID of player {name} is {}", uuid_string(profile.uuid)),
-            );
-            Ok(Ok((profile.uuid, profile.properties)))
-        }
-        Ok(None) => {
-            let text = refuse(
-                c,
-                shared,
-                &thread,
-                user,
-                &translatable("multiplayer.disconnect.unverified_username", &[]),
-            );
-            log(
-                "ERROR",
-                &format!("Username '{name}' tried to join with an invalid session"),
-            );
-            Ok(Err(text))
-        }
-        Err(_) => {
-            let text = refuse(
-                c,
-                shared,
-                &thread,
-                user,
-                &translatable("multiplayer.disconnect.authservers_down", &[]),
-            );
-            log(
-                "ERROR",
-                "Couldn't verify username because servers are unavailable",
-            );
-            Ok(Err(text))
-        }
-    }
+    let text = refuse(
+        c,
+        shared,
+        &thread,
+        user,
+        &translatable("multiplayer.disconnect.authservers_down", &[]),
+    );
+    log(
+        "ERROR",
+        &format!("Couldn't verify username {name}: Skyline never contacts the session servers"),
+    );
+    Ok(Err(text))
 }
 
 fn serve_login(
@@ -692,7 +665,7 @@ fn serve_login(
     // handleHello: online mode authenticates first; offline mode derives the
     // profile from the name.
     let (uuid, properties) = match &shared.config.online {
-        Some(online) => match authenticate(&mut c, shared, online, &hello.name, address, &user) {
+        Some(online) => match authenticate(&mut c, shared, online, &hello.name, &user) {
             Ok(Ok(profile)) => profile,
             Ok(Err(refused)) => {
                 lost(shared, &user, &refused);

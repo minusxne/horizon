@@ -539,7 +539,12 @@ impl Game<'_> {
                 }
             ),
         );
-        if online.is_none() {
+        if online.is_some() {
+            log(
+                "WARN",
+                "online-mode=true checks players with Mojang's session servers, which Skyline never contacts: every player will be refused. Set \"online-mode\" to \"false\" in the server.properties file.",
+            );
+        } else {
             log("WARN", "**** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!");
             log(
                 "WARN",

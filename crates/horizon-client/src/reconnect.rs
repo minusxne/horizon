@@ -183,7 +183,7 @@ mod tests {
             &failed("Multiplayer is disabled. Please check your Microsoft account settings."),
             false
         ));
-        assert!(!allowed(crate::net::NOT_SIGNED_IN, false));
+        assert!(!allowed(crate::net::ONLINE_MODE, true));
         // Unreachable session servers are worth another try.
         assert!(allowed(
             &failed("The authentication servers are currently not reachable. Please try again."),

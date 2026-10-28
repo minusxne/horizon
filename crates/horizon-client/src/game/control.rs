@@ -121,7 +121,6 @@ impl Game<'_> {
             self.answer(request, event_loop);
         }
         while let Some(request) = self.control.as_ref().and_then(|c| c.try_recv()) {
-            self.agent_command_seen();
             self.answer(request, event_loop);
             if self.pending_save.is_some() {
                 break;
@@ -130,11 +129,18 @@ impl Game<'_> {
         if self.control.is_some() {
             self.watch_events();
         }
-        if self.screen == Screen::Options
-            && self.ui.options.page() == horizon_client::options_ui::Page::Agent
-        {
-            self.ui.options.agent_status = self.agent_status_lines();
+    }
+
+    /// At startup: the control socket skyline-ctl talks to, opened only when the command line
+    /// asks for it (`--control`, `--control-socket`). Failing to listen is an error.
+    pub(super) fn start_control(&mut self) -> Result<()> {
+        if let Some(path) = &self.options.control {
+            let server = horizon_client::control::Server::start(path)
+                .map_err(|e| format!("control socket {}: {e}", path.display()))?;
+            log::info!("Skyline: control socket {}", server.path().display());
+            self.control = Some(server);
         }
+        Ok(())
     }
 
     fn answer(&mut self, request: horizon_client::control::Request, event_loop: &ActiveEventLoop) {
@@ -184,9 +190,6 @@ impl Game<'_> {
         if let Some(value) = self.lan_control(&words)? {
             return Ok(Some(value));
         }
-        if let Some(value) = self.friends_control(&words)? {
-            return Ok(Some(value));
-        }
         match self.agent_command(&words, line, reply, event_loop)? {
             super::agent::Handled::Reply(value) => return Ok(Some(value)),
             super::agent::Handled::Deferred => return Ok(None),
@@ -198,7 +201,6 @@ impl Game<'_> {
                 .chain(super::station_control::HELP)
                 .chain(super::blockctl::HELP)
                 .chain(super::lan::HELP)
-                .chain(super::friends::HELP)
                 .chain(super::render_control::HELP)
                 .chain(super::sculk::HELP)
                 .chain(super::agent::HELP)
@@ -678,7 +680,6 @@ impl Game<'_> {
                     "extras" => Page::Extras,
                     "credits" => Page::Credits,
                     "horizon" => Page::Horizon,
-                    "agent" => Page::Agent,
                     other => return Err(format!("unknown options page {other}").into()),
                 };
                 if self.screen == Screen::Playing && self.title.is_none() {
@@ -877,7 +878,6 @@ impl Game<'_> {
             Screen::Stats => "stats",
             Screen::Advancements => "advancements",
             Screen::WorldOptions => "world-options",
-            Screen::Friends => "friends",
             Screen::ServerLinks => "server-links",
             Screen::ConfirmLink => "confirm-link",
             Screen::DialogWarning => "dialog-warning",
@@ -1058,7 +1058,7 @@ impl Game<'_> {
             "streaming": self.streaming.stages().into_iter().map(|(k, v)| (k.to_string(), v.into())).collect::<serde_json::Map<_, _>>(),
             "dirty_light": self.world.dirty_light.len(),
             "renderer": renderer,
-            "display": self.window.as_deref().and_then(horizon_client::telemetry::monitor).map(|m| json!({
+            "display": self.window.as_deref().and_then(monitor).map(|m| json!({
                 "width": m.size().width,
                 "height": m.size().height,
                 "scale": m.scale_factor(),
@@ -1190,4 +1190,17 @@ fn key_code(name: &str) -> Option<KeyCode> {
         "down" => KeyCode::ArrowDown,
         _ => return None,
     })
+}
+
+/// The screen `window` is on, else the primary one, else the only one: right after the window
+/// is made, Wayland doesn't say yet which screen it is on.
+fn monitor(window: &winit::window::Window) -> Option<winit::monitor::MonitorHandle> {
+    let only = || {
+        let mut all = window.available_monitors();
+        all.next().filter(|_| all.next().is_none())
+    };
+    window
+        .current_monitor()
+        .or_else(|| window.primary_monitor())
+        .or_else(only)
 }

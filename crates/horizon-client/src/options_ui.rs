@@ -848,8 +848,6 @@ pub enum Page {
     /// Skyline Settings: every page Skyline adds, as a mod's settings
     /// screen hangs off vanilla's Options.
     Horizon,
-    /// AI Agent: agent control on or off, whether an agent is connected, the connection details.
-    Agent,
 }
 #[derive(Clone, Debug, PartialEq)]
 enum Act {
@@ -875,7 +873,6 @@ enum Act {
     OpenModFolder,
     /// Credits & Attribution's Credits button (WinScreen without the poem).
     Credits,
-    CopyAgentDetails,
 }
 enum WKind {
     Button {
@@ -933,8 +930,6 @@ pub enum Event {
     ModSettings(usize),
     /// Roll the credits (`CreditsAndAttributionScreen.openCreditsScreen`).
     Credits,
-    /// Copy how an agent connects (the AI Agent page).
-    CopyAgentDetails,
 }
 /// `SliderableValueSet.applyValueImmediately`: these apply 600 ms after
 /// the last change (`OptionInstanceSliderButton.delayedApplyAt`).
@@ -986,8 +981,6 @@ pub struct OptionsUi {
     /// Scroll the selected language into the middle on the next layout.
     center_language: bool,
     pub graphics: crate::graphics_ui::GraphicsUi,
-    /// The AI Agent page's status lines (set by the game while it shows).
-    pub agent_status: Vec<String>,
 }
 impl Default for OptionsUi {
     fn default() -> Self {
@@ -1016,7 +1009,6 @@ impl Default for OptionsUi {
             in_world: false,
             center_language: false,
             graphics: Default::default(),
-            agent_status: Vec::new(),
         }
     }
 }
@@ -1072,7 +1064,6 @@ fn horizon_page_tooltip(page: Page) -> Option<&'static str> {
         Page::Extras => {
             "Optional additions, all off by default: the game stays vanilla until you turn one on."
         }
-        Page::Agent => "Let your own AI agent play: skyline-ctl and MCP clients on this computer.",
         Page::ShaderPacks => {
             "Shader packs from the shaderpacks folder: Skyline's own and those in the shaders/ format. One runs at a time."
         }
@@ -1087,8 +1078,6 @@ enum Row {
     Big(Opt),
     Pair(Opt, Option<Opt>),
     Header(&'static str),
-    /// A line of grey text (a path).
-    Note(String),
     Buttons(Widget, Option<Widget>),
 }
 fn pairs(opts: &[Opt]) -> Vec<Row> {
@@ -1097,11 +1086,6 @@ fn pairs(opts: &[Opt]) -> Vec<Row> {
         .collect()
 }
 impl OptionsUi {
-    /// A switch of `skyline-extras.txt` as the Extras page draws it: "Caption: On".
-    fn extra_button(&self, s: &Settings, item: crate::extras::Item) -> Widget {
-        let label = format!("{}: {}", item.caption(), item.value(&s.extras));
-        button(0.0, 0.0, 150.0, Text::literal(label), Act::Extra(item))
-    }
     fn settings_search_active(&self) -> bool {
         self.settings_search.focused
             && matches!(self.page(), Page::Video | Page::Controls | Page::KeyBinds)
@@ -1174,7 +1158,6 @@ impl OptionsUi {
             Page::Extras => "Skyline Extras",
             Page::Credits => "credits_and_attribution.screen.title",
             Page::Horizon => "Skyline Settings",
-            Page::Agent => "AI Agent",
         }
     }
     fn scrollbar_x(&self, width: f32) -> f32 {
@@ -1291,37 +1274,7 @@ impl OptionsUi {
                         open("Extras...", Page::Extras),
                         Some(open("Mods...", Page::Mods)),
                     ),
-                    // No AI hides the AI Agent page and everything AI.
-                    Row::Buttons(
-                        self.extra_button(s, crate::extras::Item::DiscordPresence),
-                        Some(if s.extras.no_ai {
-                            self.extra_button(s, crate::extras::Item::NoAi)
-                        } else {
-                            open("AI Agent...", Page::Agent)
-                        }),
-                    ),
                 ]
-                .into_iter()
-                .chain(
-                    (!s.extras.no_ai).then(|| {
-                        Row::Buttons(self.extra_button(s, crate::extras::Item::NoAi), None)
-                    }),
-                )
-                .collect()
-            }
-            Page::Agent => {
-                let mut rows = vec![Row::Buttons(
-                    self.extra_button(s, crate::extras::Item::AgentControl),
-                    Some(button(
-                        0.0,
-                        0.0,
-                        150.0,
-                        Text::literal("Copy Connection Details"),
-                        Act::CopyAgentDetails,
-                    )),
-                )];
-                rows.extend(self.agent_status.iter().cloned().map(Row::Note));
-                rows
             }
             Page::Video => {
                 // Skyline's graphics screens, Simple and Advanced.
@@ -1990,21 +1943,6 @@ impl OptionsUi {
                             });
                             y += padding + 18.0;
                         }
-                        Row::Note(text) => {
-                            out.push(Widget {
-                                x: 0.0,
-                                y: y + 4.0,
-                                w,
-                                h: 9.0,
-                                kind: WKind::Text {
-                                    text: Text::literal(text),
-                                    color: 0xFFA0A0A0,
-                                    centered: true,
-                                },
-                                list: false,
-                            });
-                            y += 16.0;
-                        }
                         Row::Big(opt) => {
                             out.push(option_widget(s, opt, cx - 155.0, y + 2.0, 310.0));
                             y += 25.0;
@@ -2571,7 +2509,6 @@ impl OptionsUi {
                         }
                         Act::OpenShaderPackFolder => events.push(Event::OpenShaderPackFolder),
                         Act::Credits => events.push(Event::Credits),
-                        Act::CopyAgentDetails => events.push(Event::CopyAgentDetails),
                         Act::None => {}
                     }
                 }
@@ -4160,33 +4097,8 @@ mod tests {
                 Page::Controller,
                 Page::Extras,
                 Page::Mods,
-                Page::Agent,
             ]
         );
-        // No AI hides the AI Agent page.
-        let mut no_ai = Settings::default();
-        no_ai.extras.no_ai = true;
-        let (widgets, _, _, _) = ui.layout(&no_ai, 427.0, 240.0);
-        assert!(!widgets.iter().any(|w| matches!(
-            &w.kind,
-            WKind::Button {
-                act: Act::Push(Page::Agent),
-                ..
-            }
-        )));
-        // The AI Agent page: the switch, Copy and the status the game sets.
-        ui.push(Page::Agent);
-        ui.agent_status = vec!["Waiting for an agent.".into()];
-        let (widgets, _, _, _) = ui.layout(&s, 427.0, 240.0);
-        let acts: Vec<&Act> = widgets
-            .iter()
-            .filter_map(|w| match &w.kind {
-                WKind::Button { act, .. } => Some(act),
-                _ => None,
-            })
-            .collect();
-        assert!(acts.contains(&&Act::Extra(crate::extras::Item::AgentControl)));
-        assert!(acts.contains(&&Act::CopyAgentDetails));
         // Vanilla's own pages keep the Skyline pages they had.
         ui.stack = vec![Page::Main, Page::Video];
         let video = pushes(&mut ui);

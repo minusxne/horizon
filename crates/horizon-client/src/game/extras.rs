@@ -50,7 +50,7 @@ impl Game<'_> {
     }
     /// Once per frame: the frame's time, and keys let go behind screens.
     pub(super) fn extras_frame(&mut self, elapsed: Duration) {
-        // Under agent control the window may lack focus without pausing.
+        // Under skyline-ctl control the window may lack focus without pausing.
         let focused = self.focused || self.control.is_some();
         let playing = self.screen == Screen::Playing && self.title.is_none() && focused;
         if !playing {
@@ -112,16 +112,13 @@ impl Game<'_> {
         {
             log::info!(
                 "Skyline: reconnecting to {} in {} s",
-                horizon_client::net::shown_address(&retry.address),
+                retry.address,
                 retry.seconds_left(std::time::Instant::now())
             );
             *slot = Some(retry);
         }
     }
-    /// Auto-reconnect: connect again once the countdown is over. An
-    /// online-mode server gets the signed-in account again: `connect_server`
-    /// takes it from `auth::current()`, held in memory for the whole run
-    /// (the launcher's session file is gone after the first read).
+    /// Auto-reconnect: connect again once the countdown is over.
     pub(super) fn extras_retry(&mut self) -> horizon_client::Result<()> {
         if let Some(retry) = self.title.as_mut().and_then(|t| t.due_retry()) {
             self.connect_server(&retry.address, &retry.name)?;

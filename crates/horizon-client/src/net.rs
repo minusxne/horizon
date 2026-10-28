@@ -3,19 +3,18 @@
 //! game thread. Keep-alives are answered on the network thread; pings wait for
 //! the game thread, like ClientCommonPacketListenerImpl.handlePing, so a pong
 //! cannot overtake an earlier world update or teleport acknowledgement.
-//! Online-mode servers need the Microsoft account the launcher signed in
-//! (crate::auth): the login joins the server through the session service and
-//! encrypts the connection (ClientHandshakePacketListenerImpl.handleHello).
-use crate::auth::AuthSession;
+//! Skyline plays with offline names only: an online-mode server, which needs
+//! a Microsoft account, refuses the login (`ONLINE_MODE`). Resource packs a
+//! server offers are declined: Skyline downloads nothing.
 use horizon_protocol::{
     PROTOCOL_VERSION,
     connection::{ConnReader, ConnWriter, Connection, Counters},
-    crypto::{generate_secret, offline_uuid, server_hash},
+    crypto::{generate_secret, offline_uuid},
     packets::{Empty, configuration as cfg, handshake, login, play},
     registry::Dynamic,
     rsa::RsaPublicKey,
     servers::parse_address,
-    text::{Language, plain, translatable},
+    text::{Language, plain},
 };
 use std::{
     collections::HashMap,
@@ -53,10 +52,6 @@ pub enum Event {
     DecodeError(String),
     /// The server sent us back to configuration and finished it again.
     Reconfigured(Arc<Dynamic>),
-    /// ClientboundResourcePackPushPacket, in configuration or in play.
-    PackPush(cfg::ResourcePackPush),
-    /// ClientboundResourcePackPopPacket: one pack, or every pack.
-    PackPop(Option<u128>),
     /// `show_dialog` in configuration: the dialog itself.
     ShowDialog(horizon_world::nbt::Tag),
     /// `clear_dialog` in configuration.
@@ -96,35 +91,20 @@ pub struct Session {
     debug: bool,
 }
 impl Session {
-    /// Start connecting in the background, as `auth`'s account when there is one.
-    pub fn connect(
-        address: &str,
-        name: &str,
-        auth: Option<Arc<AuthSession>>,
-        view_distance: i8,
-        lang: Arc<Language>,
-    ) -> Self {
-        Self::start(address, name, auth, view_distance, lang, None, None)
+    /// Start connecting in the background, under the offline name `name`.
+    pub fn connect(address: &str, name: &str, view_distance: i8, lang: Arc<Language>) -> Self {
+        Self::start(address, name, view_distance, lang, None, None)
     }
     /// `ConnectScreen.startConnecting` for a `transfer`: the cookies the
     /// server stored carry to the new connection (`TransferState`).
     pub fn connect_transferred(
         address: &str,
         name: &str,
-        auth: Option<Arc<AuthSession>>,
         view_distance: i8,
         lang: Arc<Language>,
         cookies: Cookies,
     ) -> Self {
-        Self::start(
-            address,
-            name,
-            auth,
-            view_distance,
-            lang,
-            None,
-            Some(cookies),
-        )
+        Self::start(address, name, view_distance, lang, None, Some(cookies))
     }
     /// Join an integrated server through memory (`Connection.connectToLocalServer`).
     pub fn connect_local(
@@ -133,12 +113,11 @@ impl Session {
         view_distance: i8,
         lang: Arc<Language>,
     ) -> Self {
-        Self::start("local", name, None, view_distance, lang, Some(pipe), None)
+        Self::start("local", name, view_distance, lang, Some(pipe), None)
     }
     fn start(
         address: &str,
         name: &str,
-        auth: Option<Arc<AuthSession>>,
         view_distance: i8,
         lang: Arc<Language>,
         local: Option<horizon_protocol::connection::Pipe>,
@@ -163,7 +142,6 @@ impl Session {
                     local,
                     &address_owned,
                     &name_owned,
-                    auth.as_deref(),
                     view_distance,
                     &lang,
                     &send,
@@ -228,21 +206,6 @@ impl Session {
             w.shutdown();
         }
     }
-    /// ServerboundResourcePackPacket, in whichever phase the connection is.
-    pub fn send_pack_status(&self, id: u128, action: i32) {
-        let status = cfg::ResourcePackResponse { id, action };
-        let mut writer = self.writer.lock().unwrap();
-        let body = if self.configuring.load(Ordering::Relaxed) {
-            cfg::Serverbound::ResourcePack(status).encode()
-        } else {
-            play::Serverbound::ResourcePack(status).encode()
-        };
-        if let Some(w) = writer.as_mut()
-            && w.send(&body).is_err()
-        {
-            w.shutdown();
-        }
-    }
     /// ServerboundCustomClickActionPacket (a dialog's answer), in whichever
     /// phase the connection is.
     pub fn send_custom_click(&self, id: &str, payload: Option<horizon_world::nbt::Tag>) {
@@ -277,74 +240,16 @@ impl Drop for Session {
     }
 }
 
-/// An address of the form `friend:K7QM-3XPD` joins a friend's world through
-/// its invite code (horizon-friends): the session goes through a tunnel the
-/// client reaches on a loopback port, so everything after is a plain join.
-pub const FRIEND: &str = horizon_friends::ADDRESS_PREFIX;
-
-/// An address as players and logs see it: a friend's invite code stays
-/// out of it (its secret is in there).
-pub fn shown_address(address: &str) -> String {
-    match address.strip_prefix(FRIEND) {
-        Some(code) => match horizon_friends::invite::parse(code) {
-            Some(horizon_friends::invite::Parsed::Short(c)) => {
-                format!("Friend's world ({}-****)", c.nameplate)
-            }
-            _ => "Friend's world".to_owned(),
-        },
-        None => address.to_owned(),
-    }
-}
-
-/// The relay the player set (`friendsRelay` in skyline.txt, beside
-/// options.txt), else `SKYLINE_RELAY_URL`. None by default.
-pub fn friends_relay_setting() -> Option<String> {
-    let dir = std::env::current_dir().ok()?;
-    crate::ui_theme::preference(&dir, "friendsRelay")
-        .filter(|r| !r.is_empty())
-        .or_else(horizon_friends::relay_url)
-}
-/// Remember the relay typed on Join a friend (empty forgets it).
-pub fn save_friends_relay(relay: &str) {
-    if let Ok(dir) = std::env::current_dir() {
-        crate::ui_theme::set_preference(&dir, "friendsRelay", (!relay.is_empty()).then_some(relay));
-    }
-}
-
-/// Reach the friend's world from the code (directly, or through a relay)
-/// and open the tunnel: the loopback address to connect to.
-fn join_friend(code: &str, send: &Sender<Event>) -> Result<(String, u16), String> {
-    use horizon_friends::{
-        PathMode,
-        guest::{self, GuestConfig},
-    };
-    status(send, "Finding your friend's world...");
-    let tunnel = guest::join(&GuestConfig {
-        code: code.to_owned(),
-        relay: friends_relay_setting(),
-        protocol: PROTOCOL_VERSION,
-        game: horizon_protocol::GAME_VERSION.to_owned(),
-        path: PathMode::from_env(),
-    })
-    .map_err(|e| e.to_string())?;
-    status(
-        send,
-        if tunnel.direct {
-            "Connected straight to your friend..."
-        } else {
-            "Connected to your friend through the relay..."
-        },
-    );
-    let (port, _) = tunnel.serve_loopback().map_err(|e| e.to_string())?;
-    Ok(("127.0.0.1".to_owned(), port))
-}
-
 fn status(send: &Sender<Event>, text: &str) {
     let _ = send.send(Event::Status(text.to_owned()));
 }
 
-/// Shown when an online-mode server asks a client without an account to authenticate.
-pub const NOT_SIGNED_IN: &str = "This server is in online mode. Sign in with your Microsoft account in the Skyline launcher to join it.";
+/// Shown when an online-mode server asks the client to authenticate: that needs a Microsoft
+/// account, and Skyline plays with offline names only.
+pub const ONLINE_MODE: &str = "This server is in online mode, which needs a Microsoft account. Skyline plays with offline names only.";
+
+/// `ServerboundResourcePackPacket.Action.DECLINED`.
+const PACK_DECLINED: i32 = 1;
 
 /// A translation, or the key itself (Language.getOrDefault).
 fn tr(lang: &Language, key: &str) -> String {
@@ -357,7 +262,6 @@ fn run(
     local: Option<horizon_protocol::connection::Pipe>,
     address: &str,
     name: &str,
-    auth: Option<&AuthSession>,
     view_distance: i8,
     lang: &Language,
     send: &Sender<Event>,
@@ -370,23 +274,12 @@ fn run(
     let (host, port, mut c) = if let Some(pipe) = local {
         (address.to_owned(), 0, Connection::local(pipe))
     } else {
-        let (host, port) = match address.strip_prefix(FRIEND) {
-            Some(code) => join_friend(code, send)?,
-            None => {
-                let Some(target) = parse_address(address) else {
-                    return Ok(format!("Invalid server address: {address}"));
-                };
-                status(send, "Connecting to the server...");
-                target
-            }
+        let Some((host, port)) = parse_address(address) else {
+            return Ok(format!("Invalid server address: {address}"));
         };
-        let c = if address.starts_with(FRIEND) {
-            // The friends relay supplies a concrete endpoint, not a Minecraft hostname.
-            Connection::connect(&host, port, Duration::from_secs(10))
-        } else {
-            Connection::connect_server(&host, port, Duration::from_secs(10))
-        }
-        .map_err(|e| e.to_string())?;
+        status(send, "Connecting to the server...");
+        let c = Connection::connect_server(&host, port, Duration::from_secs(10))
+            .map_err(|e| e.to_string())?;
         (host, port, c)
     };
     *shared_counters.lock().unwrap() = Some(c.reader.counters.clone());
@@ -405,8 +298,8 @@ fn run(
         .encode(),
     )
     .map_err(e)?;
-    // Vanilla's login sends the account's profile id, or the offline one.
-    let uuid = auth.map_or_else(|| offline_uuid(name), |a| a.uuid);
+    // Vanilla's login sends the profile id: here always the offline one.
+    let uuid = offline_uuid(name);
     c.send(
         &login::Serverbound::Hello(login::ServerHello {
             name: name.to_owned(),
@@ -431,24 +324,14 @@ fn run(
                 return Ok(reason);
             }
             login::Clientbound::Hello(hello) => {
+                // Joining an online-mode server needs the session service.
+                if hello.should_authenticate {
+                    return Ok(ONLINE_MODE.to_owned());
+                }
                 status(send, &tr(lang, "connect.authorizing"));
                 let key = RsaPublicKey::from_der(&hello.public_key)
                     .map_err(|err| format!("Protocol error: {err}"))?;
                 let secret = generate_secret().map_err(e)?;
-                if hello.should_authenticate {
-                    let account = auth.ok_or_else(|| NOT_SIGNED_IN.to_owned())?;
-                    let hash = server_hash(&hello.server_id, &secret, &hello.public_key);
-                    if let Err(err) = crate::auth::join_server(account, &hash) {
-                        let reason = match err.reason() {
-                            Ok(key) => tr(lang, key),
-                            Err(message) => message.to_owned(),
-                        };
-                        return Err(plain(
-                            &translatable("disconnect.loginFailedInfo", &[&reason]),
-                            lang,
-                        ));
-                    }
-                }
                 status(send, &tr(lang, "connect.encrypting"));
                 c.send(
                     &login::Serverbound::Key(login::Key {
@@ -541,12 +424,15 @@ fn receive_play(
         match packet {
             play::Clientbound::KeepAlive(k) => reply(play::Serverbound::KeepAlive(k)),
             play::Clientbound::BundleDelimiter(_) => {}
+            // Skyline downloads nothing: a server's resource pack is declined
+            // (a server that requires it disconnects the player).
             play::Clientbound::ResourcePackPush(p) => {
-                let _ = send.send(Event::PackPush(p));
+                reply(play::Serverbound::ResourcePack(cfg::ResourcePackResponse {
+                    id: p.id,
+                    action: PACK_DECLINED,
+                }))
             }
-            play::Clientbound::ResourcePackPop(p) => {
-                let _ = send.send(Event::PackPop(p.id));
-            }
+            play::Clientbound::ResourcePackPop(_) => {}
             play::Clientbound::StartConfiguration(_) => {
                 if let Some(w) = shared_writer.lock().unwrap().as_mut() {
                     let _ = w.send(&play::Serverbound::ConfigurationAcknowledged(Empty).encode());
@@ -626,13 +512,14 @@ fn configure(
             cfg::Clientbound::CodeOfConduct(_) => {
                 reply(cfg::Serverbound::AcceptCodeOfConduct(Empty))?
             }
-            // The game answers: it may prompt the player first.
+            // Declined, as in play.
             cfg::Clientbound::ResourcePackPush(p) => {
-                let _ = send.send(Event::PackPush(p));
+                reply(cfg::Serverbound::ResourcePack(cfg::ResourcePackResponse {
+                    id: p.id,
+                    action: PACK_DECLINED,
+                }))?
             }
-            cfg::Clientbound::ResourcePackPop(p) => {
-                let _ = send.send(Event::PackPop(p.id));
-            }
+            cfg::Clientbound::ResourcePackPop(_) => {}
             // The game shows it; the answer goes back from there.
             cfg::Clientbound::ShowDialog(d) => {
                 let _ = send.send(Event::ShowDialog(d.dialog));

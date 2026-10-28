@@ -43,25 +43,10 @@ pub fn open_folder(dir: &Path) {
         log::warn!("Skyline: could not open {}: {e}", dir.display());
     }
 }
-/// `Util.getPlatform().openUri`: the system browser on the link. The offline snapshot opens no
-/// outside link (a chat or server link is copied by its other button instead), only local paths.
-pub fn open_uri(uri: &str) {
-    if uri.contains("://") && !uri.starts_with("file://") {
-        log::info!("Skyline: this offline build opens no outside link: {uri}");
-        return;
-    }
-    open_folder(Path::new(uri));
-}
-/// The resource root to load from, given the vanilla root, the selection and
-/// a server's packs, which go on top (`Pack.Position.TOP`, fixed).
-pub fn startup_root(
-    vanilla: &Path,
-    selected: &[String],
-    server: &[Pack],
-) -> std::io::Result<PathBuf> {
+/// The resource root to load from, given the vanilla root and the selection.
+pub fn startup_root(vanilla: &Path, selected: &[String]) -> std::io::Result<PathBuf> {
     let all = packs::discover(vanilla, &packs_dir());
-    let mut enabled = packs::enabled(&all, selected);
-    enabled.extend_from_slice(server);
+    let enabled = packs::enabled(&all, selected);
     packs::resource_root(vanilla, &enabled, &cache_dir())
 }
 fn info(p: &Pack) -> PackInfo {
@@ -162,7 +147,6 @@ impl Game<'_> {
         stage_pack(
             &vanilla,
             &self.settings.resource_packs,
-            &self.server_packs.active,
             &self.settings.mods.enabled,
             &self.options.dev_mods,
             &self.pack.assets,
@@ -269,7 +253,6 @@ impl Game<'_> {
 pub(super) fn stage_pack(
     vanilla_root: &Path,
     selected: &[String],
-    server: &[Pack],
     mods_enabled: &BTreeSet<String>,
     dev_mods: &[PathBuf],
     assets: &Arc<Assets>,
@@ -279,7 +262,7 @@ pub(super) fn stage_pack(
     japanese: bool,
     progress: &super::Progress,
 ) -> horizon_client::Result<StagedPack> {
-    let root = startup_root(vanilla_root, selected, server)?;
+    let root = startup_root(vanilla_root, selected)?;
     let root = super::mods::content_root(&root, mods_enabled, dev_mods);
     progress.set(1);
     let render = Arc::new(assets.reload(&root)?);

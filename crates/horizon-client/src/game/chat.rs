@@ -776,8 +776,12 @@ impl Game<'_> {
                 use horizon_client::clipboard::Clipboard;
                 self.clipboard.set(&value);
             }
+            // Only the game's own files (an F2 screenshot's link); a link to
+            // any other file opens nothing.
             Some(ClickEvent::OpenFile(path)) => {
-                super::packs::open_folder(std::path::Path::new(&path));
+                if let Some(own) = own_file(std::path::Path::new(&path)) {
+                    super::packs::open_folder(&own);
+                }
             }
             Some(ClickEvent::OpenUrl(url)) => self.click_url(url),
             Some(ClickEvent::SuggestCommand(command)) => {
@@ -790,8 +794,9 @@ impl Game<'_> {
             Some(ClickEvent::ChangePage(_)) | None => {}
         }
     }
-    /// `Screen.clickUrlAction`: nothing with Web Links off, else the link
-    /// opens, after the confirmation unless Prompt on Links is off.
+    /// `Screen.clickUrlAction`: nothing with Web Links off, else the link is
+    /// copied to the clipboard (Skyline opens no web page), after the
+    /// confirmation unless Prompt on Links is off.
     pub(super) fn click_url(&mut self, url: String) {
         if !self.settings.chat_links {
             return;
@@ -799,11 +804,12 @@ impl Game<'_> {
         if self.settings.file.bool("chatLinksPrompt") {
             self.link_prompt = Some(url);
         } else {
-            super::packs::open_uri(&url);
+            use horizon_client::clipboard::Clipboard;
+            self.clipboard.set(&url);
         }
     }
     /// `ConfirmLinkScreen` (untrusted): the link and its warning over the
-    /// chat, answered yes to open it.
+    /// chat; its first button copies the link instead of opening it.
     fn link_prompt_layout(
         &self,
         url: &str,
@@ -828,18 +834,19 @@ impl Game<'_> {
         let (w, h) = (batch.width, batch.height);
         horizon_client::ui::menu_background(batch, atlas, 0.0, 0.0, w, h, true);
         let (yes, no) = (
-            Text::translate("gui.yes", &[]),
+            Text::translate("gui.copy_link_to_clipboard", &[]),
             Text::translate("gui.no", &[]),
         );
         self.link_prompt_layout(url, (w, h))
             .draw(batch, atlas, self.cursor, [&yes, &no]);
     }
-    /// The prompt's answer: the link opens on yes; either way the chat is back.
+    /// The prompt's answer: the link is copied on yes; either way the chat is back.
     pub(super) fn answer_link_prompt(&mut self, yes: bool) {
         if let Some(url) = self.link_prompt.take()
             && yes
         {
-            super::packs::open_uri(&url);
+            use horizon_client::clipboard::Clipboard;
+            self.clipboard.set(&url);
         }
     }
     pub(super) fn link_prompt_click(&mut self) {
@@ -1203,6 +1210,14 @@ pub fn screenshot_name(dir: &std::path::Path) -> String {
         }
         n += 1;
     }
+}
+
+/// A chat link's file, if it is inside the game folder (the current folder): the screenshots an
+/// F2 message links to. Any other path (a server can send any) opens nothing.
+fn own_file(path: &std::path::Path) -> Option<std::path::PathBuf> {
+    let home = std::env::current_dir().ok()?.canonicalize().ok()?;
+    let file = path.canonicalize().ok()?;
+    file.starts_with(&home).then_some(file)
 }
 
 /// `IntegratedServer.getProfilePermissions` for the owner: `OWNER` (4) when

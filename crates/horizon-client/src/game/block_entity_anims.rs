@@ -738,21 +738,10 @@ impl Game<'_> {
             return None;
         };
         let skin = skull.skin.as_ref()?;
-        // The texture a packed or resolved `textures` property fetches: the
-        // download of a static profile, or the one the services answer for a
-        // `Dynamic` (name- or id-only) profile.
-        let download = skin.download.clone().or_else(|| {
-            let key = skin.dynamic.as_ref()?;
-            let skins::Resolve::Done(Some(profile)) = self.skin_profiles.borrow_mut().state(key)
-            else {
-                return None;
-            };
-            let (value, signature) = profile.textures()?;
-            let url = skins::unpack(&value, signature, &skins::TEXTURE_URIS).skin?;
-            let location = skins::skin_location(&skins::texture_hash(&url)?);
-            Some((url, location))
-        });
-        if let Some((url, location)) = download {
+        // The texture a packed `textures` property names. A `Dynamic` (name-
+        // or id-only) profile would resolve through Mojang's services, which
+        // Skyline never asks: it keeps the default skin.
+        if let Some((url, location)) = skin.download.clone() {
             let mut downloads = self.skin_downloads.borrow_mut();
             if self.gui.atlas.sprites.contains_key(&location) {
                 let _ = downloads.state(skins::Kind::Skin, &url);

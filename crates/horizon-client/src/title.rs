@@ -597,7 +597,7 @@ impl Title {
         }
     }
     /// The worlds, newest first, cached for two seconds (drawn every frame).
-    /// Saves changed behind the screens' back (agent control renamed or deleted a world): the
+    /// Saves changed behind the screens' back (a skyline-ctl command renamed or deleted a world): the
     /// list shows them again.
     pub fn worlds_changed(&mut self) {
         if matches!(self.mode, Mode::Select { .. }) {
@@ -723,16 +723,17 @@ impl Title {
                         2,
                     ),
                 ];
-                // CommonButtons' icon buttons; Skyline's Join a Friend (an
-                // invite code) sits behind vanilla's Friends button.
-                for (i, (key, plain, id, icon)) in [
-                    ("gui.friends.open", "Friends", 5, "friends/friends"),
-                    ("options.language", "Language...", 6, "icon/language"),
+                // CommonButtons' icon buttons. Friends is an online service:
+                // greyed, as Realms is.
+                for (i, (key, plain, id, icon, enabled)) in [
+                    ("gui.friends.open", "Friends", 5, "friends/friends", false),
+                    ("options.language", "Language...", 6, "icon/language", true),
                     (
                         "options.accessibility",
                         "Accessibility Settings...",
                         7,
                         "icon/accessibility",
+                        true,
                     ),
                 ]
                 .into_iter()
@@ -743,7 +744,7 @@ impl Title {
                         y + 72.0,
                         20.0,
                         &lang::get_or(key, plain),
-                        true,
+                        enabled,
                         id,
                     );
                     button.icon = Some((icon, 15.0));
@@ -1367,10 +1368,6 @@ impl Title {
                 crate::multiplayer::Outcome::Connect(address) => Action::Connect { address },
                 crate::multiplayer::Outcome::None => Action::None,
             },
-            (Mode::Main, Some(5)) => {
-                self.mode = Mode::Multiplayer(crate::multiplayer::Screen::friend());
-                Action::None
-            }
             (Mode::Main, Some(3)) => Action::Options,
             (Mode::Main, Some(7)) => Action::Accessibility,
             (Mode::Main, Some(6)) => Action::Language,
@@ -1825,8 +1822,7 @@ const WORLD_NAME: crate::clipboard::FieldId = ("world.name", 0);
 const WORLD_SEED: crate::clipboard::FieldId = ("world.seed", 0);
 const FLAT_SHARE: crate::clipboard::FieldId = ("world.flat-share", 0);
 /// The focused field of the world screens and the server screens: the list's
-/// search, a world name or seed, or Add Server, Direct Connection and Join a
-/// Friend.
+/// search, a world name or seed, or Add Server and Direct Connection.
 fn caret_field<'a>(
     mode: &'a mut Mode,
     search_focused: bool,
@@ -1869,7 +1865,7 @@ mod classic_tests {
             let cx = (w / 2.0).floor();
             let y = (h / 4.0).floor() + 48.0;
             for (id, x, enabled, icon) in [
-                (5, cx - 34.0, true, "friends/friends"),
+                (5, cx - 34.0, false, "friends/friends"),
                 (6, cx - 10.0, true, "icon/language"),
                 (7, cx + 14.0, true, "icon/accessibility"),
             ] {
@@ -1883,16 +1879,10 @@ mod classic_tests {
                     match id {
                         6 => (Action::Language, true),
                         7 => (Action::Accessibility, true),
-                        _ => (Action::None, true),
+                        _ => (Action::None, false),
                     }
                 );
-                if id == 5 {
-                    assert!(matches!(
-                        title.mode,
-                        Mode::Multiplayer(crate::multiplayer::Screen::Friend { .. })
-                    ));
-                    title.mode = Mode::Main;
-                }
+                assert!(matches!(title.mode, Mode::Main));
             }
             for id in [2, 3] {
                 assert_eq!(buttons.iter().find(|b| b.id == id).unwrap().y, y + 96.0);

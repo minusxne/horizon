@@ -1,11 +1,12 @@
 //! `ServerLinksDialogScreen`: the pause menu's "Server Links..." button opens
 //! the `minecraft:server_links` dialog (the `pause_screen_additions` tag's
 //! fallback when a server sent ClientboundServerLinksPacket): a scrollable
-//! list of the server's links, each opened through `ConfirmLinkScreen`
-//! (Screen.clickUrlAction), and the `dialog/warning_button`'s
+//! list of the server's links, each copied to the clipboard through
+//! `ConfirmLinkScreen` (Screen.clickUrlAction; Skyline opens no web page),
+//! and the `dialog/warning_button`'s
 //! DialogScreen.WarningScreen ("Note about custom screens").
 //! https://mcsrc.dev/2/26.3/net/minecraft/client/gui/screens/dialog/ServerLinksDialogScreen
-use super::{Game, Screen, packs::open_uri};
+use super::{Game, Screen};
 use horizon_client::{Result, clipboard::Clipboard, hud::HudBatch, text::Text, ui};
 use horizon_protocol::packets::configuration::{ServerLink, ServerLinkKind};
 
@@ -252,7 +253,7 @@ impl Game<'_> {
         Ok(())
     }
     /// `Screen.clickUrlAction`: "Web Links" off ignores the click; "Prompt on
-    /// Links" asks with ConfirmLinkScreen, else the browser opens directly.
+    /// Links" asks with ConfirmLinkScreen, else the link is copied directly.
     fn click_link(&mut self, url: &str) {
         if !self.settings.chat_links {
             return;
@@ -261,7 +262,7 @@ impl Game<'_> {
             self.links_ui.confirm = Some(url.to_owned());
             self.screen = Screen::ConfirmLink;
         } else {
-            open_uri(url);
+            self.clipboard.set(url);
         }
     }
     /// `ScrollableLayout`'s mouse wheel over the links.
@@ -272,7 +273,7 @@ impl Game<'_> {
     }
     /// `ConfirmLinkScreen` (untrusted): "Are you sure you want to open the
     /// following website?", the link, the red warning, and Yes / Copy Link to
-    /// Clipboard / No.
+    /// Clipboard / No. Yes is greyed: Skyline opens no web page.
     pub(super) fn draw_confirm_link(&mut self, batch: &mut HudBatch) {
         let atlas = &self.gui.atlas;
         let (w, h) = (batch.width, batch.height);
@@ -283,8 +284,9 @@ impl Game<'_> {
             batch.text_styled(atlas, line, *x, *y, u32::MAX, true);
         }
         let labels = ["gui.yes", "gui.copy_link_to_clipboard", "gui.no"];
-        for ((x, y), key) in layout.buttons.iter().zip(labels) {
-            let hover = ui::hovered(self.cursor, *x, *y, 100.0, 20.0);
+        for (i, ((x, y), key)) in layout.buttons.iter().zip(labels).enumerate() {
+            let active = i != 0;
+            let hover = active && ui::hovered(self.cursor, *x, *y, 100.0, 20.0);
             ui::button(
                 batch,
                 atlas,
@@ -293,28 +295,24 @@ impl Game<'_> {
                 100.0,
                 20.0,
                 &Text::translate(key, &[]),
-                true,
+                active,
                 hover,
             );
         }
     }
-    /// ConfirmLinkScreen's answer: yes opens the browser, the middle button
-    /// copies the link, no closes; all return to Server Links.
+    /// ConfirmLinkScreen's answer: the middle button copies the link, no
+    /// closes; both return to Server Links. Yes (opening it) is greyed.
     pub(super) fn confirm_link_click(&mut self) {
         let (w, h) = self.gui_size();
         let url = self.links_ui.confirm.clone().unwrap_or_default();
         let layout = confirm_link_layout(&self.gui.atlas, (w, h), &url);
         for (i, (x, y)) in layout.buttons.iter().enumerate() {
-            if !ui::hovered(self.cursor, *x, *y, 100.0, 20.0) {
+            if i == 0 || !ui::hovered(self.cursor, *x, *y, 100.0, 20.0) {
                 continue;
             }
             self.audio.play_button_click();
-            match i {
-                0 => open_uri(&url),
-                1 => {
-                    self.clipboard.set(&url);
-                }
-                _ => {}
+            if i == 1 {
+                self.clipboard.set(&url);
             }
             self.screen = Screen::ServerLinks;
             return;

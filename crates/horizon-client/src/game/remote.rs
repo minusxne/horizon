@@ -341,7 +341,6 @@ impl Game<'_> {
         local: Option<horizon_protocol::connection::Pipe>,
         cookies: Option<horizon_client::net::Cookies>,
     ) -> Result<()> {
-        self.perf.world_opening();
         let root = self.options.resources.clone();
         let builtin = Builtin::find(&root)
             .and_then(|p| Builtin::load(&p).ok())
@@ -349,38 +348,17 @@ impl Game<'_> {
         let lang = Arc::new(horizon_client::net::load_language(&root));
         let view = client_view_distance(self.settings.render_distance);
         if local.is_none() {
-            horizon_client::crash::set_detail(
-                "Server",
-                horizon_client::net::shown_address(address),
-            );
+            horizon_client::crash::set_detail("Server", address);
         }
-        // A signed-in account always plays under its own name.
-        let auth = horizon_client::auth::current();
-        let name = auth.as_ref().map_or(name, |a| a.name.as_str());
-        let user = auth.as_ref().map_or_else(
-            || {
-                (
-                    name.to_owned(),
-                    horizon_protocol::crypto::offline_uuid(name),
-                )
-            },
-            |a| (a.name.clone(), a.uuid),
-        );
-        self.server_packs_connect(local.is_none().then_some(address), user);
         let session = match local {
             Some(pipe) => Session::connect_local(pipe, name, view, lang.clone()),
             None => {
                 self.extras_connecting(address, name);
                 match cookies {
-                    Some(cookies) => Session::connect_transferred(
-                        address,
-                        name,
-                        auth.clone(),
-                        view,
-                        lang.clone(),
-                        cookies,
-                    ),
-                    None => Session::connect(address, name, auth.clone(), view, lang.clone()),
+                    Some(cookies) => {
+                        Session::connect_transferred(address, name, view, lang.clone(), cookies)
+                    }
+                    None => Session::connect(address, name, view, lang.clone()),
                 }
             }
         };
@@ -536,7 +514,6 @@ impl Game<'_> {
         if reason.is_none() && self.integrated.as_ref().is_some_and(|s| !s.stopped()) {
             return self.begin_closing_save(false);
         }
-        self.finish_perf();
         if reason.is_none() {
             // Leaving on purpose: nothing for auto-reconnect to retry.
             self.extras_left();
@@ -546,7 +523,6 @@ impl Game<'_> {
         if let Some(mut r) = self.remote.take() {
             r.session.disconnect();
         }
-        self.server_packs_disconnect();
         self.close_dialogs();
         // Single player's server thread saves the world before the title shows.
         let single_player = match self.integrated.take() {
@@ -899,8 +875,6 @@ impl Game<'_> {
                         r.transfer = Some(format!("{host}:{port}"));
                     }
                 }
-                Event::PackPush(p) => self.handle_pack_push(p),
-                Event::PackPop(id) => self.handle_pack_pop(id),
                 Event::ServerLinks(links) => {
                     if let Some(r) = self.remote.as_mut() {
                         r.server_links = super::server_links::trusted(links);
@@ -3087,20 +3061,6 @@ impl Game<'_> {
             .collect();
         Some((players, r.online_mode, upside_down))
     }
-    /// The signed-in account's `textures`, once the services answered.
-    fn own_textures(&self) -> Option<horizon_client::skins::Textures> {
-        use horizon_client::skins::{self, NameOrId, Resolve};
-        let auth = horizon_client::auth::current()?;
-        let state = self
-            .skin_profiles
-            .borrow_mut()
-            .state(&NameOrId::Id(auth.uuid));
-        let Resolve::Done(Some(profile)) = state else {
-            return None;
-        };
-        let (value, signature) = profile.textures()?;
-        Some(skins::unpack(&value, signature, &skins::TEXTURE_URIS))
-    }
     /// `PlayerInfo.getSkin` for every player entity, including NPCs that are
     /// never in the tab list: resolve each profile's textures and give the
     /// level's player models their skin.
@@ -3109,20 +3069,11 @@ impl Game<'_> {
             return;
         };
         let local = r.profile;
-        let mut entries: Vec<(u128, horizon_client::skins::Textures)> = r
+        let entries: Vec<(u128, horizon_client::skins::Textures)> = r
             .skin_textures
             .iter()
             .map(|(uuid, textures)| (*uuid, textures.clone()))
             .collect();
-        // Minecraft.profileFuture: the signed-in account's own profile, fetched from the
-        // services, gives the local player its skin where the server sends none (single
-        // player's offline-mode server).
-        if !entries.iter().any(|(u, t)| *u == local && t.skin.is_some())
-            && let Some(own) = self.own_textures()
-        {
-            entries.retain(|(u, _)| *u != local);
-            entries.push((local, own));
-        }
         let mut resolved: Vec<(u128, String)> = Vec::new();
         // PlayerSkin.model of each resolved skin: the textures' `slim`.
         let mut slim = std::collections::HashSet::new();
@@ -3191,6 +3142,8 @@ impl Game<'_> {
             .map(|m| {
                 let profile = m.profile.as_ref();
                 let t = profile.and_then(|p| p.properties.iter().find(|p| p.name == "textures"));
+                // No `textures`: vanilla resolves a name or an id through
+                // Mojang's services; Skyline never asks, so the default skin.
                 let textures = if let Some(t) = t {
                     let signature = if t.signature.is_some() {
                         horizon_client::skins::Signature::Signed
@@ -3203,28 +3156,7 @@ impl Game<'_> {
                         &horizon_client::skins::TEXTURE_URIS,
                     )
                 } else {
-                    // `ResolvableProfile.resolveProfile`: no `textures` and
-                    // only a name or an id resolves through the services.
-                    let key = profile.and_then(|p| match (&p.name, p.uuid) {
-                        (Some(name), None) => {
-                            Some(horizon_client::skins::NameOrId::Name(name.clone()))
-                        }
-                        (None, Some(id)) => Some(horizon_client::skins::NameOrId::Id(id)),
-                        _ => None,
-                    });
-                    key.and_then(|key| match self.skin_profiles.borrow_mut().state(&key) {
-                        horizon_client::skins::Resolve::Done(Some(profile)) => {
-                            profile.textures().map(|(value, signature)| {
-                                horizon_client::skins::unpack(
-                                    &value,
-                                    signature,
-                                    &horizon_client::skins::TEXTURE_URIS,
-                                )
-                            })
-                        }
-                        _ => None,
-                    })
-                    .unwrap_or_default()
+                    Default::default()
                 };
                 (m.id, textures)
             })
@@ -5915,7 +5847,7 @@ impl Game<'_> {
         let atlas = &self.gui.atlas;
         let (w, h) = (batch.width, batch.height);
         batch.fill(atlas, 0.0, 0.0, w, h, rgba(20, 20, 20, 255));
-        let shown = horizon_client::net::shown_address(&r.session.address);
+        let shown = &r.session.address;
         for (i, line) in [r.status.as_str(), shown.as_str()].iter().enumerate() {
             let tw = HudBatch::text_width(atlas, line);
             batch.text(
@@ -5989,7 +5921,7 @@ impl Game<'_> {
     pub(super) fn remote_status(&self) -> Option<serde_json::Value> {
         let r = self.remote.as_ref()?;
         Some(serde_json::json!({
-            "address": horizon_client::net::shown_address(&r.session.address),
+            "address": r.session.address,
             "name": r.session.name,
             "joined": r.joined,
             // ServerboundPlayerLoadedPacket sent: the level around the
@@ -6362,10 +6294,6 @@ impl horizon_client::interaction_input::InteractionWorld for RemoteInputWorld<'_
 }
 
 impl Remote {
-    /// Players in the server's player list, this one included.
-    pub(super) fn player_count(&self) -> usize {
-        self.players.len()
-    }
     /// The local player's profile UUID.
     pub(super) fn profile(&self) -> u128 {
         self.profile

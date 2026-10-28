@@ -1,9 +1,8 @@
 //! skyline-ctl: play and script a running Skyline client through its control
-//! socket, from a shell, a script or an AI agent (`skyline-ctl mcp`).
+//! socket (open only in a game started with `--control`), from a shell or a script.
 #![forbid(unsafe_code)]
 mod commands;
 mod launch;
-mod mcp;
 
 use std::{
     io::{BufRead, BufReader, Write},
@@ -20,8 +19,6 @@ use serde_json::{Value, json};
 const GAME_ERROR: u8 = 1;
 const USAGE: u8 = 2;
 const UNREACHABLE: u8 = 3;
-/// No AI is on (`horizon_core::no_ai`): agent control is off.
-const DENIED: u8 = 4;
 
 /// A failure, with the exit status it maps to.
 #[derive(Debug)]
@@ -34,13 +31,6 @@ impl Failure {
         Self {
             reply: json!({ "error": message.into(), "kind": "usage" }),
             status: USAGE,
-        }
-    }
-    /// No AI is on in the game's home.
-    fn denied() -> Self {
-        Self {
-            reply: json!({ "error": horizon_core::no_ai::REFUSAL, "kind": "denied" }),
-            status: DENIED,
         }
     }
     fn unreachable(message: impl Into<String>) -> Self {
@@ -107,7 +97,7 @@ impl Client {
 pub struct Session {
     pub socket: PathBuf,
     pub timeout: Option<Duration>,
-    /// The game's home, where No AI is read (`horizon_core::no_ai`).
+    /// The game's home, where `logs` reads.
     pub home: PathBuf,
     client: Option<Client>,
 }
@@ -120,10 +110,6 @@ impl Session {
             home: horizon_client::logging::game_home(),
             client: None,
         }
-    }
-    /// A failure while No AI is on: every command refuses (help aside).
-    pub fn allowed(&self) -> Result<(), Failure> {
-        horizon_core::no_ai::check(&self.home).map_err(|_| Failure::denied())
     }
     fn client(&mut self) -> Result<&mut Client, Failure> {
         if self.client.is_none() {
@@ -153,7 +139,6 @@ impl Session {
         let Some(name) = words.first().map(String::as_str) else {
             return Err(Failure::usage("no command; try skyline-ctl help"));
         };
-        self.allowed()?;
         if words.iter().skip(1).any(|w| w == "--help" || w == "-h") {
             return Err(Failure::usage(
                 "use skyline-ctl COMMAND --help outside scripts",
@@ -484,17 +469,6 @@ fn main() -> ExitCode {
                 }
             }
         }
-        Some("mcp") if session.allowed().is_err() => {
-            eprintln!("skyline-ctl mcp: {}", horizon_core::no_ai::REFUSAL);
-            DENIED
-        }
-        Some("mcp") => match mcp::serve(&mut session) {
-            Ok(()) => 0,
-            Err(e) => {
-                eprintln!("skyline-ctl mcp: {e}");
-                UNREACHABLE
-            }
-        },
         // The original form: stdin, keep going after errors.
         Some("-") => script(&mut session, std::io::stdin().lock(), true, pretty),
         Some("script") => {
@@ -513,7 +487,7 @@ fn main() -> ExitCode {
                 _ => script(&mut session, std::io::stdin().lock(), keep_going, pretty),
             }
         }
-        // Text for people; scripts and MCP get the JSON reply.
+        // Text for people; scripts get the JSON reply.
         Some("logs") => match session.run(&args) {
             Ok(reply) => {
                 print!("{}", reply["text"].as_str().unwrap_or_default());
@@ -621,27 +595,6 @@ mod tests {
         let f = s.run(&["sleep".to_owned(), "x".to_owned()]).unwrap_err();
         assert_eq!(f.status, USAGE);
         std::fs::remove_dir_all(home).unwrap();
-    }
-
-    #[test]
-    fn no_ai_refuses_every_command() {
-        let home = std::env::temp_dir().join(format!("skyline-ctl-no-ai-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&home);
-        let mut s = Session::new(std::env::temp_dir().join("skyline-ctl-nobody.sock"), None);
-        s.home = home.clone();
-        assert_eq!(
-            s.run(&["state".to_owned()]).unwrap_err().status,
-            UNREACHABLE
-        );
-        horizon_core::no_ai::set(&home, true).unwrap();
-        for words in [vec!["state"], vec!["logs"], vec!["launch", "--world", "A"]] {
-            let words: Vec<String> = words.into_iter().map(str::to_owned).collect();
-            let f = s.run(&words).unwrap_err();
-            assert_eq!(f.status, DENIED, "{words:?}");
-            assert_eq!(f.reply["kind"], "denied");
-            assert_eq!(f.reply["error"], horizon_core::no_ai::REFUSAL);
-        }
-        let _ = std::fs::remove_dir_all(&home);
     }
 
     #[test]

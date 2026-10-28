@@ -98,9 +98,6 @@ pub(super) struct ModsState {
     /// Capability `ui`'s item panel beside container screens.
     #[cfg(feature = "mods")]
     pub(super) browser: super::mod_browser::Browser,
-    /// Extras that are official mods now, being installed.
-    #[cfg(feature = "mods")]
-    pub(super) moved: super::moved_extras::MovedState,
     /// Playing at the last frame, for `mod_input_frame`.
     #[cfg(feature = "mods")]
     pub(super) playing: bool,

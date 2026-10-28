@@ -1167,14 +1167,12 @@ impl Game<'_> {
             }
         }
     }
-    /// The slots held by shown advancement, recipe and pack toasts, as bits.
+    /// The slots held by shown advancement and recipe toasts, as bits.
     pub(super) fn toast_slots_used(&self) -> u32 {
-        let packs = self.server_packs.toast_slots();
         self.adv
             .toasts
             .iter()
             .filter_map(|t| t.slot)
-            .chain(packs)
             .fold(0, |used, slot| used | 1 << slot)
     }
     /// The `AdvancementToast` or `RecipeToast` at `index` in its slot at `y`.

@@ -207,10 +207,7 @@ impl Game<'_> {
         creative: bool,
         create: Option<&WorldOptions>,
     ) -> Result<()> {
-        let auth = horizon_client::auth::current();
-        let player = auth
-            .as_ref()
-            .map_or_else(|| self.options.player_name(), |a| a.name.clone());
+        let player = self.options.player_name();
         let launch = Launch {
             folder: folder.to_owned(),
             name: name.map(str::to_owned),

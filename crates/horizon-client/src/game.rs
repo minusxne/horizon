@@ -3,7 +3,6 @@
 mod advancements;
 mod advancements_screen;
 mod agent;
-mod agent_settings;
 mod allays;
 mod armor_stands;
 mod banners;
@@ -46,7 +45,6 @@ mod decorated_pot;
 mod dedicated;
 mod deflect;
 mod dialogs;
-mod discord;
 mod dispense_fixture;
 mod dispenser;
 mod dragon;
@@ -64,7 +62,6 @@ mod fireworks;
 mod fishing;
 mod fov;
 mod frames;
-mod friends;
 mod functions;
 mod game_mode;
 mod gamemode_switcher;
@@ -118,7 +115,6 @@ mod mod_render;
 mod mods;
 mod mount_menu;
 mod mounts;
-mod moved_extras;
 mod moving_pistons;
 mod music;
 mod names;
@@ -168,7 +164,6 @@ mod sculk;
 mod sculk_fixture;
 mod server_links;
 mod server_mods;
-mod server_packs;
 mod server_travel;
 mod shader_packs;
 mod shield;
@@ -313,7 +308,7 @@ struct Options {
     window_size: [u32; 2],
     /// Multiplayer: `--server HOST[:PORT]` joins at start; `--name` is the offline player name.
     server: Option<String>,
-    /// `--name`, `SKYLINE_PLAYER_NAME` or the signed-in account's name; else
+    /// `--name` or `SKYLINE_PLAYER_NAME`; else
     /// [`Options::player_name`] uses the kept offline name.
     player_name: Option<String>,
     /// `--dedicated`: run as a dedicated server; vanilla's server arguments
@@ -388,13 +383,12 @@ impl Options {
             server_thread: std::env::var("SKYLINE_SERVER_THREAD").map_or(true, |v| v != "0"),
             execution_role: execution_role::ExecutionRole::Client,
         };
-        let mut session_file = std::env::var("SKYLINE_SESSION_FILE").ok();
         let mut args = std::env::args().skip(1);
         while let Some(arg) = args.next() {
             match arg.as_str() {
                 "--help" | "-h" => {
                     println!(
-                        "Skyline — Minecraft Java Edition {} in Rust\n\n  --resources PATH        Prepared resources (skyline-prepare)\n  --render-distance N     Chunks, 2..64 (default 12)\n  --world NAME            World folder under saves/ (default \"New World\")\n  --seed N                World seed for new worlds (default 0)\n  --width N, --height N   Window size (default 1280 x 720)\n  --creative              Creative mode (default survival)\n  --test-terrain          Simple test terrain instead of vanilla generation\n  --frames N              Exit after N frames (testing)\n  --world-frames N        Exit after N frames drawn in the world (testing)\n  --smoke-report PATH     Write a JSON report on exit\n  --benchmark SCENARIO    Run a benchmark (standard, village, forest, ocean, mountain), write its report to benchmarks/ and quit\n  --control               Accept skyline-ctl commands on a local socket\n  --control-socket PATH   Control socket path (default $XDG_RUNTIME_DIR/skyline-control.sock)\n  --server HOST[:PORT]    Join a multiplayer server (offline mode) at start\n  --quickPlaySingleplayer WORLD  Open this world of saves/ at start, only if it exists (vanilla's)\n  --quickPlayMultiplayer HOST[:PORT]  The same as --server (vanilla's name)\n  --name NAME             Player name for multiplayer (default: generated once, kept in skyline-player.txt)\n  --session-file PATH     Signed-in account from the launcher (read once, then deleted)\n  --dev-mod PATH          A Skyline mod (.hmod or folder) to develop: always on, reloaded when rebuilt\n  --in-frame              Run single player's world in the frame, not on its server thread\n  --pregen                Add Skyline's /pregen command (docs/pregeneration.md)\n\nControls: mouse look, WASD move, Space jump, Left Shift sneak, Left Ctrl sprint,\nleft click break, right click place/use, 1-9/scroll hotbar, E inventory,\nQ drop, F3 debug, Esc pause.",
+                        "Skyline — Minecraft Java Edition {} in Rust\n\n  --resources PATH        Prepared resources (skyline-prepare)\n  --render-distance N     Chunks, 2..64 (default 12)\n  --world NAME            World folder under saves/ (default \"New World\")\n  --seed N                World seed for new worlds (default 0)\n  --width N, --height N   Window size (default 1280 x 720)\n  --creative              Creative mode (default survival)\n  --test-terrain          Simple test terrain instead of vanilla generation\n  --frames N              Exit after N frames (testing)\n  --world-frames N        Exit after N frames drawn in the world (testing)\n  --smoke-report PATH     Write a JSON report on exit\n  --benchmark SCENARIO    Run a benchmark (standard, village, forest, ocean, mountain), write its report to benchmarks/ and quit\n  --control               Accept skyline-ctl commands on a local socket\n  --control-socket PATH   Control socket path (default $XDG_RUNTIME_DIR/skyline-control.sock)\n  --server HOST[:PORT]    Join a multiplayer server (offline mode) at start\n  --quickPlaySingleplayer WORLD  Open this world of saves/ at start, only if it exists (vanilla's)\n  --quickPlayMultiplayer HOST[:PORT]  The same as --server (vanilla's name)\n  --name NAME             Player name for multiplayer (default: generated once, kept in skyline-player.txt)\n  --dev-mod PATH          A Skyline mod (.hmod or folder) to develop: always on, reloaded when rebuilt\n  --in-frame              Run single player's world in the frame, not on its server thread\n  --pregen                Add Skyline's /pregen command (docs/pregeneration.md)\n\nControls: mouse look, WASD move, Space jump, Left Shift sneak, Left Ctrl sprint,\nleft click break, right click place/use, 1-9/scroll hotbar, E inventory,\nQ drop, F3 debug, Esc pause.",
                         horizon_core::VANILLA_VERSION
                     );
                     return Ok(None);
@@ -471,7 +465,6 @@ impl Options {
                         }
                         "--server" | "--quickPlayMultiplayer" => o.server = Some(value),
                         "--name" => o.player_name = Some(value),
-                        "--session-file" => session_file = Some(value),
                         "--control-socket" => o.control = Some(value.into()),
                         "--time" => o.time = Some(value.parse()?),
                         "--weather" => o.weather = Some(value),
@@ -489,17 +482,6 @@ impl Options {
                         _ => return Err(format!("unknown option {arg}").into()),
                     }
                 }
-            }
-        }
-        // The launcher's account: online-mode servers need it. A bad file
-        // only leaves the game offline.
-        if let Some(path) = session_file.filter(|p| !p.is_empty()) {
-            match horizon_client::auth::AuthSession::load(path.as_ref()) {
-                Ok(session) => {
-                    o.player_name = Some(session.name.clone());
-                    horizon_client::auth::set_current(session);
-                }
-                Err(e) => eprintln!("Skyline: not signed in: {e}"),
             }
         }
         Ok(Some(o))
@@ -521,9 +503,6 @@ enum Screen {
     Advancements,
     /// WorldOptionsScreen (game/lan_screen.rs).
     WorldOptions,
-    /// Play with Friends, from the pause menu's Friends button
-    /// (`friends_screen`, game/friends.rs).
-    Friends,
     /// CommandBlockEditScreen (game/command_blocks.rs).
     CommandBlock,
     /// ServerLinksDialogScreen: a server's links (game/server_links.rs).
@@ -1406,8 +1385,6 @@ struct Game<'a> {
     pending_entry: Option<PendingWorldEntry>,
     world_loader: Option<world_loading::WorldLoader>,
     pending_pack_reload: bool,
-    /// A server's resource packs (game/server_packs.rs).
-    server_packs: server_packs::ServerPackState,
     /// The link a chat click asks to open (`ConfirmLinkScreen`).
     link_prompt: Option<String>,
     dialogs: dialogs::DialogState,
@@ -1764,9 +1741,6 @@ struct Game<'a> {
     /// Player skin downloads, and which skin each atlas skin slot holds
     /// (least recently shown first).
     skin_downloads: RefCell<horizon_client::skins::Downloader>,
-    /// `ProfileResolver.Cached`: `Dynamic` profiles (name- or id-only heads
-    /// and mannequins) resolve through the services in the background.
-    skin_profiles: RefCell<horizon_client::skins::Resolver>,
     skin_slots: Vec<(String, usize)>,
     /// Atlas trim slots in use: (sprite name, slot), least recently drawn first.
     trim_slots: Vec<(String, usize)>,
@@ -1804,13 +1778,7 @@ struct Game<'a> {
     item_columns: Option<machines::ItemColumns>,
     creative_screen: Creative,
     control: Option<horizon_client::control::Server>,
-    /// The Agent Control setting the socket was last opened or closed for (`agent_settings`).
-    agent_control_on: bool,
-    /// When an agent's last command came.
-    agent_last: Option<Instant>,
     frame_stats: horizon_client::control::FrameStats,
-    /// This play session's frame and tick times, for opt-in performance statistics.
-    perf: horizon_client::telemetry::Session,
     /// Control replies waiting for a rendered frame or a benchmark deadline.
     pending_screenshot: Option<std::sync::mpsc::Sender<String>>,
     pending_bench: Option<(Instant, std::sync::mpsc::Sender<String>)>,
@@ -1849,8 +1817,6 @@ struct Game<'a> {
     integrated: Option<integrated::Integrated>,
     /// This game is that server thread's (game/integrated.rs).
     serving: Option<integrated::Serving>,
-    /// The open world is shared behind an invite code (game/friends.rs).
-    friends: Option<friends::Sharing>,
     world_options: Option<lan_screen::WorldOptions>,
     /// Chat Settings opened from RestrictionsScreen: Done returns to World Options.
     options_to_world_options: bool,
@@ -5485,7 +5451,6 @@ impl Game<'_> {
             });
         }
         horizon_client::spans::time("tick_lan", || self.tick_lan(false));
-        self.tick_friends();
         horizon_client::spans::time("tick_hand", || self.tick_hand());
         horizon_client::spans::time("tick_sleep", || self.tick_sleep());
         self.announce_sleep_status();
@@ -5643,7 +5608,6 @@ impl Game<'_> {
                     | Screen::Stats
                     | Screen::Advancements
                     | Screen::WorldOptions
-                    | Screen::Friends
                     | Screen::ServerLinks
                     | Screen::ConfirmLink
                     | Screen::DialogWarning
@@ -5665,9 +5629,9 @@ impl Game<'_> {
             return;
         }
         // MouseHandler.grabMouse never captures an inactive window, and vanilla
-        // grabs only on `setScreen(null)`: the pack prompt and server dialogs
-        // are screens over the world that keep the pointer.
-        if capture && (!self.focused || self.server_packs.prompt.is_some() || self.dialog_open()) {
+        // grabs only on `setScreen(null)`: server dialogs are screens over the
+        // world that keep the pointer.
+        if capture && (!self.focused || self.dialog_open()) {
             return;
         }
         // The container screen's press state belongs to the screen: a screen
@@ -5886,17 +5850,14 @@ impl Game<'_> {
         hud_layout::paint(batch, &self.gui.atlas, &draws);
     }
     fn hud(&mut self, size: [u32; 2]) -> HudBatch {
-        // The pack prompt replaces the connecting screen (setScreen), but
-        // in game it opens over the world.
-        let mut batch = if (self.server_packs.prompt.is_some() || self.dialog_open())
-            && self.player.is_none()
-        {
+        // A dialog replaces the connecting screen (setScreen), but in game
+        // it opens over the world.
+        let mut batch = if self.dialog_open() && self.player.is_none() {
             HudBatch::new(size)
         } else {
             self.hud_layers(size)
         };
         self.draw_dialog(&mut batch);
-        self.draw_pack_prompt(&mut batch);
         self.draw_link_prompt(&mut batch);
         // Gui.extractRenderState: the debug overlay comes after the screen
         // and the toasts, so it is over everything, menus included.
@@ -5934,15 +5895,11 @@ impl Game<'_> {
         }
         let atlas_ptr: *const HudAtlas = &self.gui.atlas;
         let _ = atlas_ptr;
-        // The ToastManager draws over every screen: a server's packs
-        // download while the connection screen shows.
         if self.remote_overlay(&mut batch) {
-            self.draw_pack_toasts(&mut batch, false);
             return batch;
         }
         if let Some(reason) = self.loading_reason() {
             self.draw_level_loading(&mut batch, reason);
-            self.draw_pack_toasts(&mut batch, false);
             return batch;
         }
         // Hud.extractRenderState: F1 (keyToggleGui) hides camera overlays, the
@@ -6148,14 +6105,7 @@ impl Game<'_> {
         // Screen.extractBlurredBackground blurs the world and HUD, while the
         // screen's background, widgets, toasts and debug overlay stay sharp.
         batch.blur_at = batch.vertices.len() as u32;
-        // PackConfirmScreen takes the open screen's place (it comes back once
-        // the prompt is answered): the screen under the prompt isn't drawn.
-        let screen = if self.server_packs.prompt.is_some() {
-            Screen::Playing
-        } else {
-            self.screen
-        };
-        match screen {
+        match self.screen {
             Screen::Paused if self.pause_menu => self.draw_pause_menu(&mut batch),
             // PauseScreen(false): only its title, at the top.
             Screen::Paused => {
@@ -6175,7 +6125,6 @@ impl Game<'_> {
             Screen::Stats => self.draw_stats(&mut batch),
             Screen::Advancements => self.draw_advancements(&mut batch),
             Screen::WorldOptions => self.draw_world_options(&mut batch),
-            Screen::Friends => self.draw_friends_screen(&mut batch),
             Screen::ServerLinks => self.draw_server_links(&mut batch),
             Screen::ConfirmLink => self.draw_confirm_link(&mut batch),
             Screen::DialogWarning => self.draw_dialog_warning(&mut batch),
@@ -6194,12 +6143,9 @@ impl Game<'_> {
         self.draw_saving_indicator(&mut batch);
         // ToastManager.extractRenderState: F1 hides the toasts too.
         self.draw_toasts(&mut batch, !show_hud);
-        self.draw_pack_toasts(&mut batch, !show_hud);
-        if self.server_packs.prompt.is_none() {
-            self.remote_hud(&mut batch);
-            self.draw_sign_editor(&mut batch);
-            self.draw_book(&mut batch);
-        }
+        self.remote_hud(&mut batch);
+        self.draw_sign_editor(&mut batch);
+        self.draw_book(&mut batch);
         batch
     }
     fn creative_inventory_open(&self) -> bool {
@@ -8940,7 +8886,6 @@ impl Game<'_> {
         }
         let request = world_loading::WorldRequest::new(folder, name, seed, creative, create)?;
         if self.window.is_some() {
-            self.perf.world_opening();
             if self.title.is_none() {
                 self.title = Some(Title::new(
                     std::env::current_dir()?.join("saves"),
@@ -8963,7 +8908,6 @@ impl Game<'_> {
     /// integrated-server selection. Server startup must use this entry point.
     fn load_world(&mut self, request: world_loading::WorldRequest) -> Result<()> {
         self.join_world_rest()?;
-        self.perf.world_opening();
         let prepared = request.prepare(&self.res, &self.pack, &self.options, &self.settings)?;
         self.finish_open_world(prepared)
     }
@@ -9317,31 +9261,6 @@ impl Game<'_> {
     /// Leaving the game with a world open (window closed, Quit, `quit`):
     /// menu items go back (Player.closeContainer), then the world is saved,
     /// once.
-    /// Keeps this play session's performance summary for the launcher to send, if the player
-    /// allows performance statistics (`horizon_client::telemetry`), and starts the next one.
-    pub(super) fn finish_perf(&mut self) {
-        let s = &self.settings;
-        let settings = horizon_telemetry::payload::Settings {
-            render_distance: s.render_distance.clamp(0, 255) as u8,
-            simulation_distance: s.simulation_distance.clamp(0, 255) as u8,
-            // 260 is the slider's "unlimited".
-            max_fps: if s.max_fps >= 260 {
-                0
-            } else {
-                s.max_fps.min(u32::from(u16::MAX)) as u16
-            },
-            vsync: s.vsync,
-            fullscreen: s.fullscreen,
-            graphics: s.graphics_preset.clone(),
-        };
-        // Again now: on Wayland the window is on a screen only once it has been shown.
-        if let Some(window) = &self.window {
-            horizon_client::telemetry::note_display(window);
-        }
-        self.perf
-            .finish(&horizon_client::logging::game_home(), settings);
-    }
-
     pub(super) fn save_for_exit(&mut self) -> Result<()> {
         // Native application termination can bypass CloseRequested. Finish any
         // save screen synchronously here, before the process can go away.
@@ -11507,21 +11426,6 @@ impl Game<'_> {
             }
             return Ok(false);
         }
-        // A server pack's reload covers the frame with its progress
-        // (`LoadingOverlay`) until `tick_server_packs` applies it.
-        if let Some(reload) = &self.server_packs.reload {
-            if let Some(renderer) = &mut self.renderer {
-                let mut hud = HudBatch::new([renderer.config.width, renderer.config.height]);
-                horizon_client::level_loading::draw_progress(
-                    &mut hud,
-                    &self.gui.atlas,
-                    reload.progress.line(),
-                    reload.progress.fraction(),
-                );
-                return renderer.render(&loading_frame(&hud));
-            }
-            return Ok(false);
-        }
         let Some(size) = self
             .renderer
             .as_ref()
@@ -12099,7 +12003,7 @@ impl Game<'_> {
                 }
                 Screen::GameModeSwitcher => self.close_gamemode_switcher(false),
                 Screen::Dead => {}
-                Screen::Stats | Screen::Friends => self.screen = Screen::Paused,
+                Screen::Stats => self.screen = Screen::Paused,
                 Screen::ServerLinks => self.screen = Screen::Paused,
                 // ConfirmScreen.keyPressed: Escape answers no; both return to
                 // the Server Links screen they came from.
@@ -12575,7 +12479,6 @@ impl ApplicationHandler for Game<'_> {
                 return;
             }
         };
-        horizon_client::telemetry::note_display(&window);
         match self.new_renderer(window.clone()) {
             Ok(r) => {
                 self.renderer = Some(r);
@@ -12662,26 +12565,12 @@ impl ApplicationHandler for Game<'_> {
                     loader.cancel()
                 });
             }
-            self.perf.cancel_world_opening();
             return;
         }
         if (self.pending_entry.is_some() || self.world_loader.is_some())
             && !matches!(
                 &event,
                 WindowEvent::CloseRequested
-                    | WindowEvent::Resized(_)
-                    | WindowEvent::RedrawRequested
-            )
-        {
-            return;
-        }
-        // The pack reload's progress overlay takes no input
-        // (`LoadingOverlay`): `start_pack_reload` released what was held.
-        if self.server_packs.reload.is_some()
-            && !matches!(
-                &event,
-                WindowEvent::CloseRequested
-                    | WindowEvent::Focused(_)
                     | WindowEvent::Resized(_)
                     | WindowEvent::RedrawRequested
             )
@@ -12740,7 +12629,6 @@ impl ApplicationHandler for Game<'_> {
                             && self.settings.file.bool("pauseOnLostFocus")
                             && self.book.is_none()
                             && self.sign_edit.is_none()
-                            && self.server_packs.prompt.is_none()
                             && !self.dialog_open()
                         {
                             self.screen = Screen::Paused;
@@ -12870,13 +12758,6 @@ impl ApplicationHandler for Game<'_> {
                 WindowEvent::MouseInput { state, button, .. } if self.link_prompt.is_some() => {
                     if state == ElementState::Pressed && button == MouseButton::Left {
                         self.link_prompt_click();
-                    }
-                }
-                WindowEvent::MouseInput { state, button, .. }
-                    if self.server_packs.prompt.is_some() =>
-                {
-                    if state == ElementState::Pressed && button == MouseButton::Left {
-                        self.pack_prompt_click()?;
                     }
                 }
                 WindowEvent::MouseInput { state, button, .. } if self.dialog_open() => {
@@ -13072,9 +12953,6 @@ impl ApplicationHandler for Game<'_> {
                         Screen::WorldOptions if button == MouseButton::Left => {
                             self.world_options_release()
                         }
-                        Screen::Friends if pressed && button == MouseButton::Left => {
-                            self.friends_screen_click()
-                        }
                         Screen::CommandBlock if pressed && button == MouseButton::Left => {
                             self.command_block_click()
                         }
@@ -13120,13 +12998,6 @@ impl ApplicationHandler for Game<'_> {
                         && event.physical_key == PhysicalKey::Code(KeyCode::Escape)
                     {
                         self.answer_link_prompt(false);
-                    }
-                }
-                WindowEvent::KeyboardInput { event, .. } if self.server_packs.prompt.is_some() => {
-                    if event.state == ElementState::Pressed
-                        && event.physical_key == PhysicalKey::Code(KeyCode::Escape)
-                    {
-                        self.answer_pack_prompt(false)?;
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. } if self.dialog_open() => {
@@ -13346,9 +13217,6 @@ impl ApplicationHandler for Game<'_> {
                     }
                     let updated = Instant::now();
                     self.track_toggle_screens();
-                    // For the "I'm playing" ping: an atomic, sent on when it changes.
-                    horizon_client::heartbeat::set_lan(self.is_published());
-                    self.update_discord_presence();
                     let steps = self.clock.advance(elapsed);
                     // The world ticking in the frame: once its ticks took a
                     // tick's length, the rest are dropped (`FixedStep::tick_fits`).
@@ -13367,7 +13235,6 @@ impl ApplicationHandler for Game<'_> {
                             horizon_client::spans::time("tick", || self.tick())?;
                             // In single player the tick is the integrated server's.
                             if self.remote.is_none() {
-                                self.perf.tick(tick.elapsed().as_secs_f32() * 1000.0);
                                 self.debug_charts.log_tick(tick, tick.elapsed());
                             }
                             self.tick_ambience();
@@ -13384,7 +13251,6 @@ impl ApplicationHandler for Game<'_> {
                     }
                     self.extras_frame(elapsed);
                     self.mods_frame(elapsed);
-                    self.poll_moved_extras();
                     self.extras_retry()?;
                     self.apply_mouse_look();
                     self.pad_look(elapsed.as_secs_f32());
@@ -13474,10 +13340,10 @@ impl ApplicationHandler for Game<'_> {
                                 self.started.elapsed().as_millis()
                             );
                         }
-                        if self.title.is_some() {
-                            self.perf.title_shown();
-                        } else if self.screen == Screen::Playing && self.player.is_some() {
-                            self.perf.frame(elapsed.as_secs_f32() * 1000.0);
+                        if self.title.is_none()
+                            && self.screen == Screen::Playing
+                            && self.player.is_some()
+                        {
                             self.world_frames += 1;
                         }
                         self.frames += 1;
@@ -13555,7 +13421,6 @@ impl ApplicationHandler for Game<'_> {
             event_loop.exit();
             return;
         }
-        self.tick_server_packs();
         self.poll_control(event_loop);
         if self.pending_save.is_some() {
             return;
@@ -13586,7 +13451,6 @@ impl ApplicationHandler for Game<'_> {
         if let Err(e) = self.save_for_exit() {
             log::warn!("Skyline: failed to save the world on exit: {e}");
         }
-        self.finish_perf();
     }
 }
 /// clouds.png as filled cells (`CloudRenderer.prepare`: alpha 10 or more).
@@ -13654,7 +13518,6 @@ impl<'a> Game<'a> {
             pending_entry: None,
             world_loader: None,
             pending_pack_reload: false,
-            server_packs: Default::default(),
             link_prompt: None,
             dialogs: Default::default(),
             world_renderer_ready: false,
@@ -13893,7 +13756,6 @@ impl<'a> Game<'a> {
                     .unwrap_or_default()
                     .join("assets/skins"),
             )),
-            skin_profiles: RefCell::new(horizon_client::skins::Resolver::new()),
             skin_slots: Vec::new(),
             trim_slots: Vec::new(),
             cart_models: prepared.cart_models,
@@ -13918,10 +13780,7 @@ impl<'a> Game<'a> {
             item_columns: None,
             creative_screen: prepared.creative_screen,
             control: None,
-            agent_control_on: false,
-            agent_last: None,
             frame_stats: Default::default(),
-            perf: Default::default(),
             pending_screenshot: None,
             pending_bench: None,
             flight: None,
@@ -13945,7 +13804,6 @@ impl<'a> Game<'a> {
             world_options: None,
             options_to_world_options: false,
             command_block_screen: None,
-            friends: None,
             debug_keys: Default::default(),
             debug_charts: Default::default(),
             show_hitboxes: false,
@@ -14117,7 +13975,6 @@ impl Game<'_> {
         if self.rest_loader.is_none() && self.world_loader.is_none() {
             return Ok(false);
         }
-        self.perf.world_opening();
         if self.title.is_none() {
             self.title = Some(Title::new(
                 std::env::current_dir()?.join("saves"),
@@ -14332,7 +14189,6 @@ fn load_resources(
     };
     if let Some(ui) = ui {
         if menu {
-            horizon_client::telemetry::mark_ui_ready();
             log::info!(
                 "Skyline: UI bundle ready after {} ms",
                 started.elapsed().as_millis()
@@ -14372,7 +14228,6 @@ fn load_resources(
     if !ui_ready || root != requested_root {
         let ui = UiResources::load(&root, vanilla_root)?;
         if menu {
-            horizon_client::telemetry::mark_ui_ready();
             log::info!(
                 "Skyline: UI bundle ready after {} ms",
                 started.elapsed().as_millis()
@@ -14450,7 +14305,6 @@ fn load_resources(
     };
     let resources = Arc::new(resources);
     if menu {
-        horizon_client::telemetry::mark_core_ready();
         log::info!(
             "Skyline: core-ready after {} ms",
             started.elapsed().as_millis()
@@ -14490,7 +14344,6 @@ fn load_resources(
                     .set(rest)
                     .map_err(|_| "world resources already loaded".to_owned())?;
                 progress.set(9);
-                horizon_client::telemetry::mark_rest_ready();
                 log::info!(
                     "Skyline: rest-ready after {} ms",
                     started.elapsed().as_millis()
@@ -14837,10 +14690,9 @@ fn start_game<'a>(
     // Benchmarks measure the game alone.
     if game.options.benchmark.is_none() {
         game.mods.dev = game.options.dev_mods.clone();
-        game.start_moved_extras();
         game.start_mods();
     }
-    game.start_agent_control()?;
+    game.start_control()?;
     if let Some(scenario) = game.options.benchmark.clone() {
         let control = game
             .control
@@ -14946,7 +14798,6 @@ fn write_report(game: &Game<'_>) -> Result<()> {
 
 fn run_event_loop(mut game: Game<'_>) -> Result<()> {
     EventLoop::new()?.run_app(&mut game)?;
-    horizon_client::discord_presence::stop();
     write_report(&game)?;
     if let Some(e) = game.error.take() {
         return Err(e);
@@ -15007,7 +14858,6 @@ impl Loading {
                 return;
             }
         };
-        horizon_client::telemetry::note_display(&window);
         let offscreen = self.options.as_ref().is_some_and(|o| o.offscreen);
         match loading_renderer(
             window.clone(),
@@ -15104,9 +14954,6 @@ impl Loading {
         );
         if let Some(renderer) = &mut self.renderer {
             match renderer.render(&frame) {
-                Ok(true) if self.gui.is_some() && self.menu.pending.is_none() => {
-                    self.menu.perf.title_shown()
-                }
                 Ok(_) => {}
                 Err(e) => log::warn!("Skyline: loading screen frame failed: {e}"),
             }
@@ -15303,7 +15150,6 @@ fn run_loading(
     };
     let mut app = App::Loading(Box::new(loading));
     EventLoop::new()?.run_app(&mut app)?;
-    horizon_client::discord_presence::stop();
     match app {
         App::Ready(mut game) => {
             write_report(&game)?;
@@ -15340,16 +15186,6 @@ pub fn run() -> Result<()> {
         // 10 to 200 ms to get one back.
         horizon_threads::favour_current();
     }
-    // Someone is playing: the anonymous ping behind the launcher's "N playing now". Not for a
-    // server, a benchmark or a run that quits by itself.
-    if options.execution_role.is_client()
-        && options.benchmark.is_none()
-        && !options.offscreen
-        && options.frames.is_none()
-        && options.world_frames.is_none()
-    {
-        horizon_client::heartbeat::start();
-    }
     if options.execution_role.is_client() {
         horizon_threads::catch_stop_signals();
     }
@@ -15357,14 +15193,6 @@ pub fn run() -> Result<()> {
     horizon_client::spans::enable(options.spikes.is_some());
     let vanilla_root = options.resources.clone();
     let early_settings = Settings::load(&std::env::current_dir()?.join("options.txt"));
-    // "Playing Skyline" on Discord: never for a server; an automated run only talks to a test's fake Discord.
-    if options.dedicated.is_none() {
-        let automated = options.benchmark.is_some()
-            || options.offscreen
-            || options.frames.is_some()
-            || options.world_frames.is_some();
-        horizon_client::discord_presence::start(early_settings.extras.discord_presence, automated);
-    }
     // Snapshots of derived tables live in the game folder, never beside the
     // shared resources.
     Behaviours::set_cache_dir(std::env::current_dir()?.join(".skyline-cache"));
@@ -15372,7 +15200,7 @@ pub fn run() -> Result<()> {
         return run_loading(options, early_settings, vanilla_root, None, started);
     }
     let mut pack_error = None;
-    options.resources = packs::startup_root(&vanilla_root, &early_settings.resource_packs, &[])
+    options.resources = packs::startup_root(&vanilla_root, &early_settings.resource_packs)
         .unwrap_or_else(|e| {
             log::warn!("Skyline: resource packs not applied: {e}");
             pack_error = Some(e.to_string());

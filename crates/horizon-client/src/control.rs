@@ -155,7 +155,7 @@ pub struct Server {
     path: PathBuf,
     requests: mpsc::Receiver<Request>,
     sender: mpsc::Sender<Request>,
-    /// Clients connected now (an MCP server keeps one open; skyline-ctl one per command).
+    /// Clients connected now (skyline-ctl opens one per command).
     clients: Arc<AtomicUsize>,
     /// Set when the server is dropped: the listener stops accepting and exits.
     closed: Arc<AtomicBool>,
@@ -328,7 +328,7 @@ impl Drop for Server {
         if self.path.as_os_str().is_empty() {
             return;
         }
-        // Wake the listener so it sees `closed` and exits (agent control turned off in-game).
+        // Wake the listener so it sees `closed` and exits.
         self.closed.store(true, Ordering::Relaxed);
         match self.port {
             Some(port) => drop(TcpStream::connect((Ipv4Addr::LOCALHOST, port))),

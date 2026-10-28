@@ -19,7 +19,6 @@ members = [
     "crates/horizon-prepare",
     "crates/horizon-telemetry",
     "crates/horizon-bench",
-    "crates/horizon-friends",
     "crates/horizon-mod-sdk",
     "crates/horizon-mods",
     "crates/horizon-mods/tests/guest",
