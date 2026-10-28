@@ -1886,7 +1886,6 @@ impl Settings {
     }
 }
 
-
 #[cfg(test)]
 #[path = "backend/java_tests.rs"]
 mod java_tests;

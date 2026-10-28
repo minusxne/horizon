@@ -342,34 +342,19 @@ fn extract_cookies(agent: &Agent, url: &Url) -> Option<Header> {
     }
 }
 
-/// Horizon offline snapshot: the only hosts any request may reach, Microsoft sign-in and the
-/// Minecraft services behind it (profiles, joining online-mode servers, skins), and this computer
-/// (a server the player hosts here). Every redirect hop passes through here too.
-const ALLOWED_HOSTS: &[&str] = &[
-    "login.microsoftonline.com",
-    "login.live.com",
-    "user.auth.xboxlive.com",
-    "xsts.auth.xboxlive.com",
-    "sessionserver.mojang.com",
-    "api.mojang.com",
-    "textures.minecraft.net",
-    "localhost",
-];
-const ALLOWED_DOMAINS: &[&str] = &[".minecraftservices.com"];
-
+/// Skyline is offline: a request may reach this computer only (a server the player hosts here,
+/// its control API). Every redirect hop passes through here too.
 fn host_allowed(hostname: &str) -> bool {
     let host = hostname.trim_end_matches('.').to_ascii_lowercase();
     let ip = host.trim_start_matches('[').trim_end_matches(']');
-    ALLOWED_HOSTS.contains(&host.as_str())
-        || ALLOWED_DOMAINS.iter().any(|d| host.ends_with(d))
-        || ip.parse::<std::net::IpAddr>().is_ok_and(|ip| ip.is_loopback())
+    host == "localhost" || ip.parse::<std::net::IpAddr>().is_ok_and(|ip| ip.is_loopback())
 }
 
 /// Connect the socket, either by using the pool or grab a new one.
 fn connect_socket(unit: &Unit, hostname: &str, use_pooled: bool) -> Result<(Stream, bool), Error> {
     if !host_allowed(hostname) {
         return Err(ErrorKind::ConnectionFailed.msg(format!(
-            "{hostname}: this offline build of Horizon contacts no servers but Microsoft sign-in"
+            "{hostname}: Skyline is offline and reaches no address but this computer's"
         )));
     }
     match unit.url.scheme() {
@@ -766,25 +751,20 @@ mod offline_snapshot_tests {
     use super::host_allowed;
 
     #[test]
-    fn only_sign_in_and_minecraft_services_are_reachable() {
+    fn only_this_computer_is_reachable() {
+        for host in ["127.0.0.1", "127.0.0.2", "[::1]", "localhost", "LOCALHOST."] {
+            assert!(host_allowed(host), "{host}");
+        }
         for host in [
             "login.microsoftonline.com",
             "xsts.auth.xboxlive.com",
             "api.minecraftservices.com",
             "sessionserver.mojang.com",
-            "TEXTURES.minecraft.net.",
-            "127.0.0.1",
-            "[::1]",
-            "localhost",
-        ] {
-            assert!(host_allowed(host), "{host}");
-        }
-        for host in [
+            "textures.minecraft.net",
+            "piston-meta.mojang.com",
             "api.github.com",
-            "telemetry.playhorizon.dev",
-            "piston-data.mojang.com",
-            "minecraftservices.com.evil.example",
-            "evilminecraftservices.com",
+            "api.mclo.gs",
+            "api.modrinth.com",
             "192.168.1.10",
             "localhost.example.com",
         ] {

@@ -619,9 +619,7 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
         Cmd::Add { folder } => {
             let tag = backend::add_version_from_folder(&folder)?;
             if as_json {
-                json(
-                    serde_json::json!({ "added": tag, "prepared": backend::is_prepared(&tag) }),
-                );
+                json(serde_json::json!({ "added": tag, "prepared": backend::is_prepared(&tag) }));
             } else if backend::is_prepared(&tag) {
                 println!("Added {tag}. It is prepared already.");
             } else {

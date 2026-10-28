@@ -1,25 +1,6 @@
-//! The game's log as the console shows it, and sharing it.
-//!
-//! Sharing uploads the log to mclo.gs, and only when the player asks (a click, or `logs share`).
-//! mclo.gs is a paste service made for Minecraft logs by Aternos: no account, links expire after
-//! 90 days unread, and the uploader gets a token that deletes the paste. Before anything leaves
-//! the computer, [`private`] takes out the player's home folder, their user name and their
-//! account names.
+//! The game's log as the console shows it, and a private copy of it: [`private`] takes out the
+//! player's home folder, their user name and their offline names, for a log they pass on.
 use std::path::Path;
-
-/// mclo.gs's API; `SKYLINE_LAUNCHER_PASTE_URL` points it elsewhere for tests.
-const API: &str = "https://api.mclo.gs/1";
-const PASTE_ENV: &str = "SKYLINE_LAUNCHER_PASTE_URL";
-/// mclo.gs keeps at most 25,000 lines and 10 MiB: the end of a longer log is sent.
-const MAX_LINES: usize = 25_000;
-const MAX_BYTES: usize = 10 << 20;
-
-fn api() -> String {
-    std::env::var(PASTE_ENV)
-        .ok()
-        .filter(|u| !u.is_empty())
-        .unwrap_or_else(|| API.into())
-}
 
 /// Whether a console line matches the search: every word, in any case.
 pub fn matches(line: &str, search: &str) -> bool {
@@ -96,61 +77,6 @@ fn replace_word(text: &str, word: &str, with: &str) -> String {
     }
     out.push_str(&text[at..]);
     out
-}
-
-/// The end of the log that fits what mclo.gs keeps.
-pub fn fit(text: &str) -> &str {
-    let mut start = 0;
-    let lines: Vec<usize> = text.match_indices('\n').map(|(i, _)| i + 1).collect();
-    if lines.len() > MAX_LINES {
-        start = lines[lines.len() - MAX_LINES - 1];
-    }
-    while text.len() - start > MAX_BYTES {
-        start = text[start..]
-            .find('\n')
-            .map_or(text.len(), |i| start + i + 1);
-    }
-    &text[start..]
-}
-
-/// A shared log: its page, and what deletes it.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Shared {
-    pub url: String,
-    pub id: String,
-    pub token: String,
-}
-
-/// Uploads `text` (already [`private`]) and returns its link.
-pub fn share(text: &str) -> Result<Shared, String> {
-    let body = serde_json::json!({ "content": fit(text), "source": "Skyline launcher" });
-    let answer: serde_json::Value = ureq::post(&format!("{}/log", api()))
-        .send_json(body)
-        .map_err(|e| format!("mclo.gs didn't take the log: {e}"))?
-        .into_json()
-        .map_err(|e| format!("mclo.gs answered something unexpected: {e}"))?;
-    let field = |k: &str| answer[k].as_str().map(str::to_string);
-    match (
-        answer["success"].as_bool(),
-        field("url"),
-        field("id"),
-        field("token"),
-    ) {
-        (Some(true), Some(url), Some(id), Some(token)) => Ok(Shared { url, id, token }),
-        _ => Err(format!(
-            "mclo.gs didn't take the log: {}",
-            field("error").unwrap_or_else(|| "no reason given".into())
-        )),
-    }
-}
-
-/// Deletes a log shared from here.
-pub fn unshare(shared: &Shared) -> Result<(), String> {
-    ureq::delete(&format!("{}/log/{}", api(), shared.id))
-        .set("Authorization", &format!("Bearer {}", shared.token))
-        .call()
-        .map_err(|e| format!("mclo.gs didn't delete it: {e}"))?;
-    Ok(())
 }
 
 #[cfg(test)]

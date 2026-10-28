@@ -11,14 +11,12 @@ use std::{
 
 fn fixture() -> PathBuf {
     let root = std::env::temp_dir().join(format!("skyline-startup-{}", std::process::id()));
-    for folder in ["game/telemetry", "launcher", "data", "config", "probes"] {
+    for folder in ["game", "launcher", "data", "config", "probes"] {
         fs::create_dir_all(root.join(folder)).unwrap();
     }
-    fs::write(root.join("launcher/settings.json"), r#"{"skip_opening":true,"install_new_versions":false,"desktop_entry":false,"ping_notice_seen":true}"#).unwrap();
-    let consent = serde_json::json!({"version":horizon_telemetry::CONSENT_VERSION,"choices":{}});
     fs::write(
-        root.join("game/telemetry/consent.json"),
-        consent.to_string(),
+        root.join("launcher/settings.json"),
+        r#"{"skip_opening":true,"desktop_entry":false}"#,
     )
     .unwrap();
     fs::copy(support::console_probe(), root.join("probes/powershell.exe")).unwrap();
@@ -35,9 +33,7 @@ fn launch(root: &Path) -> Child {
         .env("SKYLINE_LAUNCHER_HOME", root.join("launcher"))
         .env("XDG_DATA_HOME", root.join("data"))
         .env("XDG_CONFIG_HOME", root.join("config"))
-        .env("SKYLINE_LAUNCHER_NO_SELF_UPDATE", "1")
         .env("SKYLINE_NO_AUDIO", "1")
-        .env("SKYLINE_TELEMETRY_URL", "off")
         .env("SKYLINE_STARTUP_PROBE_LOG", root.join("probes.log"))
         .env("SKYLINE_LAUNCHER_BENCH", root.join("timing.json"))
         .stdout(Stdio::piped())

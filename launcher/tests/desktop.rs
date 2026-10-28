@@ -11,7 +11,6 @@ fn desktop_entry(home: &Path, wrapper: Option<&str>, args: &[&str]) {
         .args(args)
         .env("SKYLINE_LAUNCHER_HOME", home.join("launcher"))
         .env("XDG_DATA_HOME", home.join("data"))
-        .env("SKYLINE_LAUNCHER_NO_SELF_UPDATE", "1")
         .env_remove("SKYLINE_LAUNCHER_DESKTOP_EXEC");
     if let Some(wrapper) = wrapper {
         command.env("SKYLINE_LAUNCHER_DESKTOP_EXEC", wrapper);

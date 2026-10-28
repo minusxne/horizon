@@ -427,7 +427,11 @@ pub fn delete(query: &str) -> Result<PathBuf, String> {
         trash::delete(dir).map_err(|e| e.to_string())
     })?;
     let mut settings = backend::Settings::load();
-    if settings.instance.is_some() && !list().iter().any(|i| Some(&i.id) == settings.instance.as_ref()) {
+    if settings.instance.is_some()
+        && !list()
+            .iter()
+            .any(|i| Some(&i.id) == settings.instance.as_ref())
+    {
         settings.instance = None;
         settings.save();
     }
