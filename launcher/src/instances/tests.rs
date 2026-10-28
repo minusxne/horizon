@@ -33,8 +33,8 @@ fn files(dir: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     out
 }
 
-/// A game home as a player has it before instances: worlds, options, packs, a session, an
-/// imported modpack and a registry modpack with their own worlds.
+/// A game home as a player has it before instances: worlds, options, packs, and folders left
+/// by features Skyline no longer has (a session, data collection, an imported modpack).
 fn player_home(home: &Path) {
     put(&home.join("saves/World/level.dat"), "world");
     put(&home.join("saves/World/region/r.0.0.mca"), "region");
@@ -45,53 +45,32 @@ fn player_home(home: &Path) {
     put(&home.join("logs/latest.log"), "log");
     put(&home.join("sessions/a.json"), "token");
     put(&home.join("telemetry/consent.json"), "{}");
-    let pack = horizon_port_pack::import::Pack {
-        name: "Small Pack".into(),
-        ..Default::default()
-    };
-    put(
-        &home.join("ports/small-pack/pack.json"),
-        &serde_json::to_string(&pack).unwrap(),
-    );
-    put(
-        &home.join("ports/small-pack/home/saves/Modded/level.dat"),
-        "modded",
-    );
-    put(
-        &home.join("skyline-packs/cozy/pack.json"),
-        r#"{"id":"cozy","name":"Cozy","version":"1.0.0","sha256":"00","mods":[]}"#,
-    );
-    put(
-        &home.join("skyline-packs/cozy/home/saves/Cozy/level.dat"),
-        "cozy",
-    );
+    put(&home.join("ports/small-pack/pack.json"), "{}");
+    put(&home.join("skyline-packs/cozy/pack.json"), "{}");
 }
 
 #[test]
-#[ignore = "pack:/port: instances are no longer built; rewrite for Own-only"]
-fn existing_worlds_stay_where_they_are_and_every_folder_becomes_an_instance() {
+fn existing_worlds_stay_where_they_are_and_new_instances_get_their_own_folder() {
     let root = scratch("migrate");
-    let (home, data) = (root.join("horizon"), root.join("launcher"));
+    let (home, data) = (root.join("skyline"), root.join("launcher"));
     player_home(&home);
     let before = files(&home);
 
-    // A launcher with instances, on a player's existing folders: no instances.json yet.
+    // A launcher with instances, on a player's existing folders: only the default one, and
+    // old modpack folders are not instances.
     let all = list_in(&home, &data);
     let ids: Vec<&str> = all.iter().map(|i| i.id.as_str()).collect();
-    assert_eq!(ids, [DEFAULT, "pack:cozy", "port:small-pack"]);
+    assert_eq!(ids, [DEFAULT]);
     assert_eq!(all[0].name, "Skyline");
     assert_eq!(all[0].home, home);
-    assert_eq!(all[1].home, home.join("skyline-packs/cozy/home"));
-    assert_eq!(all[2].name, "Small Pack");
-    assert_eq!(all[2].home, home.join("ports/small-pack/home"));
 
     // Everything the player can do with instances, then not one byte of theirs has moved.
     let empty = create_in(&home, &data, "Survival", None).unwrap();
     let copy = create_in(&home, &data, "My copy", Some(&all[0])).unwrap();
     edit_in(&home, &data, DEFAULT, |m| m.name = Some("Main".into())).unwrap();
-    edit_in(&home, &data, "Small Pack", |m| {
+    edit_in(&home, &data, "My copy", |m| {
         m.icon = Some(Icon::Texture("diamond".into()));
-        m.group = Some("Modded".into());
+        m.group = Some("Copies".into());
     })
     .unwrap();
     let after = files(&home);
@@ -123,21 +102,21 @@ fn existing_worlds_stay_where_they_are_and_every_folder_becomes_an_instance() {
 
     let all = list_in(&home, &data);
     assert_eq!(all[0].name, "Main");
-    let port = find_in(&all, "port:small-pack").unwrap();
-    assert_eq!(port.group.as_deref(), Some("Modded"));
-    assert_eq!(port.home, home.join("ports/small-pack/home"));
+    let mine = find_in(&all, "my-copy").unwrap();
+    assert_eq!(mine.group.as_deref(), Some("Copies"));
+    assert_eq!(mine.kind, Kind::Own);
     fs::remove_dir_all(&root).unwrap();
 }
 
 #[test]
-#[ignore = "pack:/port: instances are no longer built; rewrite for Own-only"]
-fn names_stay_unique_and_packs_are_not_copied() {
+fn names_stay_unique() {
     let root = scratch("names");
-    let (home, data) = (root.join("horizon"), root.join("launcher"));
+    let (home, data) = (root.join("skyline"), root.join("launcher"));
     player_home(&home);
     create_in(&home, &data, "Survival", None).unwrap();
     assert!(create_in(&home, &data, "survival", None).is_err());
     assert!(create_in(&home, &data, "  ", None).is_err());
+    assert!(create_in(&home, &data, "skyline", None).is_err());
     // Another name with the same folder name gets the next free folder.
     let second = create_in(&home, &data, "Survival!", None).unwrap();
     assert_eq!(second.id, "survival-2");
@@ -145,24 +124,46 @@ fn names_stay_unique_and_packs_are_not_copied() {
     assert!(edit_in(&home, &data, "survival-2", |m| m.name =
         Some("SURVIVAL".into()))
     .is_err());
-    let port = find_in(&list_in(&home, &data), "small-pack").unwrap();
-    assert!(create_in(&home, &data, "Pack copy", Some(&port)).is_err());
-    assert!(!home.join("instances/pack-copy").exists());
     // An empty group is no group.
     let grouped = edit_in(&home, &data, "Survival", |m| m.group = Some(" ".into())).unwrap();
     assert_eq!(grouped.group, None);
-    // An import named like an instance: both can still change everything but their names.
-    let mut store = Store::load(&data);
-    store.instances.entry(port.id.clone()).or_default().name = Some("Survival".into());
-    store.save(&data).unwrap();
+    // Changing anything but the name keeps working.
     let launched = edit_in(&home, &data, "survival", |m| {
         m.launch.wrapper = "nice".into()
     })
     .unwrap();
     assert_eq!(launched.launch.wrapper, "nice");
-    assert!(edit_in(&home, &data, "survival-2", |m| m.name =
-        Some("survival".into()))
-    .is_err());
+    fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
+fn deleting_an_instance_moves_its_folder_and_forgets_it() {
+    let root = scratch("delete");
+    let (home, data) = (root.join("skyline"), root.join("launcher"));
+    player_home(&home);
+    let made = create_in(&home, &data, "Temporary", None).unwrap();
+    edit_in(&home, &data, "Temporary", |m| m.group = Some("Old".into())).unwrap();
+    // The default instance is the game's home: never deleted.
+    let nothing = |_: &Path| -> Result<(), String> { panic!("the game's home was removed") };
+    assert!(delete_in(&home, &data, DEFAULT, nothing).is_err());
+    // A failed removal keeps the instance as it was.
+    assert!(delete_in(&home, &data, "Temporary", |_| Err("busy".into())).is_err());
+    assert!(find_in(&list_in(&home, &data), "temporary").is_ok());
+
+    let mut moved = None;
+    let gone = delete_in(&home, &data, "Temporary", |dir| {
+        moved = Some(dir.to_path_buf());
+        fs::remove_dir_all(dir).map_err(|e| e.to_string())
+    })
+    .unwrap();
+    assert_eq!(gone, made.home);
+    assert_eq!(moved.as_deref(), Some(made.home.as_path()));
+    assert!(!made.home.exists());
+    assert!(find_in(&list_in(&home, &data), "temporary").is_err());
+    let text = fs::read_to_string(data.join(FILE)).unwrap();
+    assert!(!text.contains("temporary"), "{text}");
+    // The player's own files are where they were.
+    assert!(home.join("saves/World/level.dat").is_file());
     fs::remove_dir_all(&root).unwrap();
 }
 
@@ -172,8 +173,6 @@ fn an_instance_follows_the_players_answers() {
     let (main, own) = (root.join("main"), root.join("own"));
     put(&main.join("options.txt"), "fov:90\n");
     put(&main.join("skyline-player.txt"), "name:Player123\n");
-    put(&main.join("telemetry/consent.json"), r#"{"version":1}"#);
-    horizon_core::no_ai::set(&main, true).unwrap();
     put(&own.join("options.txt"), "fov:70\n");
     follow_player(&main, &own);
     assert_eq!(
@@ -184,14 +183,6 @@ fn an_instance_follows_the_players_answers() {
         fs::read_to_string(own.join("skyline-player.txt")).unwrap(),
         "name:Player123\n"
     );
-    assert_eq!(
-        fs::read_to_string(own.join("telemetry/consent.json")).unwrap(),
-        r#"{"version":1}"#
-    );
-    assert!(horizon_core::no_ai::is_on(&own));
-    horizon_core::no_ai::set(&main, false).unwrap();
-    follow_player(&main, &own);
-    assert!(!horizon_core::no_ai::is_on(&own));
     fs::remove_dir_all(&root).unwrap();
 }
 

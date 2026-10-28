@@ -1,11 +1,9 @@
 //! Instances: separate game folders, each with its own worlds, options and packs.
 //!
 //! Nothing that exists moves. The game's home (`backend::game_home`) stays the default instance,
-//! "Skyline", with its saves and options where they are. Imported modpacks (`ports/<pack>/home/`)
-//! and registry modpacks (`skyline-packs/<id>/home/`) are instances too, played from their own
-//! folders as before. New instances get `instances/<slug>/` in the game's home. What the player
-//! chooses about an instance (its name, icon, group) is kept in `instances.json` in the
-//! launcher's data folder, so renaming one never moves a folder.
+//! "Skyline", with its saves and options where they are. New instances get `instances/<slug>/`
+//! in the game's home. What the player chooses about an instance (its name, icon, group) is kept
+//! in `instances.json` in the launcher's data folder, so renaming one never moves a folder.
 use crate::backend;
 use crate::launch::Launch;
 use serde::{Deserialize, Serialize};
@@ -39,12 +37,8 @@ pub fn slug(name: &str) -> String {
 pub enum Kind {
     /// The game's home: what every player had before instances.
     Default,
-    /// Made in the launcher: `instances/<slug>/`.
+    /// Made in the launcher (or imported from a .zip): `instances/<slug>/`.
     Own,
-    /// An imported Java modpack (modpacks.rs).
-    Port,
-    /// A modpack from Skyline's registry.
-    Pack,
 }
 
 /// What an instance shows in the sidebar: a block or item texture from the player's prepared
@@ -142,11 +136,11 @@ impl Store {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Instance {
-    /// `horizon`, an own instance's folder name, `port:<pack>` or `pack:<id>`.
+    /// `horizon` (the default instance, kept from before the rename) or an own instance's folder.
     pub id: String,
     pub name: String,
     pub kind: Kind,
-    /// The folder the pack's tools work in: the game's home for Default and Own instances.
+    /// The folder its tools work in: the game's home for the default instance, else its own.
     pub work: PathBuf,
     /// The game folder it plays in: saves, options.txt, packs.
     pub home: PathBuf,
@@ -237,18 +231,16 @@ fn list_in(game_home: &Path, data: &Path) -> Vec<Instance> {
     out
 }
 
-/// The instance an id, a name (any case) or a pack's folder name names.
+/// The instance an id or a name (any case) names.
 pub fn find(query: &str) -> Result<Instance, String> {
     find_in(&list(), query)
 }
 
 fn find_in(all: &[Instance], query: &str) -> Result<Instance, String> {
     let q = query.trim();
-    let bare = |id: &str| id.split_once(':').map_or(id, |(_, rest)| rest).to_string();
     all.iter()
         .find(|i| i.id == q)
         .or_else(|| all.iter().find(|i| i.name.eq_ignore_ascii_case(q)))
-        .or_else(|| all.iter().find(|i| bare(&i.id) == q))
         .cloned()
         .ok_or_else(|| format!("No instance {q}: skyline-launcher instance list shows them"))
 }
@@ -270,8 +262,9 @@ pub fn select(query: &str) -> Result<Instance, String> {
     Ok(instance)
 }
 
-/// What a copy of a game folder leaves out: other instances and packs, logs and crash reports,
-/// caches, data collection's state, and sign-in sessions (a session never leaves its folder).
+/// What a copy of a game folder leaves out: other instances, logs and crash reports, caches, and
+/// what features Skyline no longer has left behind (sessions, data collection, the mod browser,
+/// modpacks).
 const NOT_COPIED: &[&str] = &[
     OWN,
     "ports",
@@ -313,12 +306,6 @@ fn create_in(
     let all = list_in(game_home, data);
     if all.iter().any(|i| i.name.eq_ignore_ascii_case(name)) {
         return Err(format!("There is already an instance called {name}."));
-    }
-    if let Some(from) = from.filter(|f| matches!(f.kind, Kind::Port | Kind::Pack)) {
-        return Err(format!(
-            "{} plays its pack's mods: import the pack again for a second copy.",
-            from.name
-        ));
     }
     let base = slug(name);
     let taken = |s: &str| s == DEFAULT || game_home.join(OWN).join(s).exists();
@@ -431,6 +418,46 @@ fn edit_in(
     find_in(&list_in(game_home, data), &instance.id)
 }
 
+/// Deletes an own instance: its game folder goes to the system's trash (so a mistake can be
+/// undone there) and its choices leave `instances.json`. The default instance is the game's
+/// home and is never deleted. Returns the folder that was moved.
+pub fn delete(query: &str) -> Result<PathBuf, String> {
+    let data = backend::data_dir();
+    let home = delete_in(&backend::game_home(), &data, query, |dir| {
+        trash::delete(dir).map_err(|e| e.to_string())
+    })?;
+    let mut settings = backend::Settings::load();
+    if settings.instance.is_some() && !list().iter().any(|i| Some(&i.id) == settings.instance.as_ref()) {
+        settings.instance = None;
+        settings.save();
+    }
+    Ok(home)
+}
+
+fn delete_in(
+    game_home: &Path,
+    data: &Path,
+    query: &str,
+    remove: impl FnOnce(&Path) -> Result<(), String>,
+) -> Result<PathBuf, String> {
+    let instance = find_in(&list_in(game_home, data), query)?;
+    if instance.kind == Kind::Default {
+        return Err(format!(
+            "{} is the game's own folder and can't be deleted.",
+            instance.name
+        ));
+    }
+    if instance.home.exists() {
+        remove(&instance.home)
+            .map_err(|e| format!("Could not delete {}: {e}", instance.home.display()))?;
+    }
+    let mut store = Store::load(data);
+    if store.instances.remove(&instance.id).is_some() {
+        store.save(data)?;
+    }
+    Ok(instance.home)
+}
+
 /// Adds a finished run of the game to the instance's play time (by id: a renamed instance keeps
 /// it).
 pub fn record_play(id: &str, played: Duration) -> Result<(), String> {
@@ -461,9 +488,8 @@ pub fn play_time(played: Duration) -> String {
     }
 }
 
-/// Turns the game's command into this instance: its own game folder, and a pack's mods. The
-/// player's answers that hold everywhere follow it in: data collection and No AI as the
-/// launcher has them, and options.txt and the offline name when it has none yet.
+/// Turns the game's command into this instance: its own game folder. options.txt and the
+/// offline name follow it in from the game's home when it has none yet.
 pub fn apply(cmd: &mut Command, instance: &Instance) -> Result<(), String> {
     match instance.kind {
         Kind::Default => return Ok(()),
@@ -472,12 +498,6 @@ pub fn apply(cmd: &mut Command, instance: &Instance) -> Result<(), String> {
                 .map_err(|e| format!("{}: {e}", instance.home.display()))?;
             cmd.current_dir(&instance.home)
                 .env("SKYLINE_HOME", &instance.home);
-        }
-        Kind::Port | Kind::Pack => {
-            return Err(format!(
-                "{} is a modpack, which Skyline no longer plays.",
-                instance.name
-            ))
         }
     }
     follow_player(&backend::game_home(), &instance.home);
@@ -489,16 +509,6 @@ fn follow_player(game_home: &Path, home: &Path) {
         if !home.join(f).exists() && game_home.join(f).is_file() {
             let _ = fs::copy(game_home.join(f), home.join(f));
         }
-    }
-    let consent = horizon_telemetry::consent::Consent::path(game_home);
-    if consent.is_file() {
-        let to = horizon_telemetry::consent::Consent::path(home);
-        let _ = fs::create_dir_all(to.parent().unwrap());
-        let _ = fs::copy(consent, to);
-    }
-    let no_ai = horizon_core::no_ai::is_on(game_home);
-    if horizon_core::no_ai::is_on(home) != no_ai {
-        let _ = horizon_core::no_ai::set(home, no_ai);
     }
 }
 
