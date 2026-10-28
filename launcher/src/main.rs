@@ -1207,35 +1207,45 @@ fn version_tag(tag: &str) -> Div {
         .child(tag.trim_start_matches('v').to_string())
 }
 
-/// Skyline's mark: two stems, their reflection below, and the horizon across in the accent.
+/// Skyline's mark: a pixel city skyline in the accent, its reflection below and the horizon
+/// across (docs/media/brand/icon.svg, on the same 16-unit grid).
 fn mark(size: f32, t: &Theme) -> Div {
+    const TOWERS: [(f32, f32, f32, f32); 8] = [
+        (1.0, 8.0, 2.0, 3.0),
+        (3.0, 5.0, 3.0, 6.0),
+        (6.0, 7.0, 2.0, 4.0),
+        (8.0, 4.0, 2.0, 7.0),
+        (10.0, 9.0, 1.0, 2.0),
+        (11.0, 6.0, 3.0, 5.0),
+        (14.0, 9.0, 1.0, 2.0),
+        (4.0, 3.0, 1.0, 2.0),
+    ];
+    const REFLECTION: [(f32, f32, f32, f32); 7] = [
+        (1.0, 12.0, 2.0, 2.0),
+        (3.0, 12.0, 3.0, 3.0),
+        (6.0, 12.0, 2.0, 2.0),
+        (8.0, 12.0, 2.0, 4.0),
+        (10.0, 12.0, 1.0, 1.0),
+        (11.0, 12.0, 3.0, 3.0),
+        (14.0, 12.0, 1.0, 1.0),
+    ];
     let u = size / 16.;
-    let stem = |x: f32, y: f32, color: Hsla| {
+    let block = |(x, y, w, h): (f32, f32, f32, f32), color: Hsla| {
         div()
             .absolute()
             .left(px(x * u))
             .top(px(y * u))
-            .w(px(2. * u))
-            .h(px(4. * u))
+            .w(px(w * u))
+            .h(px(h * u))
             .bg(color)
     };
     div()
         .relative()
         .flex_none()
         .size(px(size))
-        .child(stem(4., 3., t.ink))
-        .child(stem(10., 3., t.ink))
-        .child(stem(4., 8., t.ink.opacity(0.36)))
-        .child(stem(10., 8., t.ink.opacity(0.36)))
-        .child(
-            div()
-                .absolute()
-                .left(px(u))
-                .top(px(7. * u))
-                .w(px(14. * u))
-                .h(px(u))
-                .bg(t.accent),
-        )
+        .children(TOWERS.map(|r| block(r, t.accent)))
+        .children(REFLECTION.map(|r| block(r, t.accent.opacity(0.36))))
+        .child(block((1., 11.0, 14., 1.), t.ink))
 }
 
 /// The last thing the player did was press Tab: focused controls show a ring (a click focuses them
@@ -1264,7 +1274,7 @@ fn keyboard(el: Stateful<Div>, t: &Theme) -> Stateful<Div> {
 }
 
 /// A button: a block with a light bevel on top and a darker lip below, its label in the pixel
-/// face. Primary (the one main action) is the violet face; Secondary a raised block; Ghost only
+/// face. Primary (the one main action) is the red face; Secondary a raised block; Ghost only
 /// its label until the pointer is over it.
 fn button(
     id: impl Into<SharedString>,
@@ -1375,7 +1385,7 @@ fn copy_to_clipboard(cx: &mut App, item: gpui::ClipboardItem) {
     }
 }
 
-/// An on/off switch: a square knob sliding in a sunk track that turns violet when on.
+/// An on/off switch: a square knob sliding in a sunk track that turns red when on.
 fn switch(id: impl Into<SharedString>, on: bool, t: &Theme) -> Stateful<Div> {
     let t = *t;
     let id: SharedString = id.into();

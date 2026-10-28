@@ -462,7 +462,7 @@ impl Streaming {
                 let generator = generator.clone();
                 let light = context.light.clone();
                 thread::Builder::new()
-                    .name(format!("horizon-worker-{i}"))
+                    .name(format!("skyline-worker-{i}"))
                     .spawn(move || {
                         // Ticks and frames come first (horizon_threads).
                         horizon_threads::behind_server();

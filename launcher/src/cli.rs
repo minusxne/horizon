@@ -465,7 +465,7 @@ enum ModsCmd {
         source: SourceArg,
     },
     /// Install a pack and what it needs into an instance, by its id or slug (checksums
-    /// checked); a Java mod is ported into horizon-mods and turned on; a modpack is imported as
+    /// checked); a Java mod is ported into skyline-mods and turned on; a modpack is imported as
     /// an instance of its own; a data pack goes into the world `--world` names
     Install {
         project: String,
@@ -640,7 +640,7 @@ enum Cmd {
     /// on|off, opening-animation on|off, proxy http://host:port ("default" removes it),
     /// while-playing stay|minimize|hide (what the window does while the game runs), language
     /// system|en|fr|ru (the window's language; system follows the computer's), accent
-    /// violet|blue|teal|green|amber|red|pink, background PATH (a picture behind Home; "default"
+    /// red|violet|blue|teal|green|amber|pink, background PATH (a picture behind Home; "default"
     /// shows Skyline's landscape)
     Settings {
         #[arg(value_parser = SETTING_KEYS)]

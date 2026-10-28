@@ -1077,7 +1077,7 @@ fn horizon_page_tooltip(page: Page) -> Option<&'static str> {
             "Shader packs from the shaderpacks folder: Skyline's own and those in the shaders/ format. One runs at a time."
         }
         Page::Mods => {
-            "Mods made for Skyline, from the horizon-mods folder. Each runs in a sandbox and stays off until you turn it on."
+            "Mods made for Skyline, from the skyline-mods folder. Each runs in a sandbox and stays off until you turn it on."
         }
         _ => return None,
     })
@@ -1488,7 +1488,7 @@ impl OptionsUi {
             Page::Mods => {
                 if s.mods.installed.is_empty() {
                     return vec![Row::Header(
-                        "No mods: put .hmod files in the horizon-mods folder",
+                        "No mods: put .hmod files in the skyline-mods folder",
                     )];
                 }
                 s.mods

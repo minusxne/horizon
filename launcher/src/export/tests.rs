@@ -127,14 +127,14 @@ fn a_zip_has_the_instance_and_the_picked_world_and_nothing_private() {
     assert_eq!(
         names(&out),
         [
-            "skyline-graphics.txt",
-            "skyline-mods/coords/horizon-mod.toml",
             "options.txt",
             "resourcepacks/Glass.zip",
             "resourcepacks/Own.zip",
             "saves/Base/level.dat",
             "saves/Base/region/r.0.0.mca",
             "servers.dat",
+            "skyline-graphics.txt",
+            "skyline-mods/coords/horizon-mod.toml",
         ]
     );
     // The world's level.dat keeps the player, without the UUID.
@@ -178,11 +178,11 @@ fn an_mrpack_lists_what_modrinth_serves_and_carries_the_rest() {
         names(&out),
         [
             "modrinth.index.json",
-            "overrides/skyline-graphics.txt",
-            "overrides/horizon-mods/coords/horizon-mod.toml",
             "overrides/options.txt",
             "overrides/resourcepacks/Own.zip",
             "overrides/servers.dat",
+            "overrides/skyline-graphics.txt",
+            "overrides/skyline-mods/coords/horizon-mod.toml",
         ]
     );
     let index: serde_json::Value =

@@ -2667,8 +2667,9 @@ pub struct Settings {
     /// What the window does while the game runs. Stays by default.
     #[serde(default)]
     pub while_playing: WhilePlaying,
-    /// The accent colour on top of the appearance (`themes::Accent`). Skyline's violet by default.
-    #[serde(default)]
+    /// The accent colour on top of the appearance (`themes::Accent`). Skyline's red by default.
+    /// Kept under `skyline_accent`: the old `accent` key's violet was the old default (`parse`).
+    #[serde(default, rename = "skyline_accent")]
     pub accent: crate::themes::Accent,
     /// Home's background: a picture the player picked, kept in the data folder under this name
     /// (`themes::keep_background`). Unset shows Skyline's landscape.
@@ -2705,10 +2706,16 @@ impl Settings {
             {
                 fields.remove("while_playing");
             }
-            if fields.get("accent").is_some_and(|a| {
+            // From before the rename: violet was the default and becomes red; a picked hue stays.
+            if let Some(old) = fields.remove("accent") {
+                if !fields.contains_key("skyline_accent") && old.as_str() != Some("violet") {
+                    fields.insert("skyline_accent".into(), old);
+                }
+            }
+            if fields.get("skyline_accent").is_some_and(|a| {
                 serde_json::from_value::<crate::themes::Accent>(a.clone()).is_err()
             }) {
-                fields.remove("accent");
+                fields.remove("skyline_accent");
             }
             // A language this launcher doesn't have yet follows the system's.
             if fields.get("language").is_some_and(|l| {
@@ -3071,9 +3078,18 @@ mod tests {
     }
 
     #[test]
-    fn the_accent_is_violet_unless_picked_and_an_unknown_one_keeps_the_rest() {
+    fn the_accent_is_red_unless_picked_and_an_unknown_one_keeps_the_rest() {
         use crate::themes::Accent;
-        assert_eq!(Settings::parse("{}").accent, Accent::Violet);
+        assert_eq!(Settings::parse("{}").accent, Accent::Red);
+        // The old key's violet was the old default: it becomes red. A picked hue stays.
+        assert_eq!(
+            Settings::parse(r#"{"accent": "violet"}"#).accent,
+            Accent::Red
+        );
+        assert_eq!(
+            Settings::parse(r#"{"skyline_accent": "violet"}"#).accent,
+            Accent::Violet
+        );
         let teal =
             Settings::parse(r#"{"accent": "teal", "background": "background-0123456789ab.png"}"#);
         assert_eq!(
@@ -3083,7 +3099,7 @@ mod tests {
         let future = Settings::parse(r#"{"accent": "plaid", "game_args": "--x"}"#);
         assert_eq!(
             (future.accent, future.game_args.as_str()),
-            (Accent::Violet, "--x")
+            (Accent::Red, "--x")
         );
     }
 
@@ -3991,7 +4007,7 @@ mod tests {
             .map(|e| e.file_name().to_string_lossy().into_owned())
             .collect();
         names.sort();
-        assert_eq!(names, ["skyline-launcher", "new"]);
+        assert_eq!(names, ["new", "skyline-launcher"]);
         let _ = fs::remove_dir_all(&dir);
     }
 

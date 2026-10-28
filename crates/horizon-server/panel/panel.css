@@ -1,14 +1,14 @@
 /* The Skyline server panel. Colours and spacing are horizon-theme's tokens (crates/horizon-theme/tokens.css). */
 :root {
-  --page: #fafafc;
-  --plate-soft: #f3f3f8;
-  --plate: #ebecf4;
+  --page: #fcfafa;
+  --plate-soft: #f8f2f2;
+  --plate: #f3eaea;
   --surface: #ffffff;
-  --rule: #e2e3ea;
-  --ink: #16181f;
-  --ink-soft: #3b3e49;
-  --muted: #646875;
-  --accent: #5b3fd6;
+  --rule: #ebe1e1;
+  --ink: #1f1617;
+  --ink-soft: #493b3c;
+  --muted: #75646a;
+  --accent: #b8303a;
   --on-accent: #ffffff;
   --danger: #b4372a;
   --success: #1d7a48;
@@ -20,16 +20,16 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --page: #0d0e13;
-    --plate-soft: #181a22;
-    --plate: #20222c;
-    --surface: #16181f;
-    --rule: #24262f;
-    --ink: #ecedf3;
-    --ink-soft: #c5c7d1;
-    --muted: #8b8f9c;
-    --accent: #9a86ff;
-    --on-accent: #0d0e13;
+    --page: #130d0e;
+    --plate-soft: #221819;
+    --plate: #2c2021;
+    --surface: #1f1617;
+    --rule: #2f2425;
+    --ink: #f3ecec;
+    --ink-soft: #d1c5c6;
+    --muted: #9c8b8d;
+    --accent: #ff868e;
+    --on-accent: #130d0e;
     --danger: #f07a68;
     --success: #45c27a;
     color-scheme: dark;

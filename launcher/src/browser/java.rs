@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 /// more, so older answers are checked again.
 const CHECKS: &str = "mod-browser/checks-1";
 /// The game's mod folder and on-list, beside `options.txt` (`horizon_client::mod_list`).
-pub const MODS_DIR: &str = "horizon-mods";
+pub const MODS_DIR: &str = "skyline-mods";
 const MODS_LIST: &str = "skyline-mods.txt";
 /// How deep required mods are followed.
 const MAX_DEPTH: usize = 3;

@@ -3,7 +3,7 @@
 //! generated from [`css`] by `cargo run -p xtask -- tokens`, which the site's build reads from main). Change a value here and all three
 //! follow. The system is described in `docs/design-system.md`.
 //!
-//! Cool neutrals in two appearances and one violet accent; Geist and Geist Mono only, bundled
+//! Warm neutrals in two appearances and one red accent; Geist and Geist Mono only, bundled
 //! here under the SIL Open Font License (`fonts/OFL-Geist.txt`). Colours are `0xRRGGBB`; sizes
 //! are in logical pixels.
 use std::fmt::Write as _;
@@ -305,15 +305,15 @@ pub struct Palette {
 }
 
 pub const LIGHT: Palette = Palette {
-    page: 0xfafafc,
-    plate_soft: 0xf3f3f8,
-    plate: 0xebecf4,
+    page: 0xfcfafa,
+    plate_soft: 0xf8f2f2,
+    plate: 0xf3eaea,
     surface: 0xffffff,
-    rule: 0xe2e3ea,
-    ink: 0x16181f,
-    ink_soft: 0x3b3e49,
-    muted: 0x646875,
-    accent: 0x5b3fd6,
+    rule: 0xebe1e1,
+    ink: 0x1f1617,
+    ink_soft: 0x493b3c,
+    muted: 0x75646a,
+    accent: 0xb8303a,
     on_accent: 0xffffff,
     danger: 0xb4372a,
     success: 0x1d7a48,
@@ -321,24 +321,24 @@ pub const LIGHT: Palette = Palette {
 };
 
 pub const DARK: Palette = Palette {
-    page: 0x0d0e13,
-    plate_soft: 0x181a22,
-    plate: 0x20222c,
-    surface: 0x16181f,
-    rule: 0x24262f,
-    ink: 0xecedf3,
-    ink_soft: 0xc5c7d1,
-    muted: 0x8b8f9c,
-    accent: 0x9a86ff,
-    on_accent: 0x0d0e13,
+    page: 0x130d0e,
+    plate_soft: 0x221819,
+    plate: 0x2c2021,
+    surface: 0x1f1617,
+    rule: 0x2f2425,
+    ink: 0xf3ecec,
+    ink_soft: 0xd1c5c6,
+    muted: 0x9c8b8d,
+    accent: 0xff868e,
+    on_accent: 0x130d0e,
     danger: 0xf07a68,
     success: 0x45c27a,
     dark: true,
 };
 
 /// The launcher's and the website's blocky look ("Blocks" in `docs/design-system.md`): stone-dark
-/// (or lavender-light) neutrals with a violet cast, panels with a dark outline, a light bevel on top
-/// and a darker lip below, and the violet `face` of the one big action. The game's menus keep
+/// (or blush-light) neutrals with a warm red cast, panels with a dark outline, a light bevel on top
+/// and a darker lip below, and the red `face` of the one big action. The game's menus keep
 /// [`LIGHT`] and [`DARK`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Blocks {
@@ -382,24 +382,24 @@ pub struct Blocks {
 }
 
 pub const BLOCKS_DARK: Blocks = Blocks {
-    page: 0x0f0d17,
-    side: 0x0b0a11,
-    panel: 0x1a1727,
-    raised: 0x221e34,
-    button: 0x2b2641,
-    button_bevel: 0x3d3560,
-    well: 0x0c0b12,
-    bevel: 0x342d52,
-    lip: 0x07060b,
-    outline: 0x05040a,
-    rule: 0x120f1c,
-    ink: 0xecedf3,
-    ink_soft: 0xc5c7d1,
-    muted: 0xa29cb8,
-    accent: 0x9a86ff,
-    face: 0x5b3fd6,
-    face_bevel: 0x8a74ff,
-    face_lip: 0x3a2694,
+    page: 0x170e0f,
+    side: 0x110a0b,
+    panel: 0x271718,
+    raised: 0x341e20,
+    button: 0x412629,
+    button_bevel: 0x60383c,
+    well: 0x120b0c,
+    bevel: 0x52302f,
+    lip: 0x0b0607,
+    outline: 0x0a0405,
+    rule: 0x1c1011,
+    ink: 0xf3ecec,
+    ink_soft: 0xd1c5c6,
+    muted: 0xb89c9f,
+    accent: 0xff868e,
+    face: 0xd63f49,
+    face_bevel: 0xff747d,
+    face_lip: 0x94262d,
     on_face: 0xffffff,
     danger: 0xf07a68,
     success: 0x45c27a,
@@ -408,24 +408,24 @@ pub const BLOCKS_DARK: Blocks = Blocks {
 };
 
 pub const BLOCKS_LIGHT: Blocks = Blocks {
-    page: 0xece7f7,
-    side: 0xe2dbf2,
-    panel: 0xf8f6fd,
-    raised: 0xe9e3f8,
-    button: 0xddd4f3,
-    button_bevel: 0xf4f0fe,
-    well: 0xf3f0fb,
+    page: 0xf7e8e8,
+    side: 0xf0dbdb,
+    panel: 0xfdf6f6,
+    raised: 0xf8e4e4,
+    button: 0xf2d4d5,
+    button_bevel: 0xfef2f2,
+    well: 0xfbf0f0,
     bevel: 0xffffff,
-    lip: 0xc3b8e2,
-    outline: 0x2b2244,
-    rule: 0xe4ddf4,
-    ink: 0x1b1530,
-    ink_soft: 0x3b3354,
-    muted: 0x585071,
-    accent: 0x5333c9,
-    face: 0x5b3fd6,
-    face_bevel: 0x8069ef,
-    face_lip: 0x3a2694,
+    lip: 0xe2b7b9,
+    outline: 0x44222a,
+    rule: 0xf2dddd,
+    ink: 0x2a1517,
+    ink_soft: 0x4f3437,
+    muted: 0x6e5053,
+    accent: 0xb3232e,
+    face: 0xd63f49,
+    face_bevel: 0xef6b73,
+    face_lip: 0x94262d,
     on_face: 0xffffff,
     danger: 0xa3301d,
     success: 0x136336,

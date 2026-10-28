@@ -178,30 +178,30 @@ pub struct Palette {
     trees: u32,
 }
 
-/// The sunset of Skyline's first icon: night blue to violet to coral, and a sun in three bands.
+/// Skyline's dusk: night maroon to crimson to ember orange, and a sun in three bands.
 pub const SUNSET: Palette = Palette {
     sky: &[
-        0x0a0f2c, 0x26206a, 0x4b2a7e, 0x7c3a88, 0xc4527a, 0xee6e5a, 0xffb25e,
+        0x12080a, 0x2e0f14, 0x55161e, 0x86202a, 0xc0353d, 0xe8604a, 0xffa25a,
     ],
-    sun: [0xfff6cf, 0xffd272, 0xff9a44],
-    far: 0x4a2f7e,
-    mid: 0x2b1f5e,
-    near: 0x151a45,
-    top: 0x3d2f80,
-    trees: 0x0e1236,
+    sun: [0xfff3d6, 0xffcf7a, 0xff8a4a],
+    far: 0x6a1e27,
+    mid: 0x45141b,
+    near: 0x240b0f,
+    top: 0x7e2630,
+    trees: 0x16070a,
 };
 
-/// The light appearance's morning: lavender to peach, soft violet hills.
+/// The light appearance's morning: rose to peach, soft red hills.
 pub const DAWN: Palette = Palette {
     sky: &[
-        0x8d7fd8, 0xa596e2, 0xbcaeea, 0xd2c4f0, 0xe7d2ee, 0xf6dce4, 0xffe6d6,
+        0xd8858c, 0xe29a9f, 0xeab0b3, 0xf0c4c4, 0xf4d4cf, 0xf8dfd6, 0xffe8d8,
     ],
     sun: [0xffffff, 0xfff1d0, 0xffd9a8],
-    far: 0xa898dc,
-    mid: 0x8676c8,
-    near: 0x6a5ab4,
-    top: 0x9a8ae0,
-    trees: 0x4c3e94,
+    far: 0xd49095,
+    mid: 0xbc6d74,
+    near: 0xa04f58,
+    top: 0xd27f86,
+    trees: 0x7a333b,
 };
 
 /// A blocky landscape, `w` by `h` texels: banded sky, a sun half set behind the far hills and cut

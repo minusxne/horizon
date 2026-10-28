@@ -56,7 +56,7 @@ pub fn deadline(stream: &TcpStream, limit: Duration) -> io::Result<Deadline> {
     let stream = stream.try_clone()?;
     let (tx, rx) = channel::<()>();
     std::thread::Builder::new()
-        .name("horizon-friends-deadline".into())
+        .name("skyline-friends-deadline".into())
         .spawn(move || {
             if rx.recv_timeout(limit) == Err(RecvTimeoutError::Timeout) {
                 let _ = stream.shutdown(Shutdown::Both);
@@ -126,7 +126,7 @@ pub fn pump(
     let mut plain_in = plain.try_clone()?;
     let mut plain_out = plain;
     let outbound = std::thread::Builder::new()
-        .name("horizon-friends-out".into())
+        .name("skyline-friends-out".into())
         .spawn(move || {
             let mut buf = vec![0u8; crypto::MAX_PAYLOAD];
             loop {
@@ -143,7 +143,7 @@ pub fn pump(
             let _ = plain_in.shutdown(std::net::Shutdown::Both);
         })?;
     std::thread::Builder::new()
-        .name("horizon-friends-in".into())
+        .name("skyline-friends-in".into())
         .spawn(move || {
             while let Ok(Some(frame)) = reader.read_frame() {
                 if let crypto::Frame::Data(d) = frame

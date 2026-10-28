@@ -144,7 +144,7 @@ fn ping_all(servers: &[ServerEntry], pings: &Pings, icons: &Icons, file: &Path) 
         }
         let (pings, icons, file) = (pings.clone(), icons.clone(), file.to_owned());
         let _ = std::thread::Builder::new()
-            .name("horizon-ping".into())
+            .name("skyline-ping".into())
             .spawn(move || {
                 let result = match crate::net::ping(&address, Duration::from_secs(5)) {
                     Ok((json, ms)) => {

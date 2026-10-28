@@ -2083,7 +2083,7 @@ impl SaveDir {
         let pending = self.pending.clone();
         let outstanding = self.outstanding.clone();
         let thread = std::thread::Builder::new()
-            .name("horizon-region-writer".into())
+            .name("skyline-region-writer".into())
             .spawn(move || {
                 for (kind, batch) in receive {
                     let cache = match kind {

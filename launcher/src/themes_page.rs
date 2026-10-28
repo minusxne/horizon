@@ -66,7 +66,7 @@ impl Launcher {
             Some(
                 div()
                     .child(tr(
-                        "Skyline's violet by default. Every colour keeps text as easy to read.",
+                        "Skyline's red by default. Every colour keeps text as easy to read.",
                     ))
                     .into_any_element(),
             ),

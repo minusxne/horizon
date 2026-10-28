@@ -187,14 +187,14 @@ fn refuses_a_changed_file_a_taken_id_and_local_files_from_the_real_registry() {
     tampered.projects[0].versions[0].file.url = cozy;
     let e = install_from(&tampered, true, None, &p, &home, &|_, _| {}).unwrap_err();
     assert!(e.contains("larger than its source says"), "{e}");
-    assert!(!home.join("horizon-mods").exists());
+    assert!(!home.join("skyline-mods").exists());
 
     let e = install_from(&index, false, None, &p, &home, &|_, _| {}).unwrap_err();
     assert!(e.contains("file servers"), "{e}");
 
     fs::create_dir_all(home.join("skyline-mods/coords_hud")).unwrap();
     let e = install_from(&index, true, None, &p, &home, &|_, _| {}).unwrap_err();
-    assert!(e.contains("already in horizon-mods"), "{e}");
+    assert!(e.contains("already in skyline-mods"), "{e}");
 
     let mut taken_down = index.clone();
     taken_down.revoked.push(index::Revoked {

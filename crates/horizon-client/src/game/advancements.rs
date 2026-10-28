@@ -280,7 +280,7 @@ impl Game<'_> {
         }
         let data = self.options.resources.join("data");
         self.adv.pending_tree = std::thread::Builder::new()
-            .name("horizon-advancements".into())
+            .name("skyline-advancements".into())
             .spawn(move || Tree::load(&data))
             .ok();
     }

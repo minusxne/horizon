@@ -1,9 +1,9 @@
 # Skyline's mark and icons
 
-**The mark.** An H whose crossbar is the horizon: the line runs edge to edge in Skyline's violet,
-the stems above it in full strength and their reflection below at a third. It is drawn on whole
-units of a 16-unit grid, so it is sharp at 16 px and holds at 1024 px. `docs/design-system.md`
-places it in the design system; `candidates/` keeps the two alternatives that were shown with it.
+**The mark.** A pixel city skyline in Skyline's red standing on a pale horizon line,
+its reflection below at a third. It is drawn on whole units of a 16-unit grid, so it is
+sharp at 16 px and holds at 1024 px. `tools/../launcher/src/main.rs` `mark()` draws the same
+rects in the launcher.
 
 ## Masters (edit these)
 
@@ -13,8 +13,7 @@ places it in the design system; `candidates/` keeps the two alternatives that we
 | `icon-macos.svg` | the same tile on Apple's 1024 grid (824 px tile, 185 px corners, transparent margin) |
 | `avatar.svg` | full-bleed square for services that round or crop the image (GitHub, Discord) |
 | `mark.svg`, `mark-dark.svg` | the mark alone, for light and for dark backgrounds |
-| `social/card.html` | the GitHub social preview, as a page |
-
+| 
 ## Generated (don't edit)
 
 `cargo run -p xtask -- icons` (needs `rsvg-convert` from librsvg) renders the masters into:
@@ -24,7 +23,7 @@ places it in the design system; `candidates/` keeps the two alternatives that we
 | `packaging/icons/hicolor/<size>/apps/skyline.png` (16–512) and `scalable/apps/skyline.svg` | Linux: copy the tree into `~/.local/share/icons/hicolor` (or `/usr/share/icons/hicolor`) |
 | `packaging/linux/horizon-launcher.desktop`, `skyline.desktop` (hand-written) | Linux: the launcher installs both and the hicolor icons itself, under `$XDG_DATA_HOME` (`~/.local/share`), with its own path in `Exec` (`launcher/src/desktop.rs`; `skyline-launcher desktop-entry --remove` takes them out). Wayland matches the windows' app ids `skyline-launcher` and `horizon` |
 | `packaging/icons/skyline.ico` | Windows: embedded in `horizon-client.exe`, its tools and `skyline-launcher.exe` as icon resource 1 (`build.rs` of each, Windows builds only) |
-| `packaging/icons/skyline.icns` | macOS: `Skyline.app/Contents/Resources/skyline.icns`, packaged with the .dmg by `packaging/macos/package.sh` |
+| `packaging/icons/skyline.icns` | macOS: `Skyline.app/Contents/Resources/skyline.icns` |
 | `crates/horizon-theme/icons/skyline-64.png` | the game window's icon at run time (X11 and Windows title bars, `window::icon`) |
 | `web/favicon.svg`, `web/favicon-32.png`, `web/apple-touch-icon.png` | the website (its `npm run assets` copies them into its `public/`) |
 | `icon-1024.png`, `icon-macos-1024.png` | previews, store listings |

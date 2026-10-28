@@ -10,7 +10,7 @@ fn blend(top: u32, under: u32, alpha: f32) -> u32 {
 }
 
 #[test]
-fn every_accent_reads_as_well_as_the_violet() {
+fn every_accent_reads_as_well_as_the_red() {
     for base in [BLOCKS_DARK, BLOCKS_LIGHT] {
         for accent in Accent::ALL {
             let p = accent.apply(base);
@@ -33,22 +33,22 @@ fn every_accent_reads_as_well_as_the_violet() {
                 hsl(p.face_bevel).2 > face && hsl(p.face_lip).2 < face,
                 "{what}"
             );
-            if accent != Accent::Violet {
+            if accent != Accent::Red {
                 let (h, _, _) = hsl(p.face);
                 let want = accent.hue().unwrap();
                 let off = ((h - want).rem_euclid(360.)).min((want - h).rem_euclid(360.));
                 assert!(off < 3., "{what}: face hue {h:.0}, not {want}");
             }
         }
-        let violet = Accent::Violet.apply(base);
-        assert_eq!((violet.accent, violet.face), (base.accent, base.face));
+        let red = Accent::Red.apply(base);
+        assert_eq!((red.accent, red.face), (base.accent, base.face));
     }
 }
 
 #[test]
 fn colours_go_to_hsl_and_back() {
     for c in [
-        0x5b3fd6, 0x9a86ff, 0x000000, 0xffffff, 0x45c27a, 0xf0b84f, 0x123456,
+        0xd63f49, 0xff868e, 0x000000, 0xffffff, 0x45c27a, 0xf0b84f, 0x123456,
     ] {
         let (h, s, l) = hsl(c);
         assert_eq!(from_hsl(h, s, l), c, "{c:06x}");

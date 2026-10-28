@@ -269,7 +269,7 @@ fn spawn_listener<S: Send + 'static>(
 ) -> io::Result<()> {
     let accept = std::sync::Arc::new(accept);
     thread::Builder::new()
-        .name("horizon-control".into())
+        .name("skyline-control".into())
         .spawn(move || {
             loop {
                 let next = accept_next();
@@ -284,7 +284,7 @@ fn spawn_listener<S: Send + 'static>(
                 let accept = accept.clone();
                 let clients = clients.clone();
                 let _ = thread::Builder::new()
-                    .name("horizon-control-client".into())
+                    .name("skyline-control-client".into())
                     .spawn(move || {
                         if let Some(stream) = accept(stream) {
                             clients.fetch_add(1, Ordering::Relaxed);

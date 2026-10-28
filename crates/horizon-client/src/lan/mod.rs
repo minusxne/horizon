@@ -471,7 +471,7 @@ impl Lan {
         let stop = Arc::new(AtomicBool::new(false));
         let (accept_shared, accept_stop) = (self.shared.clone(), stop.clone());
         let thread = std::thread::Builder::new()
-            .name("horizon-lan-accept".into())
+            .name("skyline-lan-accept".into())
             .spawn(move || accept_loop(listener, accept_shared, &accept_stop))?;
         self._pinger = if announce {
             discovery::Pinger::start(self.shared.motd(), port).ok()
@@ -503,7 +503,7 @@ impl Lan {
         let (client, server) = horizon_protocol::connection::Pipe::pair();
         let shared = self.shared.clone();
         std::thread::Builder::new()
-            .name("horizon-local-conn".into())
+            .name("skyline-local-conn".into())
             .spawn(move || {
                 if let Err(e) = conn::serve_local(server, shared)
                     && std::env::var_os("SKYLINE_NET_DEBUG").is_some()
@@ -538,7 +538,7 @@ fn accept_loop(listener: TcpListener, shared: Arc<Shared>, stop: &AtomicBool) {
             Ok((stream, addr)) => {
                 let shared = shared.clone();
                 let _ = std::thread::Builder::new()
-                    .name("horizon-lan-conn".into())
+                    .name("skyline-lan-conn".into())
                     .spawn(move || handle(stream, addr, shared));
             }
             Err(e) if e.kind() == io::ErrorKind::WouldBlock => {

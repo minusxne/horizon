@@ -654,7 +654,7 @@ impl Launcher {
                         .collect();
                     if p.source == SourceId::Horizon && p.kind == PackKind::Mod {
                         return Ok(format!(
-                            "Installed {} into horizon-mods and turned it on, checksum checked \
+                            "Installed {} into skyline-mods and turned it on, checksum checked \
                              (Options > Mods in the game).",
                             names.join(", ")
                         ));
@@ -662,7 +662,7 @@ impl Launcher {
                     if p.kind == PackKind::Mod {
                         let skipped = done.last().map_or(0, |e| e.skipped.len());
                         return Ok(format!(
-                            "Ported {} into horizon-mods and turned on (Options > Mods in the \
+                            "Ported {} into skyline-mods and turned on (Options > Mods in the \
                              game).{}",
                             names.join(", "),
                             if skipped > 0 {

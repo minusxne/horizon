@@ -79,7 +79,7 @@ impl Pinger {
         let flag = stop.clone();
         let message = ping_string(&motd, port);
         let thread = std::thread::Builder::new()
-            .name("horizon-lan-ping".into())
+            .name("skyline-lan-ping".into())
             .spawn(move || {
                 let target = SocketAddr::V4(SocketAddrV4::new(GROUP, PORT));
                 while !flag.load(Ordering::Relaxed) {
@@ -137,7 +137,7 @@ impl Scanner {
         if let Ok(socket) = bind_listener() {
             let (games, stop) = (games.clone(), stop.clone());
             let _ = std::thread::Builder::new()
-                .name("horizon-lan-scan".into())
+                .name("skyline-lan-scan".into())
                 .spawn(move || listen(socket, games, stop));
         }
         Self {

@@ -78,7 +78,7 @@ pub struct Setup {
 /// Starts the driver; the game quits when it is done, and the report's path is printed.
 pub fn start(requests: Sender<Request>, setup: Setup) {
     thread::Builder::new()
-        .name("horizon-benchmark".into())
+        .name("skyline-benchmark".into())
         .spawn(move || {
             let control = Control(requests);
             match run(&control, setup) {

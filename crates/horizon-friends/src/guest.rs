@@ -144,7 +144,7 @@ fn join_direct(invite: &Invite) -> Result<Option<Tunnel>, JoinError> {
     for &endpoint in &invite.endpoints {
         let tx = tx.clone();
         let _ = std::thread::Builder::new()
-            .name("horizon-friends-dial".into())
+            .name("skyline-friends-dial".into())
             .spawn(move || {
                 if let Ok(mut s) = TcpStream::connect_timeout(&endpoint, Duration::from_secs(4))
                     && direct::code_hello(&mut s, session).is_ok()
@@ -267,7 +267,7 @@ impl Tunnel {
         let port = listener.local_addr()?.port();
         listener.set_nonblocking(true)?;
         let thread = std::thread::Builder::new()
-            .name("horizon-friends-guest".into())
+            .name("skyline-friends-guest".into())
             .spawn(move || {
                 let deadline = std::time::Instant::now() + Duration::from_secs(30);
                 let plain = loop {

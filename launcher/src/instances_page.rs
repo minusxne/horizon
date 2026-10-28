@@ -39,7 +39,7 @@ const TEXTURES: [&str; 24] = [
 
 /// Colours offered as icons: Skyline's accent and a few that sit beside it in both themes.
 const COLOURS: [&str; 8] = [
-    "#5b3fd6", "#3f7fd6", "#2f9e8f", "#4f9e2f", "#c9a227", "#d9732f", "#c4405a", "#7d7591",
+    "#d63f49", "#3f7fd6", "#2f9e8f", "#4f9e2f", "#c9a227", "#d9732f", "#5b3fd6", "#7d7591",
 ];
 
 /// The dialog: a new instance (`editing` None) or one being changed. Its name and group are the

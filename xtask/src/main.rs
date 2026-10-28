@@ -198,11 +198,6 @@ fn icons() -> Result<(), String> {
     // Avatars, and the website's icons (horizon-site copies docs/media/brand/web/ into its public/).
     let avatar = brand.join("avatar.svg");
     for (svg, size, out) in [
-        (
-            &avatar,
-            500,
-            "docs/media/brand/social/github-avatar-500.png",
-        ),
         (&avatar, 180, "docs/media/brand/web/apple-touch-icon.png"),
         (&square, 32, "docs/media/brand/web/favicon-32.png"),
         (&square, 1024, "docs/media/brand/icon-1024.png"),

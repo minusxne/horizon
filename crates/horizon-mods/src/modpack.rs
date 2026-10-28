@@ -198,7 +198,7 @@ fn check_override(path: &str, manifest: &Manifest) -> Result<(), String> {
     let ok = match parts.as_slice() {
         [file] => SETTINGS.contains(file),
         ["resourcepacks", name] => plain(name) && name.ends_with(".zip"),
-        ["horizon-mods", dir, id, rest @ ..] => {
+        ["skyline-mods" | "horizon-mods", dir, id, rest @ ..] => {
             *dir == STORAGE_DIR
                 && manifest.mods.iter().any(|m| m.id == *id)
                 && !rest.is_empty()

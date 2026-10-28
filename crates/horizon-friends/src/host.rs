@@ -171,13 +171,13 @@ impl Host {
         let s = shared.clone();
         threads.push(
             std::thread::Builder::new()
-                .name("horizon-friends-listen".into())
+                .name("skyline-friends-listen".into())
                 .spawn(move || route_inbound(listeners, s))?,
         );
         let s = shared.clone();
         threads.push(
             std::thread::Builder::new()
-                .name("horizon-friends-reach".into())
+                .name("skyline-friends-reach".into())
                 .spawn(move || share(s, port))?,
         );
         Ok(Self {
@@ -259,7 +259,7 @@ fn share(shared: Arc<Shared>, port: u16) {
             let s = shared.clone();
             let r = r.clone();
             std::thread::Builder::new()
-                .name("horizon-friends-relay".into())
+                .name("skyline-friends-relay".into())
                 .spawn(move || run_relay(s, r))
                 .ok()
         }
@@ -296,7 +296,7 @@ fn route_inbound(listeners: Vec<TcpListener>, shared: Arc<Shared>) {
             shared.handshakes.fetch_add(1, Ordering::Relaxed);
             let shared = shared.clone();
             let _ = std::thread::Builder::new()
-                .name("horizon-friends-inbound".into())
+                .name("skyline-friends-inbound".into())
                 .spawn(move || {
                     let _ = s.set_nonblocking(false);
                     let Ok(deadline) = crate::deadline(&s, HANDSHAKE) else {
@@ -484,7 +484,7 @@ fn register(shared: &Arc<Shared>, relay_url: &str) -> io::Result<()> {
                     relay_url.to_owned(),
                 );
                 let _ = std::thread::Builder::new()
-                    .name("horizon-friends-session".into())
+                    .name("skyline-friends-session".into())
                     .spawn(move || {
                         serve_relayed(
                             &shared, &relay_url, &code, &token, session, port, relay, &control,

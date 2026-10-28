@@ -7,7 +7,7 @@ mods and the data-driven parts of packs and mods. Fabric and NeoForge jars do
 Skyline has none. What carries over is the data and assets inside a jar
 ([modpacks.md](modpacks.md)).
 
-Mods are **off and absent by default**. A fresh install has no `horizon-mods`
+Mods are **off and absent by default**. A fresh install has no `skyline-mods`
 folder, loads no runtime and plays exactly like vanilla 26.3.
 
 | Part | Where | State |
@@ -171,7 +171,7 @@ the stable figure):
 
 | | median frame | mean FPS |
 |---|---|---|
-| no `horizon-mods` folder | 2.62-2.71 ms | 149-163 |
+| no `skyline-mods` folder | 2.62-2.71 ms | 149-163 |
 | coords-hud on | 2.72-2.78 ms | 151-254 |
 
 At 20 ticks per second coords-hud costs 46 µs per second of game time: well

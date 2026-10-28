@@ -1,10 +1,10 @@
 //! The player's own look, on top of Dark, Light or System: an accent colour and a picture behind
 //! Home.
 //!
-//! An accent is a hue. Skyline's violet is the default; another hue turns the violet tokens
+//! An accent is a hue. Skyline's red is the default; another hue turns the red tokens
 //! (`horizon_theme::Blocks`' accent and the main action's face, bevel and lip) to it, keeping
 //! their saturation and lightness, then darkens or lightens each just enough to read as well as
-//! the violet does: white on the face at 4.5:1, the accent at 3:1 on every background.
+//! the red does: white on the face at 4.5:1, the accent at 3:1 on every background.
 use horizon_theme::{contrast, Blocks};
 use std::path::{Path, PathBuf};
 
@@ -12,23 +12,23 @@ use std::path::{Path, PathBuf};
 #[serde(rename_all = "lowercase")]
 pub enum Accent {
     #[default]
+    Red,
     Violet,
     Blue,
     Teal,
     Green,
     Amber,
-    Red,
     Pink,
 }
 
 impl Accent {
     pub const ALL: [Accent; 7] = [
+        Self::Red,
         Self::Violet,
         Self::Blue,
         Self::Teal,
         Self::Green,
         Self::Amber,
-        Self::Red,
         Self::Pink,
     ];
 
@@ -47,7 +47,9 @@ impl Accent {
 
     pub fn parse(name: &str) -> Option<Self> {
         let name = name.trim().to_ascii_lowercase();
-        let name = if name == "purple" || name == "default" {
+        let name = if name == "default" {
+            "red"
+        } else if name == "purple" {
             "violet"
         } else {
             &name
@@ -55,15 +57,15 @@ impl Accent {
         Self::ALL.into_iter().find(|a| a.name() == name)
     }
 
-    /// Its hue in degrees; None for the violet, whose tokens stay as they are.
+    /// Its hue in degrees; None for the red, whose tokens stay as they are.
     fn hue(self) -> Option<f32> {
         match self {
-            Self::Violet => None,
+            Self::Red => None,
+            Self::Violet => Some(252.),
             Self::Blue => Some(212.),
             Self::Teal => Some(176.),
             Self::Green => Some(140.),
             Self::Amber => Some(36.),
-            Self::Red => Some(356.),
             Self::Pink => Some(322.),
         }
     }

@@ -210,7 +210,7 @@ pub fn dial(
     for target in targets {
         let (stop, found) = (stop.clone(), found.clone());
         let _ = std::thread::Builder::new()
-            .name("horizon-friends-dial".into())
+            .name("skyline-friends-dial".into())
             .spawn(move || {
                 while !stop.load(Ordering::Relaxed) {
                     let now = Instant::now();
@@ -244,7 +244,7 @@ pub fn accept(
     found: Sender<TcpStream>,
 ) {
     let _ = std::thread::Builder::new()
-        .name("horizon-friends-accept".into())
+        .name("skyline-friends-accept".into())
         .spawn(move || {
             while !stop.load(Ordering::Relaxed) && Instant::now() < deadline {
                 let mut idle = true;

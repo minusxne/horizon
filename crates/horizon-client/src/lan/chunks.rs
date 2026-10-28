@@ -356,7 +356,7 @@ fn warm_pool() -> Option<&'static WarmPool> {
             .filter(|i| {
                 let pool = pool.clone();
                 std::thread::Builder::new()
-                    .name(format!("horizon-chunk-encode-{i}"))
+                    .name(format!("skyline-chunk-encode-{i}"))
                     .spawn(move || {
                         let mut done = 0;
                         loop {

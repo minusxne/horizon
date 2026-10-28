@@ -9,7 +9,7 @@ use std::{
 
 pub const FILE: &str = "skyline-mods.txt";
 /// The folder holding `.hmod` files, beside `options.txt`.
-pub const DIR: &str = "horizon-mods";
+pub const DIR: &str = "skyline-mods";
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ModList {

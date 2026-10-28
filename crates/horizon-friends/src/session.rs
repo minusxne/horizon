@@ -112,12 +112,12 @@ pub(crate) fn settle(
         direct::dial(direct_port, theirs, session, deadline, stop.clone(), raw_tx);
         let key = key.clone();
         let _ = std::thread::Builder::new()
-            .name("horizon-friends-auth".into())
+            .name("skyline-friends-auth".into())
             .spawn(move || {
                 for raw in raw_rx {
                     let (key, atx) = (key.clone(), atx.clone());
                     let _ = std::thread::Builder::new()
-                        .name("horizon-friends-auth".into())
+                        .name("skyline-friends-auth".into())
                         .spawn(move || {
                             let Ok(_) = raw.set_read_timeout(Some(Duration::from_secs(6))) else {
                                 return;
