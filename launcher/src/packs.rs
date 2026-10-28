@@ -263,13 +263,26 @@ pub fn find(home: &Path, kind: Kind, query: &str) -> Result<Pack, String> {
         .ok_or_else(|| format!("No pack {query} in {}", home.join(kind.folder()).display()))
 }
 
-/// What a dropped or picked file is: a resource pack (a zip with `pack.mcmeta`), a Skyline
-/// shader pack (`.hshader`), or a shader pack in the `shaders/` format (a zip with `shaders/`).
+/// What a dropped or picked file or folder is: a resource pack (a zip or folder with
+/// `pack.mcmeta`), a Skyline shader pack (`.hshader`, or a folder with `horizon-shaders.toml`),
+/// or a shader pack in the `shaders/` format (a zip or folder with `shaders/`).
 pub fn kind_of(file: &Path) -> Result<Kind, String> {
     let name = file
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_default();
+    if file.is_dir() {
+        return if file.join(SHADER_MANIFEST).is_file() || file.join("shaders").is_dir() {
+            Ok(Kind::Shader)
+        } else if file.join("pack.mcmeta").is_file() {
+            Ok(Kind::Resource)
+        } else {
+            Err(format!(
+                "The folder {name} has neither a pack.mcmeta (a resource pack) nor a shaders \
+                 folder (a shader pack)."
+            ))
+        };
+    }
     let ext = file
         .extension()
         .map(|e| e.to_string_lossy().to_ascii_lowercase());
@@ -278,7 +291,7 @@ pub fn kind_of(file: &Path) -> Result<Kind, String> {
         Some("zip") => {}
         _ => {
             return Err(format!(
-                "{name} is not a pack: packs are .zip or .hshader files."
+                "{name} is not a pack: packs are .zip or .hshader files, or pack folders."
             ))
         }
     }
@@ -297,21 +310,28 @@ pub fn kind_of(file: &Path) -> Result<Kind, String> {
     }
 }
 
-/// Copies a pack file into the right folder of `home`, under a name not taken yet. Returns it,
-/// turned off.
+/// Copies a pack file or folder into the right folder of `home`, under a name not taken yet.
+/// Returns it, turned off.
 pub fn add(home: &Path, file: &Path) -> Result<Pack, String> {
     let kind = kind_of(file)?;
     let dir = home.join(kind.folder());
     fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     let name = file.file_name().ok_or("A pack file has a name")?;
-    let stem = Path::new(name)
-        .file_stem()
-        .unwrap_or(name)
-        .to_string_lossy();
-    let ext = Path::new(name)
-        .extension()
-        .map(|e| format!(".{}", e.to_string_lossy()))
-        .unwrap_or_default();
+    let folder = file.is_dir();
+    let stem = match folder {
+        true => name.to_string_lossy(),
+        false => Path::new(name)
+            .file_stem()
+            .unwrap_or(name)
+            .to_string_lossy(),
+    };
+    let ext = match folder {
+        true => String::new(),
+        false => Path::new(name)
+            .extension()
+            .map(|e| format!(".{}", e.to_string_lossy()))
+            .unwrap_or_default(),
+    };
     let target = (1..)
         .map(|n| match n {
             1 => dir.join(name),
@@ -319,7 +339,11 @@ pub fn add(home: &Path, file: &Path) -> Result<Pack, String> {
         })
         .find(|p| !p.exists())
         .unwrap();
-    fs::copy(file, &target).map_err(|e| format!("Could not copy {}: {e}", file.display()))?;
+    let copied = match folder {
+        true => crate::backend::copy_dir(file, &target),
+        false => fs::copy(file, &target).map(|_| ()),
+    };
+    copied.map_err(|e| format!("Could not copy {}: {e}", file.display()))?;
     read(&target, kind, &[])
         .ok_or_else(|| format!("{} is not a pack the game reads", target.display()))
 }

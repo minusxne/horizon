@@ -8,6 +8,7 @@ mod blocks;
 mod cli;
 mod console;
 mod console_page;
+mod content_page;
 mod datapacks_page;
 mod export_page;
 mod import_page;
@@ -51,16 +52,18 @@ use theme::Theme;
 #[derive(Clone, Copy, PartialEq)]
 enum Page {
     Play,
+    Content,
     Versions,
     Servers,
     Settings,
 }
 
 impl Page {
-    /// `SKYLINE_LAUNCHER_PAGE=servers` (or `versions`, `settings`) opens on that page, for
-    /// screenshots; Home otherwise.
+    /// `SKYLINE_LAUNCHER_PAGE=content` (or `servers`, `versions`, `settings`) opens on that
+    /// page, for screenshots; Home otherwise.
     fn from_env() -> Page {
         match std::env::var("SKYLINE_LAUNCHER_PAGE").as_deref() {
+            Ok("content") => Page::Content,
             Ok("servers") => Page::Servers,
             Ok("versions") => Page::Versions,
             Ok("settings") => Page::Settings,
@@ -70,8 +73,9 @@ impl Page {
 
     /// Every page, with its name and icon: the top bar shows all but Settings, which has its
     /// own button.
-    const ALL: [(Page, &'static str, &'static str); 4] = [
+    const ALL: [(Page, &'static str, &'static str); 5] = [
         (Page::Play, "Home", "home"),
+        (Page::Content, "Content", "box"),
         (Page::Servers, "Servers", "server"),
         (Page::Versions, "Versions", "archive"),
         (Page::Settings, "Settings", "sliders"),
@@ -169,6 +173,7 @@ struct Launcher {
     multiplayer: multiplayer_page::Multiplayer,
     screenshots: screenshots_page::Screenshots,
     game_packs: packs_page::Packs,
+    game_mods: content_page::GameMods,
     world_packs: datapacks_page::WorldPacks,
     export: Option<export_page::ExportPanel>,
     launch: Option<launch_page::LaunchPanel>,
@@ -285,6 +290,7 @@ impl Launcher {
             multiplayer: multiplayer_page::Multiplayer::default(),
             screenshots: screenshots_page::Screenshots::default(),
             game_packs: packs_page::Packs::default(),
+            game_mods: content_page::GameMods::default(),
             world_packs: datapacks_page::WorldPacks::default(),
             export: None,
             launch: None,
@@ -442,6 +448,7 @@ impl Launcher {
                             self.multiplayer.stale();
                             self.screenshots.stale();
                             self.game_packs.stale();
+                            self.game_mods.stale();
                             if let Some((id, started)) = self.client_run.take() {
                                 if let Err(e) = instances::record_play(&id, started.elapsed()) {
                                     eprintln!("Play time not saved: {e}");
@@ -2506,6 +2513,7 @@ impl Render for Launcher {
         let banner_width = f32::from(size.width) - theme::SIDEBAR - scrollbar::GUTTER;
         let content = match self.page {
             Page::Play => self.play_page(banner_width, cx),
+            Page::Content => self.content_page(cx),
             Page::Versions => self.versions_page(cx),
             Page::Servers => self.servers_page(cx),
             Page::Settings => self.settings_page(cx),

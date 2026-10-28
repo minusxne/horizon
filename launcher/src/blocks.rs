@@ -1,10 +1,10 @@
 //! The blocky look's parts (`docs/design-system.md`, "Blocks"): pixel type, pixel icons, panels
-//! with a dark outline, a light bevel on top and a darker lip below, sunk wells, badges, the
-//! inventory tabs, and the slots that hold icons downloaded at run time.
+//! with a dark outline, a light bevel on top and a darker lip below, sunk wells, and the slots
+//! that hold pictures.
 use crate::theme::{self, Theme};
 use gpui::{
-    div, img, prelude::*, px, svg, AnyElement, App, ClickEvent, Div, FontWeight, Hsla, ImageSource,
-    ObjectFit, SharedString, Stateful, Svg, Window,
+    div, img, prelude::*, px, svg, AnyElement, Div, FontWeight, Hsla, ImageSource, ObjectFit,
+    SharedString, Stateful, Svg,
 };
 use std::borrow::Cow;
 
@@ -76,79 +76,6 @@ pub fn panel(t: &Theme) -> Div {
         .border_2()
         .border_color(t.outline)
         .children(edges(t.bevel, t.lip, theme::BEVEL))
-}
-
-/// A small label in a block of its colour: "Runs", "Partly", a version.
-pub fn badge(label: impl Into<SharedString>, color: Hsla, t: &Theme) -> Div {
-    let tint = if t.dark { 0.14 } else { 0.12 };
-    div()
-        .flex()
-        .flex_none()
-        .items_center()
-        .gap(px(6.))
-        .h(px(22.))
-        .px(px(8.))
-        .bg(color.opacity(tint))
-        .border_2()
-        .border_color(t.outline)
-        .child(div().size(px(6.)).bg(color))
-        .child(
-            pixel(12., FontWeight::MEDIUM)
-                .text_color(color)
-                .child(label.into()),
-        )
-}
-
-/// Inventory tabs: a row of tabs on top of a panel, the open one joined to it.
-pub fn tabs<T: Copy + PartialEq + 'static>(
-    id: &'static str,
-    options: &[(T, &'static str, &'static str)],
-    current: T,
-    t: &Theme,
-    on_pick: impl Fn(T, &mut Window, &mut App) + Clone + 'static,
-) -> Div {
-    let t = *t;
-    div()
-        .flex()
-        .items_end()
-        .gap(px(4.))
-        .children(options.iter().map(|&(value, label, icon_name)| {
-            let open = current == value;
-            let pick = on_pick.clone();
-            let tab = div()
-                .id(SharedString::from(format!("{id}-{label}")))
-                .relative()
-                .flex()
-                .items_center()
-                .gap(px(8.))
-                .h(px(if open { 42. } else { 38. }))
-                .px(px(14.))
-                .border_2()
-                .border_b_0()
-                .border_color(t.outline)
-                .cursor_pointer()
-                .bg(if open { t.panel } else { t.side })
-                .child(
-                    div()
-                        .absolute()
-                        .top_0()
-                        .left_0()
-                        .right_0()
-                        .h(px(theme::BEVEL))
-                        .bg(if open { t.bevel } else { t.raised }),
-                )
-                .child(icon(icon_name, 18., if open { t.accent } else { t.muted }))
-                .child(
-                    pixel(15., FontWeight::MEDIUM)
-                        .text_color(if open { t.ink } else { t.muted })
-                        .child(label),
-                )
-                .when(!open, |d| d.hover(move |s| s.bg(t.raised)))
-                // The open tab covers the panel's outline under it.
-                .when(open, |d| d.mb(px(-2.)))
-                .on_click(move |_: &ClickEvent, window, cx| pick(value, window, cx));
-            crate::keyboard(tab, &t)
-        }))
 }
 
 /// A square slot for an icon: the picture at `source` when there is one, else the first letter of

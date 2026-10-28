@@ -10,7 +10,7 @@ pub(super) struct Worlds {
     /// The game folder the list is of, and the list as last read: kept on screen while it is
     /// read again, so the page doesn't jump.
     home: Option<PathBuf>,
-    list: Vec<World>,
+    pub(super) list: Vec<World>,
     fresh: bool,
     reading: bool,
     /// The world being backed up, copied or deleted now.
@@ -48,7 +48,7 @@ enum Action {
 impl Launcher {
     /// Reads the worlds of `home` in the background when the list is missing or of another
     /// instance.
-    fn load_worlds(&mut self, home: PathBuf, cx: &mut Context<Self>) {
+    pub(super) fn load_worlds(&mut self, home: PathBuf, cx: &mut Context<Self>) {
         if self.worlds.home.as_ref() != Some(&home) {
             self.worlds = Worlds {
                 home: Some(home.clone()),

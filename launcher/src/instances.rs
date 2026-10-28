@@ -424,7 +424,7 @@ fn edit_in(
 pub fn delete(query: &str) -> Result<PathBuf, String> {
     let data = backend::data_dir();
     let home = delete_in(&backend::game_home(), &data, query, |dir| {
-        trash::delete(dir).map_err(|e| e.to_string())
+        crate::desktop_seams::to_trash(dir)
     })?;
     let mut settings = backend::Settings::load();
     if settings.instance.is_some()

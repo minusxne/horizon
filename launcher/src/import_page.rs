@@ -1,6 +1,6 @@
-//! Files dropped anywhere on the window (`horizon_launcher::import`): a shared instance becomes
-//! a new instance, a Java modpack goes to the Modpacks import, a resource or shader pack into
-//! the selected instance. The Packs section and the world rows take their own drops first.
+//! Files and folders dropped anywhere on the window (`horizon_launcher::import`): a shared
+//! instance becomes a new instance; a mod, a resource pack or a shader pack goes into the
+//! selected instance. The Content page's sections and the world rows take their own drops first.
 use super::*;
 use gpui::ExternalPaths;
 use horizon_launcher::import::{self, Dropped};
@@ -35,18 +35,24 @@ impl Launcher {
                     };
                     self.importing.note =
                         Some(horizon_launcher::packs::add(&i.home, &file).map(|p| {
-                            format!(
-                                "Added {} to {}'s packs: switch it on under Packs.",
-                                p.title, i.name
-                            )
+                            format!("Added {} to {}: switch it on in Content.", p.title, i.name)
                         }));
                     self.game_packs.stale();
                 }
                 Ok(Dropped::DataPack) => {
                     self.importing.note = Some(Err(format!(
-                        "{name} is a data pack: drop it on a world on Home, or install it into \
-                         one from there."
+                        "{name} is a data pack: drop it on a world in Content or on Home."
                     )))
+                }
+                Ok(Dropped::Mod) => {
+                    let Some(i) = self.selected_instance().cloned() else {
+                        continue;
+                    };
+                    self.importing.note =
+                        Some(horizon_launcher::mods::add(&i.home, &file).map(|m| {
+                            format!("Added {} to {}: switch it on in Content.", m.title, i.name)
+                        }));
+                    self.game_mods.stale();
                 }
             }
         }

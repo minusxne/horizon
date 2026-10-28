@@ -101,6 +101,9 @@ enum InstanceCmd {
     },
     /// Rename an instance (its folder stays)
     Rename { instance: String, name: String },
+    /// Delete an instance: its folder (worlds, options, packs) goes to the system's trash. The
+    /// default instance, the game's own folder, can't be deleted
+    Delete { instance: String },
     /// Set an instance's icon: a block or item name from your prepared files (grass_block),
     /// a colour (#3fa7d6), or none
     Icon { instance: String, icon: String },
@@ -288,6 +291,41 @@ enum PacksCmd {
 }
 
 #[derive(Subcommand)]
+enum ModsCmd {
+    /// The Skyline mods in skyline-mods/, and which are on (the default)
+    List {
+        /// The instance (default: the selected one)
+        #[arg(long)]
+        instance: Option<String>,
+    },
+    /// Copy a mod in: a .hmod file or a mod folder (with horizon-mod.toml). It starts off
+    Add {
+        file: PathBuf,
+        #[arg(long)]
+        instance: Option<String>,
+    },
+    /// Turn a mod on (the game starts it next time)
+    On {
+        /// Its id, file name or title
+        r#mod: String,
+        #[arg(long)]
+        instance: Option<String>,
+    },
+    /// Turn a mod off
+    Off {
+        r#mod: String,
+        #[arg(long)]
+        instance: Option<String>,
+    },
+    /// Turn a mod off and move it to the system's trash
+    Remove {
+        r#mod: String,
+        #[arg(long)]
+        instance: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
 enum ScreenshotsCmd {
     /// The screenshots, the newest first, with their files (the default)
     List {
@@ -444,6 +482,11 @@ enum Cmd {
     Packs {
         #[command(subcommand)]
         action: Option<PacksCmd>,
+    },
+    /// An instance's Skyline mods: list, add, turn on or off, remove
+    Mods {
+        #[command(subcommand)]
+        action: Option<ModsCmd>,
     },
     /// The screenshots F2 took in an instance: list, delete
     Screenshots {
@@ -773,6 +816,9 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
             }),
             as_json,
         )?,
+        Cmd::Mods { action } => {
+            game_mods(action.unwrap_or(ModsCmd::List { instance: None }), as_json)?
+        }
         Cmd::Screenshots { action } => screenshots(
             action.unwrap_or(ScreenshotsCmd::List { instance: None }),
             as_json,
@@ -1002,6 +1048,13 @@ fn instance(action: InstanceCmd, as_json: bool) -> Result<(), String> {
         InstanceCmd::Rename { instance, name } => {
             changed(instances::edit(&instance, |m| m.name = Some(name))?)
         }
+        InstanceCmd::Delete { instance } => {
+            let home = instances::delete(&instance)?;
+            match as_json {
+                true => json(serde_json::json!({ "deleted": instance, "folder": home })),
+                false => println!("Moved {} to the trash.", home.display()),
+            }
+        }
         InstanceCmd::Icon { instance, icon } => {
             let icon = (icon != "none").then(|| Icon::parse(&icon)).transpose()?;
             changed(instances::edit(&instance, |m| m.icon = icon)?)
@@ -1164,6 +1217,19 @@ fn instance(action: InstanceCmd, as_json: bool) -> Result<(), String> {
                         file.display()
                     ))
                 }
+                Dropped::Mod => {
+                    let i = match instance {
+                        Some(name) => instances::find(&name)?,
+                        None => instances::selected(),
+                    };
+                    let m = horizon_launcher::mods::add(&i.home, &file)?;
+                    println!(
+                        "Added {} to {}: turn it on with skyline-launcher mods on {}",
+                        m.title,
+                        i.name,
+                        m.id.as_deref().unwrap_or(&m.file)
+                    );
+                }
             }
         }
         InstanceCmd::Export {
@@ -1284,6 +1350,61 @@ fn game_packs(action: PacksCmd, as_json: bool) -> Result<(), String> {
             let p = packs::find(&home, kind.into(), &pack)?;
             packs::remove(&home, &p)?;
             println!("{} is in the trash.", p.file);
+        }
+    }
+    Ok(())
+}
+
+fn game_mods(action: ModsCmd, as_json: bool) -> Result<(), String> {
+    use horizon_launcher::mods;
+    let home = |instance: Option<String>| -> Result<PathBuf, String> {
+        Ok(match instance {
+            Some(name) => instances::find(&name)?.home,
+            None => instances::selected().home,
+        })
+    };
+    let value = |m: &mods::Mod| {
+        serde_json::json!({
+            "id": m.id, "file": m.file, "title": m.title, "description": m.description,
+            "enabled": m.enabled, "folder": m.folder, "problem": m.problem, "path": m.path,
+        })
+    };
+    let set = |home: &std::path::Path, query: &str, on: bool| -> Result<(), String> {
+        let m = mods::find(home, query)?;
+        mods::set_enabled(home, &m, on)?;
+        println!("{} is {}.", m.title, if on { "on" } else { "off" });
+        Ok(())
+    };
+    match action {
+        ModsCmd::List { instance } => {
+            let all = mods::list(&home(instance)?);
+            if as_json {
+                json(all.iter().map(value).collect());
+            } else if all.is_empty() {
+                println!("No mods: add a .hmod or a mod folder with skyline-launcher mods add");
+            }
+            for m in all.iter().filter(|_| !as_json) {
+                let on = if m.enabled { "on " } else { "off" };
+                match &m.problem {
+                    Some(p) => println!("  {on} {} ({}): {p}", m.title, m.file),
+                    None => println!("  {on} {} ({})", m.title, m.file),
+                }
+            }
+        }
+        ModsCmd::Add { file, instance } => {
+            let m = mods::add(&home(instance)?, &file)?;
+            match as_json {
+                true => json(value(&m)),
+                false => println!("Added {} as {} (off).", m.title, m.file),
+            }
+        }
+        ModsCmd::On { r#mod, instance } => set(&home(instance)?, &r#mod, true)?,
+        ModsCmd::Off { r#mod, instance } => set(&home(instance)?, &r#mod, false)?,
+        ModsCmd::Remove { r#mod, instance } => {
+            let home = home(instance)?;
+            let m = mods::find(&home, &r#mod)?;
+            mods::remove(&home, &m)?;
+            println!("{} is in the trash.", m.file);
         }
     }
     Ok(())

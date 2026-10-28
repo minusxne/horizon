@@ -19,7 +19,6 @@ pub use tokens::{CONTROL_LARGE, DISABLED, FIELD, PRESSED, RISE, ROW, SEGMENT};
 
 /// Blocks have square corners: these stay for the places that ask for a radius.
 pub const RADIUS: f32 = 0.;
-pub const RADIUS_PLATE: f32 = 0.;
 /// Buttons are a little taller than the quiet look's, for their lip.
 pub const CONTROL: f32 = 34.;
 /// The top bar, and the sidebar of instances and servers.

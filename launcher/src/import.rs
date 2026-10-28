@@ -6,9 +6,10 @@
 //!   `overrides/` (and `client-overrides/`) go into the instance's folder; each of its `files`
 //!   must already be in it: Skyline downloads nothing.
 //! - A `.mrpack` for a mod loader, or a CurseForge modpack zip (`manifest.json`): a Java
-//!   modpack, for the Modpacks import (`modpacks::import`).
-//! - A zip with `pack.mcmeta`: a data pack (`data/`) or a resource pack; with `shaders/`, or a
-//!   `.hshader`: a shader pack.
+//!   modpack, which Skyline doesn't play.
+//! - A zip or folder with `pack.mcmeta`: a data pack (`data/`) or a resource pack; with
+//!   `shaders/`, or a `.hshader`: a shader pack.
+//! - A `.hmod`, or a folder with `horizon-mod.toml`: a Skyline mod, for the selected instance.
 //!
 //! Only what an instance holds is taken from a shared zip ([`crate::export::FILES`],
 //! [`crate::export::FOLDERS`], `saves/`), and every path is checked to stay inside its folder.
@@ -34,6 +35,8 @@ pub enum Dropped {
     Pack(packs::Kind),
     /// A data pack: it goes into a world.
     DataPack,
+    /// A Skyline mod (`.hmod` or mod folder), for the selected instance.
+    Mod,
 }
 
 fn open(file: &Path) -> Result<zip::ZipArchive<fs::File>, String> {
@@ -59,9 +62,20 @@ fn read_index(zip: &mut zip::ZipArchive<fs::File>) -> Result<serde_json::Value, 
     serde_json::from_slice(&text).map_err(|e| format!("{INDEX}: {e}"))
 }
 
-/// What `file` is, from its name and what is inside.
+/// What `file` (or folder) is, from its name and what is inside.
 pub fn what(file: &Path) -> Result<Dropped, String> {
     let name = name_of(file);
+    if crate::mods::is_mod(file) {
+        return Ok(Dropped::Mod);
+    }
+    if file.is_dir() {
+        if file.join("pack.mcmeta").is_file() && file.join("data").is_dir() {
+            return Ok(Dropped::DataPack);
+        }
+        return packs::kind_of(file).map(Dropped::Pack).map_err(|_| {
+            format!("The folder {name} is neither a Skyline mod nor a resource or shader pack.")
+        });
+    }
     let ext = file
         .extension()
         .map(|e| e.to_string_lossy().to_ascii_lowercase());
@@ -80,7 +94,7 @@ pub fn what(file: &Path) -> Result<Dropped, String> {
         Some("zip") => {}
         _ => {
             return Err(format!(
-                "{name} can't be imported: drop a .mrpack, a .zip or a .hshader."
+                "{name} can't be imported: drop a .zip, a .hmod, a .hshader, a .mrpack or a folder."
             ))
         }
     }
